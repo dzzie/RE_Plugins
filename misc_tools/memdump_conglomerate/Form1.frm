@@ -118,6 +118,15 @@ Private Sub Command1_Click()
      
     files() = GetFolderFiles(Text1, ".mem")
     
+    If AryIsEmpty(files) Then
+        files() = GetFolderFiles(Text1, ".bin")
+    End If
+    
+    If AryIsEmpty(files) Then
+        List1.AddItem "No .mem or .bin files to operate on!"
+        Exit Sub
+    End If
+    
     Dim tmp As Double
     lowestBase = OFFSET_4 'max unsigned long..
     
@@ -247,6 +256,7 @@ Function BaseFromFileName(x) As String
     If a > 0 Then
         BaseFromFileName = Mid(x, a + 1)
         BaseFromFileName = Replace(BaseFromFileName, ".mem", "")
+        BaseFromFileName = Replace(BaseFromFileName, ".bin", "")
         If Not isHex(BaseFromFileName) Then BaseFromFileName = Empty
     End If
 End Function

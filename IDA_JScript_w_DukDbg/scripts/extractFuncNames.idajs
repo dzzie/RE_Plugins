@@ -1,46 +1,11 @@
 
-//creates an IDC script of all of the user defined names in an IDB and saves them to the clipboard.
-
-s = app.askValue("Start offset","0x")
-e = app.askValue("End offset","0x")
-
-//s = 0x09A47A8
-//e = 0x09A5ACE
-
-if(s.length==0 || e.length == 0){
-    throw "invalid inputs"
+for(i=0 ; i < ida.funcCount(); i++){
+    n = ida.functionName(i)
+    if(n.indexOf('after_exportCerts') == 0){
+        //n = n.subString('after_exportCerts'.length+1)
+        ida.removeName(ida.functionStart(i));
+    }
+    
 }
 
-s = parseInt(s);
-e = parseInt(e);
-
-ret = '';
-com = 'comments:\r\n';
-
-while(s < e)
-{
-    n = ida.getName(s)
-    c = ida.getComment(s);
-    
-    if(n && n.length > 0){
-        ret += "MakeName(0X" + h(s) + ",\"" + n + "\");\r\n"
-    }
-    
-    if(c && c.length > 0){
-        com += "0X" + h(s) + "\t= " + c + "\r\n";
-    }
-    
-    s = ida.nextEA(s);
-    if(s==-1) break;
-} 
-
-ret = ret + "\r\n\r\n" + com 
-t(ret)
-app.setClipboard(ret);
-alert("Names and comments for range extracted");
-
-
-
-
-
-
+alert('done');

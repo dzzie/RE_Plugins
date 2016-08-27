@@ -12,3 +12,13 @@ Public Type IMAGE_SECTION_HEADER
     NumberOfLinenumbers As Integer
     Characteristics As Long
 End Type
+
+
+
+Function AryIsEmpty(ary) As Boolean
+  On Error GoTo oops
+    i = UBound(ary)  '<- throws error if not initalized
+    AryIsEmpty = False
+  Exit Function
+oops: AryIsEmpty = True
+End Function

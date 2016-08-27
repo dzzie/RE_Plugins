@@ -1,0 +1,32 @@
+
+ea = ida.screenEA()
+funcIndex = ida.funcIndexFromVA(ea)
+if(funcIndex == -1) throw("Cursor not within a function: ea=" + h(ea) + " i=" + funcIndex);
+
+fName = ida.functionName(funcIndex);
+fStart = ida.functionStart(funcIndex);
+fEnd = ida.functionEnd(funcIndex);
+
+tmp = '';j=0;x = new Array();
+x.push("unsigned char "+fName+"[0x"+h(fEnd-fStart)+"] = {")
+
+for(i = fStart; i < fEnd; i++){
+    tmp+= "0x" + h(ida.readByte(i))+", ";
+    j++;
+    if(j == 15){
+        x.push('\t'+tmp.trim());
+        tmp = '';
+        j=0;
+    }
+}
+
+if(tmp.length > 0) x.push('\t'+tmp.trim());
+last = x[x.length-1]
+x[x.length-1] = last.substring(0,last.length-1); //strip last comma
+
+x.push('}');
+x = x.join('\r\n')
+app.setClipboard(x)
+t(x)
+
+

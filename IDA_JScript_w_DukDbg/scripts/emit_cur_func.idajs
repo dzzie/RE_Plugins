@@ -1,0 +1,29 @@
+//emit_cur_func.idajs
+ea = ida.screenEA()
+funcIndex = ida.funcIndexFromVA(ea)
+if(funcIndex == -1) throw("Cursor not in a function: ea="+h(ea)+" i="+funcIndex);
+
+fName = ida.functionName(funcIndex);
+fStart = ida.functionStart(funcIndex);
+fEnd = ida.functionEnd(funcIndex);
+
+tmp = '';j=0;x = new Array();
+x.push("// opcodes for " + fName + " size: 0x" + h(fEnd-fStart) + " bytes\r\n");
+
+for(i = fStart; i < fEnd; i++){
+    tmp+= "_asm _emit 0x" + h(ida.readByte(i)) + " ";
+    j++;
+    if(j == 6){
+        x.push('\t'+tmp);
+        tmp = '';
+        j=0;
+    }
+}
+
+if(tmp.length > 0) x.push('\t'+tmp);
+x.push(' }');
+x = x.join('\r\n')
+app.setClipboard(x)
+t(x)
+
+

@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{9A143468-B450-48DD-930D-925078198E4D}#1.1#0"; "hexed.ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   8910
@@ -162,6 +162,9 @@ Begin VB.Form Form1
       Caption         =   "mnuPopup"
       Begin VB.Menu mnuSearchString 
          Caption         =   "Search String"
+      End
+      Begin VB.Menu mnuExport 
+         Caption         =   "Export All To File"
       End
    End
 End
@@ -450,6 +453,27 @@ End Sub
 
 Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = 2 Then PopupMenu mnuPopup
+End Sub
+
+Private Sub mnuExport_Click()
+    Dim f As String
+    Dim m As Match, li As ListItem
+    Dim ff As Long
+    
+    If lv.ListItems.Count = 0 Then Exit Sub
+    
+    f = dlg.SaveDialog(AllFiles, , , , , "export.txt")
+    If Len(f) = 0 Then Exit Sub
+    
+    ff = FreeFile
+    Open f For Output As ff
+    For Each li In lv.ListItems
+        Set m = li.Tag
+        Print #ff, CStr(HexStringUnescape(m.value, True))
+    Next
+    Close ff
+    
+    MsgBox "complete!"
 End Sub
 
 Private Sub mnuSearchString_Click()

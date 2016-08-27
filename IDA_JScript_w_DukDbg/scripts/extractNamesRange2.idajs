@@ -1,0 +1,19 @@
+
+//extract user names for offset range
+
+a = 0x00414ED8;
+b = 0x00415068;
+x='';
+for(i=a; i< b; i+=4){
+  j = ida.getName(i);
+  if(j.length > 0){
+     x+='MakeName(0x0'+h(i) + ',"' + j+'");\r\n'
+  }
+}
+
+app.setClipboard(x);
+t('done')
+
+
+
+

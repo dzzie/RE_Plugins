@@ -18,12 +18,12 @@ copy D:\_code\RE_Plugins\IDASrvr\bin\idasrvr.plw C:\IDA6.6\plugins\
 
 :NO66
 
-set pth=C:\IDA6.7\plugins\idasrvr.plw
+set pth=D:\IDA6.7\plugins\idasrvr.plw
 
-IF NOT EXIST C:\IDA6.7 GOTO NO67
+IF NOT EXIST D:\IDA6.7 GOTO NO67
 echo Installing for 6.7
 IF EXIST %pth% del %pth%
-copy D:\_code\RE_Plugins\IDASrvr\bin\idasrvr.plw C:\IDA6.7\plugins\
+copy D:\_code\RE_Plugins\IDASrvr\bin\idasrvr.plw D:\IDA6.7\plugins\
 
 :NO67
 
