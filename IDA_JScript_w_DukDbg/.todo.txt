@@ -1,3 +1,6 @@
+
+app.doevents 
+ability to set app.timeout = -1
 compatiable icon
 use the dukdbg js engine / debugger component once binary compat set
 

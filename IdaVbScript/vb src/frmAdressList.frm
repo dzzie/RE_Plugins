@@ -131,7 +131,7 @@ Begin VB.Form frmAdressList
       Height          =   4275
       Left            =   0
       TabIndex        =   0
-      Top             =   0
+      Top             =   30
       Width           =   2835
       _ExtentX        =   5001
       _ExtentY        =   7541
@@ -248,40 +248,69 @@ Private Sub cmdLoad_Click()
     
     'todo: this sub is error prone fix me
     
+     'ida 6.7 sample input:
+    'Direction Type Address         Text
+    '--------- ---- -------         ----
+    '          p    sub_401EAE+86   call    calldecoder
+    'Down      p    sub_401EAE+152  call    calldecoder
+    'Down      p    loadinetapi+E   call    calldecoder
+    
+    t = Clipboard.GetText
+    't = Text1
+
     On Error GoTo nextone
     errs = 0
     
-    x = Split(Clipboard.GetText, vbCrLf)
+    pos = InStr(t, "Address")
+    If pos < 1 Then
+        MsgBox "Does not look like an ida xref list?"
+        Exit Sub
+    End If
+    
+    x = Split(t, vbCrLf)
     For i = 0 To UBound(x)
-        y = Split(x(i), " ")
-        If UBound(y) > 2 Then
-            k = y(2)
-            If InStr(k, ":") > 0 Then
-                adr = Mid(k, InStr(k, ":") + 1)
-                adr = CLng("&h" & adr)
-            ElseIf InStr(k, "sub_") = 1 Then
-                m = Mid(k, 5)
-                If InStr(m, "+") > 0 Then
-                    a = Mid(m, InStr(m, "+") + 1)
-                    b = Mid(m, 1, InStr(m, "+") - 1)
-                    adr = CLng("&h" & b) + CLng("&h" & a)
-                Else
-                    adr = CLng("&h" & m)
-                End If
-            End If
-            
-            Set li = lv.ListItems.Add
-            li.Text = Hex(adr)
-            li.Tag = adr
-            
-            k = 0
-            For j = 0 To 2
-                k = k + Len(y(j))
-            Next
-            
-            li.SubItems(1) = Trim(Mid(x(i), k + 3))
+        If left(x(i), Len("Direction")) = "Direction" Then GoTo nextone
+        If left(x(i), 1) = "-" Then GoTo nextone
+        If Len(x(i)) < pos Then GoTo nextone
         
+        x(i) = Mid(x(i), pos)
+        
+        While InStr(x(i), "  ") > 0
+            x(i) = Replace(x(i), "  ", " ")
+        Wend
+        
+        y = Split(x(i), " ")
+        k = y(0)
+        adr = 0
+        
+        If InStr(k, ":") > 0 Then
+            adr = Mid(k, InStr(k, ":") + 1)
+            adr = CLng("&h" & adr)
+        ElseIf InStr(k, "sub_") = 1 Then
+            m = Mid(k, 5)
+            If InStr(m, "+") > 0 Then
+                a = Mid(m, InStr(m, "+") + 1)
+                b = Mid(m, 1, InStr(m, "+") - 1)
+                adr = CLng("&h" & b) + CLng("&h" & a)
+            Else
+                adr = CLng("&h" & m)
+            End If
+        Else 'it must be a function by name?
+            a = InStr(k, "+")
+            If a > 0 Then
+                n = Trim(Mid(k, 1, a - 1))
+                b = Mid(k, a + 1)
+                a = GetFuncOffset(n)
+                adr = a + CLng("&h" & b)
+            End If
         End If
+        
+        Set li = lv.ListItems.Add
+        li.Text = Hex(adr)
+        li.Tag = adr
+        li.SubItems(1) = Trim(Mid(x(i), Len(y(0)) + 1))
+        
+         
         
 nextone:
         If Err.Number > 0 Then
@@ -361,6 +390,15 @@ Private Sub lv_ItemClick(ByVal Item As MSComctlLib.ListItem)
     lv.SetFocus
 End Sub
 
+Private Sub lv_KeyDown(KeyCode As Integer, Shift As Integer)
+    If KeyCode = vbKeyDelete Then
+        For i = lv.ListItems.count To 1 Step -1
+            If lv.ListItems(i).Selected Then lv.ListItems.Remove i
+        Next
+    End If
+    Me.Caption = "Address list: " & lv.ListItems.count & " entries"
+End Sub
+
 Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = 2 Then PopupMenu mnuPopup
 End Sub
@@ -394,7 +432,7 @@ Private Sub mnuPop_Click(Index As Integer)
                     push k, li.Text & vbTab & li.SubItems(1)
                 Next
                 
-                writeFile x, Join(k, vbCrLf)
+                WriteFile x, Join(k, vbCrLf)
                 
         Case 3:
                 x = dlg.OpenDialog(AllFiles)
@@ -432,7 +470,7 @@ End Sub
 
 
 
-Sub writeFile(path, it)
+Sub WriteFile(path, it)
     f = FreeFile
     Open path For Output As #f
     Print #f, it
