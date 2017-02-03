@@ -1,6 +1,8 @@
 
-app.doevents 
-ability to set app.timeout = -1
+startBenchMark/endBenchMark
+
+add filestream class for incremental writes to one open file..
+
 compatiable icon
 use the dukdbg js engine / debugger component once binary compat set
 

@@ -7,6 +7,7 @@ using System.Windows.Forms;
 //using Microsoft.Glee;
 using Microsoft.Glee.GraphViewerGdi;
 using Microsoft.Glee.Drawing;
+using System.Diagnostics;
 
 namespace gleeGraph
 {
@@ -32,33 +33,42 @@ namespace gleeGraph
         public List<Node> NodesBelow(Node parent, string opt_nodeMatchText)
         {
             List<Node> nodes = new List<Node>();
+            List<Node> touched = new List<Node>();
             try
             {
-                AddSubNodes(ref nodes, parent, opt_nodeMatchText);
+                Debug.WriteLine("Starting: " + parent.Attr.Label);
+                AddSubNodes(ref nodes, ref touched, parent, opt_nodeMatchText);
             }
             catch (Exception e) { /*I will deal with you latter*/ };
             return nodes;
         }
 
         //can trigger an out of stack space error on large graphs.. 
-        private void AddSubNodes(ref List<Node> nodes, Node parent, string opt_nodeMatchText)
+        private void AddSubNodes(ref List<Node> nodes, ref List<Node> touched, Node parent, string opt_nodeMatchText)
         {
             foreach(Edge e in parent.OutEdges)
             {
-                if (!NodeExistsInList(ref nodes, e.TargetNode))
+                if (!NodeExistsInList(ref touched, e.TargetNode))
                 {
+                    touched.Add(e.TargetNode);
                     if (opt_nodeMatchText == null || opt_nodeMatchText.Length == 0) //no optional match criteria specified, just add it
                     {
+                        Debug.WriteLine("Adding: " + e.TargetNode.Attr.Label);
                         nodes.Add(e.TargetNode);
                     }
                     else //only add if our match string is found in the label ex. sub_ prefix...
                     {
-                        if (e.TargetNode.Attr.Label.IndexOf(opt_nodeMatchText) >= 0) nodes.Add(e.TargetNode);
+                        if (e.TargetNode.Attr.Label.IndexOf(opt_nodeMatchText) >= 0)
+                        {
+                            Debug.WriteLine("Adding: " + e.TargetNode.Attr.Label);
+                            nodes.Add(e.TargetNode);
+                        }
                     }
                 }
                 if (e.TargetNode.OutEdges.Count() > 0)
                 {
-                    AddSubNodes(ref nodes, e.TargetNode, opt_nodeMatchText);
+                        Debug.WriteLine("Following: " + e.TargetNode.Attr.Label);
+                        AddSubNodes(ref nodes, ref touched, e.TargetNode, opt_nodeMatchText);
                 }
             }
         } 
@@ -66,7 +76,8 @@ namespace gleeGraph
 
         private bool NodeExistsInList(ref List<Node> nodes, Node test)
         {
-            foreach (Node n in nodes) if (n.Id == test.Id) return true;
+            foreach (Node n in nodes) if (n.Id == test.Id) 
+                    return true;
             return false;
         }
 

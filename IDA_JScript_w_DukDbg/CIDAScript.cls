@@ -22,11 +22,25 @@ Private Sub Class_Initialize()
     ipc.Listen Form1.hwnd
 End Sub
 
+Property Get timeout()
+    timeout = Form1.txtjs.timeout
+End Property
+
+Property Let timeout(v)
+    On Error Resume Next
+    Form1.txtjs.timeout = CLng(v)
+End Property
+
 Property Get isUp() As Boolean
     isUp = IIf(IsWindow(ipc.RemoteHWND) = 1, True, False)
 End Property
 
+Sub do_events()
+    DoEvents
+End Sub
+
 Sub die(msg)
+    Form1.txtjs.timeout = 1
     Form1.txtjs.StopExecution
     t msg
 End Sub
@@ -68,6 +82,7 @@ End Property
 Sub t(data)
     Form1.Text1.Text = Form1.Text1.Text & vbCrLf & data
     Form1.Text1.SelStart = Len(Form1.Text1.Text)
+    DoEvents
 End Sub
 
 Sub clearLog()
@@ -389,21 +404,53 @@ End Sub
 
 Function readFile(filename) As Variant
   Dim f As Long
-  Dim Temp As Variant
+  Dim temp As Variant
+  
+  On Error Resume Next
+   
+  If InStr(1, filename, "%sp%", vbTextCompare) > 0 Then
+        If Len(Form1.loadedFile) = 0 Then
+            MsgBox "can not use %sp variable yet in file path file not saved!"
+            Exit Function
+        End If
+        
+        temp = fso.GetParentFolder(Form1.loadedFile)
+        filename = Replace(filename, "%sp%", temp, , , vbTextCompare)
+  End If
+  
+  'todo support %desktop%
+  
   f = FreeFile
-  Temp = ""
+  temp = ""
    Open filename For Binary As #f        ' Open file.(can be text or image)
-     Temp = Input(FileLen(filename), #f) ' Get entire Files data
+     temp = Input(FileLen(filename), #f) ' Get entire Files data
    Close #f
-   readFile = Temp
+   readFile = temp
 End Function
 
 Sub writeFile(path, it)
+    On Error Resume Next
+    
+    Dim temp As String
+    
+    If InStr(1, path, "%sp%", vbTextCompare) > 0 Then
+    
+        If Len(Form1.loadedFile) = 0 Then
+            MsgBox "can not use %sp variable yet in file path file not saved!"
+            Exit Sub
+        End If
+        
+        temp = fso.GetParentFolder(Form1.loadedFile)
+        path = Replace(path, "%sp%", temp, , , vbTextCompare)
+      
+    End If
+  
     Dim f As Long
     f = FreeFile
     Open path For Output As #f
     Print #f, it
     Close f
+    
 End Sub
 
 Sub appendFile(path, it)

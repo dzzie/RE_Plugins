@@ -9,6 +9,14 @@ Begin VB.Form Form1
    ScaleHeight     =   3375
    ScaleWidth      =   9315
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton Command2 
+      Caption         =   "?"
+      Height          =   405
+      Left            =   210
+      TabIndex        =   6
+      Top             =   810
+      Width           =   525
+   End
    Begin VB.TextBox Text2 
       Height          =   330
       Left            =   5985
@@ -45,7 +53,6 @@ Begin VB.Form Form1
       Left            =   810
       OLEDropMode     =   1  'Manual
       TabIndex        =   0
-      Text            =   "drag and drop file ex: [pid]_[hexbase].mem to auto parse base"
       Top             =   180
       Width           =   4470
    End
@@ -215,6 +222,14 @@ End Function
 
 
 
+Private Sub Command2_Click()
+    Const msg = "drag and drop file or folder to main textbox to load.\n" & _
+                "supports [pid]_[hexbase].mem or hexbase.mem\n" & _
+                "for single files will auto parse out base\n\n" & _
+                "this will add the file(s) to a new pe image and output one 32bit dll"
+    MsgBox Replace(msg, "\n", vbCrLf)
+End Sub
+
 Private Sub Form_Load()
 
 
@@ -241,10 +256,16 @@ Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Inte
 End Sub
 
 Function BaseFromFileName(x) As String
-    a = InStrRev(x, "_")
+    Dim base As String
+    base = FileNameFromPath(x)
+    a = InStrRev(base, "_")
     If a > 0 Then
-        BaseFromFileName = Mid(x, a + 1)
+        BaseFromFileName = Mid(base, a + 1)
         BaseFromFileName = Replace(BaseFromFileName, ".mem", "")
+        If Not isHex(BaseFromFileName) Then BaseFromFileName = Empty
+    Else
+        'may its just base.mem
+        BaseFromFileName = Replace(base, ".mem", "")
         If Not isHex(BaseFromFileName) Then BaseFromFileName = Empty
     End If
 End Function

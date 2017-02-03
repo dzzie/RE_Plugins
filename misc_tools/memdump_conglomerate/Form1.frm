@@ -252,10 +252,16 @@ Private Sub Text1_OLEDragDrop(Data As DataObject, Effect As Long, Button As Inte
 End Sub
 
 Function BaseFromFileName(x) As String
-    a = InStrRev(x, "_")
+    Dim base As String
+    base = FileNameFromPath(x)
+    a = InStrRev(base, "_")
     If a > 0 Then
-        BaseFromFileName = Mid(x, a + 1)
+        BaseFromFileName = Mid(base, a + 1)
         BaseFromFileName = Replace(BaseFromFileName, ".mem", "")
+        BaseFromFileName = Replace(BaseFromFileName, ".bin", "")
+        If Not isHex(BaseFromFileName) Then BaseFromFileName = Empty
+    Else
+        BaseFromFileName = Replace(base, ".mem", "")
         BaseFromFileName = Replace(BaseFromFileName, ".bin", "")
         If Not isHex(BaseFromFileName) Then BaseFromFileName = Empty
     End If

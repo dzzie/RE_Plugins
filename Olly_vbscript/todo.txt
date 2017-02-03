@@ -1,0 +1,3 @@
+
+idasync doesnt seem to work for code in rwe memory sections,
+maybe alloc an offset range instead of dll name
