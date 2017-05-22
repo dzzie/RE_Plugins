@@ -59,6 +59,8 @@ Public Enum quickCallMessages
     qcmIsCode = 44
     qcmIsData = 45
     qcmInstLen = 46
+    qcmReadLong = 47
+    qcmReadShort = 48
 End Enum
 
 Private Const WM_COPYDATA = &H4A
@@ -163,7 +165,7 @@ Function Send(msg As String) As Long
     On Error Resume Next
     
     DataIn = Empty
-    Dim Buffer(1 To 2048) As Byte
+    Dim buffer(1 To 2048) As Byte
     Dim CopyData As COPYDATASTRUCT
     
     If IsWindow(RemoteHWND) = 0 Then
@@ -174,10 +176,10 @@ Function Send(msg As String) As Long
     
     Form1.List1.AddItem "SendData: " & msg
     
-    CopyMemory Buffer(1), ByVal msg, Len(msg)
+    CopyMemory buffer(1), ByVal msg, Len(msg)
     CopyData.dwFlag = 3
     CopyData.cbSize = Len(msg) + 1
-    CopyData.lpData = VarPtr(Buffer(1))
+    CopyData.lpData = VarPtr(buffer(1))
     Send = SendMessage(RemoteHWND, WM_COPYDATA, RemoteHWND, CopyData)
     
 End Function
@@ -234,19 +236,19 @@ End Sub
 Private Function RecieveTextMessage(lParam As Long, ByRef msg As String) As Boolean
    
     Dim CopyData As COPYDATASTRUCT
-    Dim Buffer(1 To 2048) As Byte
-    Dim Temp As String
+    Dim buffer(1 To 2048) As Byte
+    Dim temp As String
     
     msg = Empty
     
     CopyMemory CopyData, ByVal lParam, Len(CopyData)
     
     If CopyData.dwFlag = 3 Then
-        CopyMemory Buffer(1), ByVal CopyData.lpData, CopyData.cbSize
-        Temp = StrConv(Buffer, vbUnicode)
-        Temp = Left$(Temp, InStr(1, Temp, Chr$(0)) - 1)
+        CopyMemory buffer(1), ByVal CopyData.lpData, CopyData.cbSize
+        temp = StrConv(buffer, vbUnicode)
+        temp = Left$(temp, InStr(1, temp, Chr$(0)) - 1)
         'heres where we work with the intercepted message
-        msg = Temp
+        msg = temp
         RecieveTextMessage = True
         Form1.List1.AddItem "RecvData: " & msg
     End If

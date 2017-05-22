@@ -326,6 +326,18 @@ End Function
     readByte = CByte(ipc.quickCall(qcmReadByte, CLng(va)))
 End Function
 
+Function readLong(va)
+    On Error Resume Next
+    If va = 0 Or va = -1 Then Exit Function
+    readLong = CLng(ipc.quickCall(qcmReadLong, CLng(va)))
+End Function
+
+Function readShort(va)
+    On Error Resume Next
+    If va = 0 Or va = -1 Then Exit Function
+    readShort = CLng(ipc.quickCall(qcmReadShort, CLng(va)))
+End Function
+
 Function originalByte(va)
     On Error Resume Next
     originalByte = CByte(ipc.quickCall(qcmOrgByte, CLng(va)))
@@ -504,6 +516,20 @@ Function benchMark() As Long
     QueryPerformanceCounter i
     benchMark = i.lowpart
 End Function
+
+Function hexDump(x) As String
+    hexDump = Module1.hexDump(CStr(x), , , hoDump)
+End Function
+
+Function hexstr(x) As String
+    hexstr = Module1.hexDump(CStr(x), , , hoHexOnly)
+End Function
+
+Function toBytes(hexstr) As String
+    Dim out As String
+    If Module1.toBytes(CStr(hexstr), out) Then toBytes = out
+End Function
+
 
 'Function refListToArray(x) As Long() 'no way to use a vb6 array in js?
 '    On Error Resume Next

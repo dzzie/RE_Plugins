@@ -19,4 +19,9 @@ for(i=0; i< ida.funcCount(); i++){
 n = x.join('\r\n')
 t(n)
 app.setClipboard(n);
+
+f = fso.saveFileDialog()
+if(f.length > 0) fso.writeFile(f, n)
+
 //app.alert("done!")
+

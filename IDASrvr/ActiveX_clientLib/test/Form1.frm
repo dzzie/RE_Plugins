@@ -135,6 +135,13 @@ Sub SampleAPI()
     List1.AddItem "Jumping to 1st inst"
     ida.Jump va
     
+    r = ida.ReadLong(&H4110A4)
+    List1.AddItem "4 byte value at 4110A4 = " & Hex(r)
+    
+    r = ida.ReadShort(&H4110A4)
+    List1.AddItem "2 byte value at 4110A4 = " & Hex(r)
+    
+    
 End Sub
 
  

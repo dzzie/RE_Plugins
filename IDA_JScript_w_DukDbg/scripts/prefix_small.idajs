@@ -4,7 +4,7 @@ for(i=0;i< ida.funcCount(); i++){
     a = ida.functionStart(i);
     b = ida.functionEnd(i);
     sz = b-a
-    if(sz <= 0x60){
+    if(sz <= 0x6A){
         n = ida.functionName(i)
         if(n.indexOf("sub_") == 0){
             ida.setname(a, "small_" + n);
@@ -15,3 +15,4 @@ for(i=0;i< ida.funcCount(); i++){
 }
 
 alert(x + " functions renamed")
+

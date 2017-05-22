@@ -1,17 +1,2 @@
-x=0;
 
-for(i=0;i< ida.funcCount(); i++){
-    a = ida.functionStart(i);
-    b = ida.functionEnd(i);
-    sz = b-a
-    if(sz <= 0x60){
-        n = ida.functionName(i)
-        if(n.indexOf("sub_") == 0){
-            ida.setname(a, "small_" + n);
-            x++;
-            //t( n + " sz:"+sz);
-        }
-    }
-}
-
-alert(x + " functions renamed")
+alert( app.toBytes("616161616161616161 61 61 61 61"))

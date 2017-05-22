@@ -60,3 +60,8 @@ isData(va)
 isCode(va) 
 ScanProcess(pidOrName) As Boolean
 ResolveExport(apiOrAddress) As Boolean
+hexDump(x)
+hexstr(x)
+toBytes(hexstr)
+readLong(va)
+readShort(va)

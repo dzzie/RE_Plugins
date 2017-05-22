@@ -44,6 +44,8 @@ Public Enum quickCallMessages
     qcmIsCode = 44
     qcmIsData = 45
     qcmInstLen = 46
+    qcmReadLong = 47
+    qcmReadShort = 48
 End Enum
 
 
@@ -390,9 +392,19 @@ End Function
     FunctionEnd = QuickCall(qcmFuncEnd, CLng(functionIndex))
  End Function
   
- Function ReadByte(va)
+Function ReadByte(va)
     If va = 0 Or va = -1 Then Exit Function
     ReadByte = CByte(QuickCall(qcmReadByte, CLng(va)))
+End Function
+
+Function ReadLong(va) As Long
+    If va = 0 Or va = -1 Then Exit Function
+    ReadLong = CLng(QuickCall(qcmReadLong, CLng(va)))
+End Function
+
+Function ReadShort(va) As Long
+    If va = 0 Or va = -1 Then Exit Function
+    ReadShort = CLng(QuickCall(qcmReadShort, CLng(va)))
 End Function
 
 Function OriginalByte(va)

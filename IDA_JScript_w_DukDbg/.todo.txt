@@ -1,4 +1,5 @@
 
+readLong
 startBenchMark/endBenchMark
 
 add filestream class for incremental writes to one open file..

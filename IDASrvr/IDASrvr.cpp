@@ -302,6 +302,10 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 				return isData(getFlags(arg1));
 		case 46:
 				return decode_insn(arg1);
+		case 47:
+				return get_long(arg1);
+		case 48:
+				return get_word(arg1);
 
 	}
 
