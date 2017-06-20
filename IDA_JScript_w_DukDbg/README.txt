@@ -1,36 +1,17 @@
 
-Status: beta but working
-
-Notes:  this build requires correct case for COM calls through ida, 
-        fso and app objects you may have to case. may have to case correct 
-        sample scripts
-
-dependancies:
-   spSubclass.dll - activex 
-   SCIVB2.ocx     - activex 
-   vb6 runtimes   - from MS probably already have installed
-   SciLexer.dll   - must be in same dir as SCIVBX.ocx, in this dir
-   IDASrvr.plw    - must install this IDA plugin, see ./../IDASrvr/bin
-   Duk4VB.dll     - C dll
-   dukDbg.ocx     - activex
-
-An installer can be found in the binary_snapshot directory to register
-all dependancies.
-
-The duktape dll and ocx can be found here:
-
-https://github.com/dzzie/duk4vb
-
-If you get to compiling the ocx's on your own remember versions have to
-match since binary compatability has not yet been set on the ocx. 
-(rememebr to run regsvr32 from a 32bit process with run as admin privs)
-
+Status: late beta
+Link:   http://sandsprite.com/tools.php?id=25
 
 what is this?
 ----------------------------------------
 
 This is a standalone interface to interact and script commands sent to IDA
 through the IDASrvr plugin using Javascript.
+
+The installer will:
+   register all dependancies
+   register the idajs file extension 
+   install the IDA plw plugin
 
 This build uses the duktape javascript engine, built for use with vb6, and housed
 in an ocx control that provides full debugger support with single stepping,
@@ -57,5 +38,55 @@ prefix.
 h(x) convert x to hex //no error handling in this yet..also high numbers can overflow error (dll addr)
 alert(x) supports arrays and other types
 t(x) appends x to the output textbox on main form.
+
+
+Dependancies and Source Links:
+-------------------------------------------------------------
+
+IDAJS is all open source
+
+duk4vb:       https://github.com/dzzie/duk4vb
+scivb:        https://github.com/dzzie/scivb2
+idasrvr:      https://github.com/dzzie/RE_Plugins/tree/master/IDASrvr
+idajs:        https://github.com/dzzie/RE_Plugins/tree/master/IDA_JScript_w_DukDbg
+spSubclass:   https://github.com/dzzie/libs/tree/master/Subclass
+vbdevKit:     https://github.com/dzzie/libs/tree/master/vbDevKit
+
+dependancies:
+   dukDbg.ocx     - Activex
+   spSubclass.dll - ActiveX 
+   SCIVB2.ocx     - ActiveX 
+   vbDevKit.dll   - ActiveX
+   Duk4VB.dll     - C dll must be in same dir as dukDbg.ocx
+   SciLexer.dll   - C dll must be in same dir as SCIVBX.ocx
+   IDASrvr.plw    - IDA plugin installed by installer
+   MSWINSCK.OCX   - from MS included in installer
+   richtx32.ocx   - from MS included in installer
+   vb6 runtimes   - from MS assumed already installed
+   mscomctl.ocx   - from MS assumed already installed
+   
+An installer can be found in the binary_snapshot directory to register
+all dependancies.
+
+
+
+Credits:
+--------------------------------------------
+
+* Duktape   
+     http://duktape.org
+
+* Scintilla by Neil Hodgson [neilh@scintilla.org] 
+     http://www.scintilla.org/
+
+* ScintillaVB by Stu Collier 
+     http://www.ceditmx.com/software/scintilla-vb/
+
+* CSubclass by Paul Canton [Paul_Caton@hotmail.com]
+
+* Interface by David Zimmer 
+    http://sandsprite.com
+
+
 
 

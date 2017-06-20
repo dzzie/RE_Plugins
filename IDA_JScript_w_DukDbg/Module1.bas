@@ -22,6 +22,46 @@ Declare Function IsWindow Lib "user32" (ByVal hwnd As Long) As Long
 Global dlg As New vbDevKit.clsCmnDlg2
 Global fso As New CFileSystem2
 
+Private Const STANDARD_RIGHTS_ALL = &H1F0000
+Private Const SYNCHRONIZE = &H100000
+Private Const READ_CONTROL = &H20000
+Private Const STANDARD_RIGHTS_READ = (READ_CONTROL)
+Private Const STANDARD_RIGHTS_WRITE = (READ_CONTROL)
+Private Const KEY_CREATE_LINK = &H20
+Private Const KEY_CREATE_SUB_KEY = &H4
+Private Const KEY_ENUMERATE_SUB_KEYS = &H8
+Private Const KEY_NOTIFY = &H10
+Private Const KEY_QUERY_VALUE = &H1
+Private Const KEY_SET_VALUE = &H2
+Private Const KEY_READ = ((STANDARD_RIGHTS_READ Or KEY_QUERY_VALUE Or KEY_ENUMERATE_SUB_KEYS Or KEY_NOTIFY) And (Not SYNCHRONIZE))
+Private Const KEY_WRITE = ((STANDARD_RIGHTS_WRITE Or KEY_SET_VALUE Or KEY_CREATE_SUB_KEY) And (Not SYNCHRONIZE))
+Private Const KEY_EXECUTE = (KEY_READ)
+Private Const KEY_ALL_ACCESS = ((STANDARD_RIGHTS_ALL Or KEY_QUERY_VALUE Or KEY_SET_VALUE Or KEY_CREATE_SUB_KEY Or KEY_ENUMERATE_SUB_KEYS Or KEY_NOTIFY Or KEY_CREATE_LINK) And (Not SYNCHRONIZE))
+
+Private Declare Function RegCloseKey Lib "advapi32.dll" (ByVal hKey As Long) As Long
+Private Declare Function RegOpenKeyEx Lib "advapi32.dll" Alias "RegOpenKeyExA" (ByVal hKey As Long, ByVal lpSubKey As String, ByVal ulOptions As Long, ByVal samDesired As Long, phkResult As Long) As Long
+Private Declare Function RegQueryValueEx Lib "advapi32.dll" Alias "RegQueryValueExA" (ByVal hKey As Long, ByVal lpValueName As String, ByVal lpReserved As Long, lpType As Long, lpData As Any, lpcbData As Long) As Long
+
+Private Enum hKey
+    HKEY_CLASSES_ROOT = &H80000000
+    HKEY_CURRENT_USER = &H80000001
+    HKEY_LOCAL_MACHINE = &H80000002
+    HKEY_USERS = &H80000003
+    HKEY_PERFORMANCE_DATA = &H80000004
+    HKEY_CURRENT_CONFIG = &H80000005
+    HKEY_DYN_DATA = &H80000006
+End Enum
+
+Private Enum dataType
+    REG_BINARY = 3                     ' Free form binary
+    REG_DWORD = 4                      ' 32-bit number
+    'REG_DWORD_BIG_ENDIAN = 5           ' 32-bit number
+    'REG_DWORD_LITTLE_ENDIAN = 4        ' 32-bit number (same as REG_DWORD)
+    REG_EXPAND_SZ = 2                  ' Unicode nul terminated string
+    'REG_MULTI_SZ = 7                   ' Multiple Unicode strings
+    REG_SZ = 1                         ' Unicode nul terminated string
+End Enum
+
 Sub FormPos(fform As Form, Optional andSize As Boolean = False, Optional save_mode As Boolean = False)
     
     On Error Resume Next
@@ -329,3 +369,143 @@ init:
     bAry(0) = b
     
 End Sub
+
+
+Private Function stdPath(sIn, ByRef hive As hKey) As String
+    Dim tmp
+    
+    stdPath = Replace(sIn, "/", "\")
+    
+    tmp = Split(stdPath, "\")
+    Select Case LCase(tmp(0))
+        Case "hklm", "hkey_local_machine": hive = HKEY_LOCAL_MACHINE
+        Case "hkcu", "hkey_current_user": hive = HKEY_CURRENT_USER
+        Case "hkcr", "hkey_classes_root": hive = HKEY_CLASSES_ROOT
+        Case "hku", "hkey_users": hive = HKEY_USERS
+    End Select
+    
+    tmp(0) = Empty
+    stdPath = Join(tmp, "\")
+    stdPath = Replace(stdPath, "\\", "\")
+    
+    If Left(stdPath, 1) = "\" Then stdPath = Mid(stdPath, 2, Len(stdPath))
+    If Right(stdPath, 1) <> "\" Then stdPath = stdPath & "\"
+    
+End Function
+
+Function ReadRegValue(path, Optional KeyName = "")
+     
+    Dim lResult As Long, lValueType As Long, strBuf As String, lDataBufSize As Long
+    'Dim ret As Long
+    'retrieve nformation about the key
+    Dim p As String
+    Dim hive As hKey
+    Dim handle As Long
+    Dim ret
+
+    p = stdPath(path, hive)
+    RegOpenKeyEx hive, p, 0, KEY_READ, handle
+    lResult = RegQueryValueEx(handle, CStr(KeyName), 0, lValueType, ByVal 0, lDataBufSize)
+    If lResult = 0 Then
+        If lValueType = REG_SZ Then
+            strBuf = String(lDataBufSize, Chr$(0))
+            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, ByVal strBuf, lDataBufSize)
+            If lResult = 0 Then ret = Replace(strBuf, Chr$(0), "")
+        ElseIf lValueType = REG_BINARY Then
+            Dim strData As Integer
+            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, strData, lDataBufSize)
+            If lResult = 0 Then ret = strData
+        ElseIf lValueType = REG_DWORD Then
+            Dim x As Long
+            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, x, lDataBufSize)
+            ret = x
+        ElseIf lValueType = REG_EXPAND_SZ Then
+            strBuf = String(lDataBufSize, Chr$(0))
+            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, ByVal strBuf, lDataBufSize)
+            If lResult = 0 Then ret = Replace(strBuf, Chr$(0), "")
+
+        'Else
+        '    MsgBox "UnSupported Type " & lValueType
+        End If
+    End If
+    RegCloseKey handle
+    
+    ReadRegValue = ret
+    
+End Function
+
+Function IDAPath() As String
+    
+    tmp = ReadRegValue("HKLM\SOFTWARE\Classes\IDApro.Database32\shell\open\command")
+    If Len(tmp) = 0 Then Exit Function
+    
+    a = InStr(1, tmp, ".exe", vbTextCompare)
+    If a < 1 Then Exit Function
+    IDAPath = Mid(tmp, 1, a + 4)
+    IDAPath = Replace(IDAPath, """", Empty)
+    
+End Function
+
+Function installPLW(Optional alert As Boolean = False, Optional forceUpdate As Boolean = False) As Boolean
+    
+    Dim pluginDir As String, plwPath As String
+    Dim ida As String
+    
+    Const plw = "IDASrvr.plw"
+    
+    ida = IDAPath()
+    If Len(ida) = 0 Then
+        If alert Then MsgBox "Could not find IDA path in registry to auto install plw." & vbCrLf & vbCrLf & "Please copy it from the install directory to IDA plugins folder", vbInformation
+        Exit Function
+    End If
+    
+    pluginDir = fso.GetParentFolder(ida) & "\plugins\"
+    
+    If fso.fileExists(pluginDir & plw) Then
+        If Not forceUpdate Then
+            installPLW = True
+            Exit Function
+        End If
+        fso.deleteFile pluginDir & plw
+    End If
+    
+    plwPath = App.path & "\" & plw
+    If Not fso.fileExists(plwPath) Then
+        If alert Then MsgBox "Could not find " & plw & " to install?"
+        Exit Function
+    End If
+    
+    fso.Copy plwPath, pluginDir
+    
+    If fso.fileExists(pluginDir & plw) Then
+        installPLW = True
+    Else
+        If alert Then MsgBox "Failed to install " & plw & " in " & pluginDir, vbInformation
+    End If
+    
+End Function
+
+Function register_idajsFileExt() As Boolean
+    
+    Dim homedir As String
+    Dim tmp As String
+       
+    homedir = App.path & "\IDA_JScript.exe"
+    If Not fso.fileExists(homedir) Then Exit Function
+    cmd = "cmd /c ftype IDAJS.Document=""" & homedir & """ %1 && assoc .idajs=IDAJS.Document"
+    
+    On Error Resume Next
+    Shell cmd, vbHide
+    
+    Dim wsh As Object 'WshShell
+    Set wsh = CreateObject("WScript.Shell")
+    If Not wsh Is Nothing Then
+        wsh.RegWrite "HKCR\IDAJS.Document\DefaultIcon\", homedir & ",0"
+    End If
+    
+    tmp = ReadRegValue("HKLM\SOFTWARE\Classes\IDAJS.Document\shell\open\command")
+    register_idajsFileExt = (Len(tmp) > 0)
+    
+End Function
+    
+    

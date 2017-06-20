@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{9A143468-B450-48DD-930D-925078198E4D}#1.1#0"; "hexed.ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
 Begin VB.Form Form1 
    Caption         =   "Form1"
    ClientHeight    =   8910
@@ -165,6 +165,9 @@ Begin VB.Form Form1
       End
       Begin VB.Menu mnuExport 
          Caption         =   "Export All To File"
+      End
+      Begin VB.Menu mnuBinExport 
+         Caption         =   "Export Binaries to folder"
       End
    End
 End
@@ -453,6 +456,36 @@ End Sub
 
 Private Sub lv_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
     If Button = 2 Then PopupMenu mnuPopup
+End Sub
+
+Private Sub mnuBinExport_Click()
+    Dim f As String
+    Dim m As Match, li As ListItem
+    Dim ff As Long
+    Dim b() As Byte
+    Dim tmp As String
+    
+    If lv.ListItems.Count = 0 Then Exit Sub
+    
+    f = dlg.FolderDialog()
+    If Len(f) = 0 Then Exit Sub
+    
+    For Each li In lv.ListItems
+        fp = f & "\" & li.Text & ".bin"
+        If FileExists(fp) Then Kill fp
+        
+        Set m = li.Tag
+        tmp = CStr(HexStringUnescape(m.value, True))
+        b() = StrConv(tmp, vbFromUnicode, &H409)
+        
+        ff = FreeFile
+        Open fp For Binary As ff
+        Put ff, , b()
+        Close ff
+        
+    Next
+    
+    MsgBox "complete!"
 End Sub
 
 Private Sub mnuExport_Click()

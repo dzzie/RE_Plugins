@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
-Object = "{047848A0-21DD-421D-951E-B4B1F3E1718D}#88.0#0"; "dukDbg.ocx"
+Object = "{047848A0-21DD-421D-951E-B4B1F3E1718D}#89.0#0"; "dukDbg.ocx"
 Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "RICHTX32.OCX"
 Object = "{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0"; "MSWINSCK.OCX"
 Begin VB.Form Form1 
@@ -257,7 +257,7 @@ Private Sub cboSaved_Click()
 End Sub
 
 Private Sub Check1_Click()
-    List1.Visible = CBool(Check1.Value)
+    List1.Visible = CBool(Check1.value)
 End Sub
 
 Private Sub mnuSetTimeout_Click()
@@ -315,12 +315,18 @@ Private Sub Form_Load()
     'quick way for IDASrvr to be able to find us for launching..
     SaveSetting "IPC", "HANDLES", "IDAJSCRIPT", App.path & "\IDA_JScript.exe"
     
+    If Command = "/install" Then
+        Call installPLW(True, True)
+        Call register_idajsFileExt
+        End
+    End If
+        
     FormPos Me, True
     Me.Visible = True
     
     Set remote.ws = Winsock1
     Set sci = txtjs.sci
-    If sci Is Nothing Then MsgBox "Failed to get DukDbg.sci"
+    If sci Is Nothing Then MsgBox "Failed to get DukDbg.sci version mismatch between scivb and dukdbg :("
 
     'to use with duk we MUST use correct case on these since the relay is through JS
     
@@ -577,23 +583,7 @@ Private Sub mnuSelectIDAInstance_Click()
 End Sub
 
 Private Sub mnuSHellExt_Click()
-    
-    Dim homedir As String
-    
-    homedir = App.path & "\IDA_JScript.exe"
-    If Not fileExists(homedir) Then Exit Sub
-    cmd = "cmd /c ftype IDAJS.Document=""" & homedir & """ %1 && assoc .idajs=IDAJS.Document"
-    
-    On Error Resume Next
-    Shell cmd, vbHide
-    
-    Dim wsh As Object 'WshShell
-    Set wsh = CreateObject("WScript.Shell")
-    If Not wsh Is Nothing Then
-        wsh.RegWrite "HKCR\IDAJS.Document\DefaultIcon\", homedir & ",0"
-    End If
-    
-    
+   MsgBox "Registered .idajs file extension: " & register_idajsFileExt()
 End Sub
 
 
