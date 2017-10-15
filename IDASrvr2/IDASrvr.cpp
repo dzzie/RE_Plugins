@@ -2,7 +2,7 @@
 
 /*
 
-Status: in progress not yet usable...
+Status: in progress so far c and vb6 clients are tested with plw/p64
 
 IDASRVR2: move to support x64 addresses everywhere, even between 32bit and 64 bit clients...
 
@@ -22,7 +22,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 
 bool m_debug = true;
 
-//#define __EA64__  //create the plugin for the 32 bit, 64 bit capable IDA
+#define __EA64__  //create the plugin for the 32 bit, 64 bit capable IDA
 
 #ifdef __EA64__
 	#pragma comment(linker, "/out:./bin/IDASrvr2.p64")
@@ -428,7 +428,7 @@ int HandleMsg(char* m){
 		0 msg:message
 	q	1 jmp:lngAdr  
 		2 jmp_name:function_name
-		3 name_va:fx_name[:hwnd]          (returns va for fxname) TODO: MAKEX64
+		3 name_va:fx_name[:hwnd]          (returns va for fxname) - hwnd no longer optional...
 	    4 rename:oldname:newname[:hwnd]   (w/confirm: sends back 1 for success or 0 for fail)
 	    5 loadedfile:hwnd
 	    6 getasm:lngva:hwnd
@@ -439,12 +439,12 @@ int HandleMsg(char* m){
 	q  11 orgbyte:lngva[:hwnd]
 	q  12 refresh:
 	q  13 numfuncs[:hwnd]
-	q  14 funcstart:funcIndex[:hwnd]
-	q  15 funcend:funcIndex[:hwnd]
-	   16 funcname:funcIndex:hwnd
+	q  14 funcstart:funcIndex[:hwnd] - hwnd no longer optional...
+	q  15 funcend:funcIndex[:hwnd] - hwnd no longer optional...
+	   16 funcname:funcIndex:hwnd  
 	   17 setname:va:name
-	q  18 refsto:offset:hwnd          //multiple call backs to hwnd each int as string, still synchronous TODO: MAKEX64
-	q  19 refsfrom:offset:hwnd        //multiple call backs to hwnd each int as string, still synchronous TODO: MAKEX64
+	q  18 refsto:offset:hwnd          //multiple call backs to hwnd each int as string, still synchronous  
+	q  19 refsfrom:offset:hwnd        //multiple call backs to hwnd each int as string, still synchronous  
 	q  20 undefine:offset
 	   21 getname:offset:hwnd
 	q  22 hide:offset
@@ -458,8 +458,8 @@ int HandleMsg(char* m){
 	   30 delcodexref:offset:tova 
 	   31 deldataxref:offset:tova 
 	q  32 funcindex:va[:hwnd] 
-	q  33 nextea:va[:hwnd] 
-	q  34 prevea:va[:hwnd] 
+	q  33 nextea:va[:hwnd]  - hwnd no longer optional...
+	q  34 prevea:va[:hwnd]  - hwnd no longer optional...
 	   35 makestring:va:[ascii | unicode] 
 	   36 makeunk:va:size 
 	   37 screenea: 
@@ -621,17 +621,17 @@ int HandleMsg(char* m){
 				 return i;
 				 break;
 
-		case 14: //funcstart:funcIndex[:hwnd]
-			     if( argc < 1 ){msg("funcstart needs 1 args\n"); return -1;}
+		case 14: //funcstart:funcIndex:hwnd - CHANGE hwnd no longer optional...
+			     if( argc < 2 ){msg("funcstart needs 2 args\n"); return -1;}
 				 x = FunctionStart(_atoi64(args[1]));
-				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
+				 SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
-		 case 15: //funcend:funcIndex[:hwnd]
-			     if( argc < 1 ){msg("funcend needs 1 args\n"); return -1;}
+		 case 15: //funcend:funcIndex[:hwnd] - CHANGE hwnd no longer optional...
+			     if( argc < 2 ){msg("funcend needs 1 args\n"); return -1;}
 				 x = FunctionEnd(_atoi64(args[1]));
-				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
+				 SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
@@ -710,16 +710,16 @@ int HandleMsg(char* m){
 					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
-		  case 33: //nextea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...
-					if( argc < 1 ){msg("nextea needs 1 args\n"); return -1;}
+		  case 33: //nextea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...  - CHANGE hwnd no longer optional...
+					if( argc < 2 ){msg("nextea needs 2 args\n"); return -1;}
 					x = find_code( _atoi64(args[1]), SEARCH_DOWN | SEARCH_NEXT );
-					if( argc == 2 )SendIntMessage( atoi(args[2]), x);
+					SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
-		  case 34: //prevea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...
-					if( argc < 1 ){msg("prevea needs 1 args\n"); return -1;}
+		  case 34: //prevea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably... - CHANGE hwnd no longer optional...
+					if( argc < 2 ){msg("prevea needs 1 args\n"); return -1;}
 					x = find_code( _atoi64(args[1]), SEARCH_UP | SEARCH_NEXT );
-					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
+					SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
 		  case 35: //makestring:va:[ascii | unicode]

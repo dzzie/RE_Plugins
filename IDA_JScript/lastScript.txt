@@ -1,39 +1,4 @@
-
-/*
-s3:00A4E0F0 sub_A4E0F0
-s3:00A4E0F0
-s3:00A4E0F0 B8 6C 00 00 00   mov     eax, 6Ch
-s3:00A4E0F5 E9 60 FB EB 7B   jmp     near ptr 7C90DC5Ah
-s3:00A4E0F5 sub_A4E0F0      
-
-*/
-
- remote.ip = "192.168.0.55"
- if(!remote.scanprocess("3c8.exe")){
-    t("failed to scan VM process is tool running? ip right?");
-    return;
- }
- 
- t(remote.response)
- 
- found=0;
- cnt = ida.funcCount();
- for(i=0; i < cnt; i++){
-    ea = ida.functionStart(i);
-    if(ea >= 0xA4E0F0 && ea <= 0xA4EAE0){
-        //t( h(ea) ) //log the hex start addresses..
-        firstSz = ida.instSize(ea);
-        nextEa = ida.nextEA(ea);
-        jmp = ida.getAsm(nextEa);
-        jmp = jmp.substr(jmp.indexOf('ptr')+3).split('h').join('').trim();
-        //t( h(ea) + ',' + firstSz + ',' + jmp )
-        jmp = parseInt('0x'+jmp) - firstSz;
-        t( h(ea) + ',' + h(jmp) )
-        found++;
-    }
- }
- 
- t( found + " thunks found" )
- 
-
-
+a = 0x1122334455667788
+a++
+b = a.toString(16)
+alert(b + " len: " + b.length)

@@ -32,11 +32,11 @@ Function FuncAddrFromName(funcName As String) As ULong64
 End Function
 
 Function FunctionStart(functionIndex) As ULong64
-    Set FunctionStart = SendCmdRecvX64("funcstart:" & functionIndex)
+    Set FunctionStart = SendCmdRecvX64("funcstart:" & functionIndex & ":" & Form1.hwnd)
 End Function
 
 Function FunctionEnd(functionIndex) As ULong64
-    Set FunctionEnd = SendCmdRecvX64("funcend:" & functionIndex)
+    Set FunctionEnd = SendCmdRecvX64("funcend:" & functionIndex & ":" & Form1.hwnd)
 End Function
  
 Function FunctionName(functionIndex)

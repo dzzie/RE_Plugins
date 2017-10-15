@@ -41,6 +41,7 @@ Public rawValue As Currency   'this is the default property of the class
 Public padLeft As Boolean
 Public useTick As Boolean
 Public use0x As Boolean
+Public def32bit As Boolean
 
 'Currency (scaled integer) 8 bytes
 '-922,337,203,685,477.5808 to 922,337,203,685,477.5807
@@ -158,15 +159,21 @@ Function toString(Optional m As modes = mHex) As String
     If i > 0 Then
         tmp = UCase(Mid(tmp, 1, i))
         If m = mHex Then
-            If padLeft Then
-                tmp = Right("0000000000000000" & tmp, 16)
-            End If
-            If useTick Then
-                a = Len(tmp) - 8
-                If a > 0 Then
-                    lo = Right(tmp, 8)
-                    hi = Mid(tmp, 1, Len(tmp) - 8)
-                    tmp = hi & "`" & lo
+            If is32BitSafe() Then
+                If padLeft Then
+                    tmp = Right("00000000" & tmp, 8)
+                End If
+            Else
+                If padLeft Then
+                    tmp = Right("0000000000000000" & tmp, 16)
+                End If
+                If useTick Then
+                    a = Len(tmp) - 8
+                    If a > 0 Then
+                        lo = Right(tmp, 8)
+                        hi = Mid(tmp, 1, Len(tmp) - 8)
+                        tmp = hi & "`" & lo
+                    End If
                 End If
             End If
             If use0x Then tmp = "0x" & tmp
@@ -240,6 +247,8 @@ Private Sub Class_Initialize()
     If hLib = 0 Then hLib = LoadLibrary(App.Path & "\..\..\UTypes.dll")
 '    If ensureUTypes() Then hLib = modGeneral.hUTypes
     padLeft = True
+    def32bit = True
+    useTick = True
 End Sub
 
 'these stubs are for readability/ease of use

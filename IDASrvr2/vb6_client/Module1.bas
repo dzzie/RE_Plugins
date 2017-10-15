@@ -33,6 +33,9 @@ End Type
  Private IDASRVR_BROADCAST_MESSAGE As Long
  Public Servers As New Collection
  
+ Const WINDOW_MSG_NAME = "IDA_SERVER2"
+ Const QUICKCALL_MSG_NAME = "IDA_QUICKCALL2"
+ 
  'quick call offers about 3x performance boost over original..
 Public Enum quickCallMessages
     qcmJmpAddr = 1    ' jmp:lngAdr
@@ -68,8 +71,8 @@ End Function
  Public Sub Hook(hwnd As Long)
      subclassed_hwnd = hwnd
      lpPrevWndProc = SetWindowLong(subclassed_hwnd, GWL_WNDPROC, AddressOf WindowProc)
-     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER")
-     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL")
+     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(WINDOW_MSG_NAME)
+     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage(QUICKCALL_MSG_NAME)
  End Sub
 
  Function FindActiveIDAWindows() As Long

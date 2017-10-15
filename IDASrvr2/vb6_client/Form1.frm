@@ -149,10 +149,10 @@ Sub SampleAPI()
     List1.AddItem "NumFuncs: " & r & " (quickcall " & b - a & " ticks)"
     
     
-    Set va = ida.FunctionStart(0)
+    Set va = ida.FunctionStart(1)
     List1.AddItem "Func[0].start: " & va.toString()
-    List1.AddItem "Func[0].end: " & ida.FunctionEnd(0).toString()
-    List1.AddItem "Func[0].name: " & ida.FunctionName(0)
+    List1.AddItem "Func[0].end: " & ida.FunctionEnd(1).toString()
+    List1.AddItem "Func[0].name: " & ida.FunctionName(1)
     List1.AddItem "1st inst: " & ida.GetAsm(va)
     
     List1.AddItem "VA For Func 'start': " & Hex(ida.FuncAddrFromName("start"))
