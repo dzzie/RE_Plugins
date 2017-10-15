@@ -1,23 +1,33 @@
 
+instead of memfile we could use WM_GETTEXT, WM_SETTEXT and pass a texbox hwnd in as arg1 since it is 32bit safe
 
-QuickCalls changed:
-case 8: // imgbase changed now memfile output
-case 10: //readbyte:lngva - changed now reads address from memFile
-case 11: //orgbyte:lngva  - changed now reads address from memFile
-case 14: //funcstart:funcIndex changed to memfile output
-case 20: //undefine:offset - changed now reads address from memFile
-case 22: //hide:offset - changed now reads address from memFile
-case 23: //show:offset - changed now reads address from memFile
-case 24: //remname:offset - changed now reads address from memFile
-case 25: //makecode:offset   - changed now reads address from memFile
-case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... changed writes to memfile
-case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  changed writes to memfile
-case 37: //screenea: changed writes to memfile
-case 44: return isCode(getFlags(tmp)); - changed now reads address from memFile
-case 45:return isData(getFlags(tmp)); - changed now reads address from memFile
-case 46:return decode_insn(tmp);- changed now reads address from memFile
-case 47:return get_long(tmp);- changed now reads address from memFile
-case 48:return get_word(tmp);- changed now reads address from memFile
+QuickCalls changed: 
+   18/28 quick calls depends on arg1 being an address..not cool for x64 addresses w/ 32bit caller
+   6 of these do not exist in traditional call mechanism *
+
+ these three can be used traditionally still from 32bit code, x64 must use memfile...
+   case 8: // imgbase changed now memfile output
+   case 14: //funcstart:funcIndex changed to memfile output
+   case 15: //funcend:funcIndex - changed to memfile output
+
+ wont work for quickcall at all without mods
+   case 10: //readbyte:lngva - 
+   case 11: //orgbyte:lngva  - 
+   case 20: //undefine:offset - 
+   case 22: //hide:offset - 
+   case 23: //show:offset - 
+   case 24: //remname:offset - 
+   case 25: //makecode:offset   - 
+   case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... 
+   case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  
+   case 37: //screenea: 
+
+ not implemented in regular call yet...
+  case 44: return isCode(getFlags(tmp)); - 
+  case 45:return isData(getFlags(tmp)); - 
+  case 46:return decode_insn(tmp);- 
+  case 47:return get_long(tmp);- 
+  case 48:return get_word(tmp);- 
 
 
 QuickCalls removed..
@@ -33,10 +43,7 @@ clients with an underscore have not yet been worked on
 
 regular calls changed:
 
-there was an optimization where [:hwnd] was optional for many functions because SendMessage could handle the 32bit return
-this can no longer be used if we need to support 64 bit return addresses and work from a 32bit process...
-
-	q  14 funcstart:funcIndex[:hwnd] - hwnd no longer optional...
-	q  15 funcend:funcIndex[:hwnd] - hwnd no longer optional...
-	q  33 nextea:va[:hwnd]  - hwnd no longer optional...
-	q  34 prevea:va[:hwnd]  - hwnd no longer optional...
+	q  14 funcstart:funcIndex[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
+	q  15 funcend:funcIndex[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
+	q  33 nextea:va[:hwnd]   - x64 requires hwnd, legacy 32bit code still ok
+	q  34 prevea:va[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok

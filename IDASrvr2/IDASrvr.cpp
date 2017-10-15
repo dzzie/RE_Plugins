@@ -22,7 +22,8 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 
 bool m_debug = true;
 
-#define __EA64__  //create the plugin for the 32 bit, 64 bit capable IDA
+#define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
+//#define __EA64__  //create the plugin for the 32 bit, 64 bit capable IDA
 
 #ifdef __EA64__
 	#pragma comment(linker, "/out:./bin/IDASrvr2.p64")
@@ -36,9 +37,9 @@ bool m_debug = true;
 #pragma warning(disable:4244) //conversion from '__int64' to 'ea_t', possible loss of data
 
 
-
 #include <windows.h>  //define this before other headers or get errors 
 #include <stdlib.h>
+#include <string.h>
 
 #include <ida.hpp>
 #include <idp.hpp>
@@ -54,8 +55,6 @@ bool m_debug = true;
 #include <stdio.h>
 #include <search.hpp>
 #include <xref.hpp>
-
-#define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
 
 #ifdef HAS_DECOMPILER
 	#include <hexrays.hpp>    
@@ -93,73 +92,9 @@ CRITICAL_SECTION m_cs;
 UINT IDASRVR_BROADCAST_MESSAGE=0;
 UINT IDA_QUICKCALL_MESSAGE = 0;
 
-//memmapped file stuff
-HANDLE hMemMapFile = 0;
-void* gMemMapAddr = 0;
-unsigned int MaxSize = 0;
-
-
 __int64 __stdcall ImageBase(void);
 void __stdcall SetFocusSelectLine(void);
 
-void write64(unsigned __int64 x){
-	memcpy(gMemMapAddr,&x,8);
-}
-
-void write32(unsigned int x){
-	memcpy(gMemMapAddr,&x,4);
-}
-
-void write16(unsigned int x){
-	memcpy(gMemMapAddr,&x,2);
-}
-
-void write8(unsigned int x){
-	memcpy(gMemMapAddr,&x,1);
-}
-
-void writeStr(char* x){
-	memcpy(gMemMapAddr,x,strlen(x)+1);
-}
-
-void writeBlob(unsigned char* x, int len){
-	memcpy(gMemMapAddr,x,len);
-}
-
-unsigned __int64 read64u(){
-	unsigned __int64 x=0;
-	memcpy(&x,gMemMapAddr,8);
-	return x;
-}
-
-
-
-
-
-bool CreateMemMapFile(char* fName, int mSize){
-    
-
-    if((int)hMemMapFile!=0){
-        msg("Cannot open multiple virtural files with one class");
-        return false;
-    }
-
-    MaxSize = 0;
-    hMemMapFile = CreateFileMapping((HANDLE)-1, 0, PAGE_READWRITE, 0, mSize, fName);
-
-    if( hMemMapFile == 0 ){
-        msg("Unable to create virtual file");
-        return false;
-    }
-
-     gMemMapAddr = MapViewOfFile(hMemMapFile, FILE_MAP_ALL_ACCESS, 0, 0, mSize);
-
-     if (gMemMapAddr == 0) return false;
-
-	 MaxSize = mSize;
-     return true;
-    
-}
 
 int EaForFxName(char* fxName){
 	
@@ -299,10 +234,76 @@ bool SendIntMessage(int hwnd, __int64 resp){
 int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 
 	//msg("QuickCall( %d, 0x%x)\n" , fIndex, arg1);
-	unsigned __int64 tmp = read64u();
-
 	
 	switch(fIndex){
+
+		//these are only defined for 32bit disassemblies so we dont 
+		//break compatability with existing clients.. p64 can just use traditional call
+		//having a ida and ida64 access class is slightly annoying but working with x64 numbers
+		//in vb6 which doesnt have them is more annoying and mandatory for x64 num access...so this
+		//way we spare the annoyance for most work...except then our scripts arent cross compatiable...grrr
+		//if we figure out how to implement x64 numbers cleanly in js anyway..we could use our vb Ulong64 class actually
+
+		#ifndef __EA64__
+
+				case 8: // imgbase 
+						return ImageBase();
+
+				case 10: //readbyte:lngva 
+						return get_byte(arg1);
+						 
+				case 11: //orgbyte:lngva 
+						return get_original_byte(arg1);		 
+
+				case 14: //funcstart:funcIndex 
+						 return FunctionStart( arg1 );
+						 
+				case 15: //funcend:funcIndex 
+						 return FunctionEnd( arg1 );
+
+				case 20: //undefine:offset
+						Undefine( arg1 );
+						return 0;		
+
+				case 22: //hide:offset
+						HideEA( arg1 );
+						return 0;
+
+				case 23: //show:offset
+						ShowEA( arg1 );
+						return 0;
+
+				case 24: //remname:offset
+						RemvName( arg1 );
+						return 0;
+
+				case 25: //makecode:offset
+						MakeCode( arg1 );
+						return 0;
+		
+				case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably...
+						 return find_code( arg1 , SEARCH_DOWN | SEARCH_NEXT );
+							
+				case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...
+						 return find_code( arg1 , SEARCH_UP | SEARCH_NEXT );
+
+				case 37: //screenea:
+						 return ScreenEA();
+
+				case 44:
+						return isCode(getFlags(arg1));
+				case 45:
+						return isData(getFlags(arg1));
+				case 46:
+						return decode_insn(arg1);
+				case 47:
+						return get_long(arg1);
+				case 48:
+						return get_word(arg1);
+
+		#endif
+
+
 		case 1: // jmp:lngAdr
 				Jump( arg1 );
 				return 0;
@@ -311,65 +312,12 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 				Jump( ImageBase()+arg1 );
 				return 0;
 
-		case 8: // imgbase - changed now memfile output
-				write64(ImageBase());
-				return 1;
-				 
-		case 10: //readbyte:lngva - changed now reads address from memFile
-				return get_byte(tmp);
-				 
-		case 11: //orgbyte:lngva  - changed now reads address from memFile
-				return get_original_byte(tmp);		 
-
 		case 12: // refresh:
 				Refresh();
 				return 0;
 
 		case 13: // numfuncs 
 				return NumFuncs();		 
-
-		case 14: //funcstart:funcIndex - changed to memfile output
-				write64(FunctionStart( arg1 ));
-				return 1;
-				 
-		case 15: //funcend:funcIndex - changed to memfile output
-				 write64(FunctionEnd( arg1 ));
-				 return 1;
-				 
-		case 20: //undefine:offset   - changed now reads address from memFile
-				Undefine( tmp );
-				return 0;
-
-		case 22: //hide:offset   - changed now reads address from memFile
-				HideEA( tmp );
-				return 0;
-
-		case 23: //show:offset   - changed now reads address from memFile
-				ShowEA( tmp );
-				return 0;
-
-		case 24: //remname:offset   - changed now reads address from memFile
-				RemvName( tmp );
-				return 0;
-
-		case 25: //makecode:offset   - changed now reads address from memFile
-			    MakeCode( tmp );
-			    return 0;
-
-		case 32: //funcindex:va     - changed now reads address from memFile
-				 return get_func_num( tmp );
-					
-		case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... changed writes to memfile
-				 write64( find_code( tmp , SEARCH_DOWN | SEARCH_NEXT ) );
-				 return 1;
-					
-		case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  changed writes to memfile
-				 write64( find_code( tmp , SEARCH_UP | SEARCH_NEXT ));
-				 return 1;
-
-	    case 37: //screenea: changed writes to memfile
-				 write64( ScreenEA() );
-				 return 1;
 
 		case 38: //debugmsgs: 1/0
 				m_debug = arg1 == 1 ? true : false;
@@ -394,16 +342,6 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 		case 43:
 				SetFocusSelectLine();
 				return 0;
-		case 44:
-				return isCode(getFlags(tmp));
-		case 45:
-				return isData(getFlags(tmp));
-		case 46:
-				return decode_insn(tmp);
-		case 47:
-				return get_long(tmp);
-		case 48:
-				return get_word(tmp);
 
 	}
 
@@ -423,7 +361,8 @@ int HandleMsg(char* m){
 				new   call ~ 15993         4/5
 				quick call ~  7322         1/3
 			
-		Change note: all of these now support 64 bit addresses by switching to _atoi64
+		Change note: all of these now support 64 bit addresses by switching to _atoi64, 32bit safe still...
+        q marks quick call, * = 32bit disasm only
 
 		0 msg:message
 	q	1 jmp:lngAdr  
@@ -433,24 +372,24 @@ int HandleMsg(char* m){
 	    5 loadedfile:hwnd
 	    6 getasm:lngva:hwnd
 	q   7 jmp_rva:lng_rva
-	q  	8 imgbase[:hwnd]
+	q* 	8 imgbase[:hwnd]
 		9 patchbyte:lng_va:byte_newval
-	q  10 readbyte:lngva[:hwnd]
-	q  11 orgbyte:lngva[:hwnd]
+	q* 10 readbyte:lngva[:hwnd]
+	q* 11 orgbyte:lngva[:hwnd]
 	q  12 refresh:
 	q  13 numfuncs[:hwnd]
-	q  14 funcstart:funcIndex[:hwnd] - hwnd no longer optional...
-	q  15 funcend:funcIndex[:hwnd] - hwnd no longer optional...
+	q* 14 funcstart:funcIndex[:hwnd] - hwnd no longer optional...
+	q* 15 funcend:funcIndex[:hwnd] - hwnd no longer optional...
 	   16 funcname:funcIndex:hwnd  
 	   17 setname:va:name
 	q  18 refsto:offset:hwnd          //multiple call backs to hwnd each int as string, still synchronous  
 	q  19 refsfrom:offset:hwnd        //multiple call backs to hwnd each int as string, still synchronous  
-	q  20 undefine:offset
+	q* 20 undefine:offset
 	   21 getname:offset:hwnd
-	q  22 hide:offset
-	q  23 show:offset
-	q  24 remname:offset
-    q  25 makecode:offset
+	q* 22 hide:offset
+	q* 23 show:offset
+	q* 24 remname:offset
+    q* 25 makecode:offset
 	   26 addcomment:offset:comment (non repeatable)
 	   27 getcomment:offset:hwnd    (non repeatable) 
 	   28 addcodexref:offset:tova 
@@ -458,13 +397,21 @@ int HandleMsg(char* m){
 	   30 delcodexref:offset:tova 
 	   31 deldataxref:offset:tova 
 	q  32 funcindex:va[:hwnd] 
-	q  33 nextea:va[:hwnd]  - hwnd no longer optional...
-	q  34 prevea:va[:hwnd]  - hwnd no longer optional...
+	q* 33 nextea:va[:hwnd]  - hwnd no longer optional...
+	q* 34 prevea:va[:hwnd]  - hwnd no longer optional...
 	   35 makestring:va:[ascii | unicode] 
 	   36 makeunk:va:size 
-	   37 screenea: 
+	q* 37 screenea: 
 	   38 findcode:start:end:hexstr  //indexes no longer aligned with quick call.. 
 	   39 decompile:va:fpath         //replace the c:\ with c_\ so we dont break tokenization..humm that sucks.. 
+
+	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
+			  case 44: return isCode(getFlags(tmp)); - 
+			  case 45:return isData(getFlags(tmp)); - 
+			  case 46:return decode_insn(tmp);- 
+			  case 47:return get_long(tmp);- 
+			  case 48:return get_word(tmp);- 
+
     */
 
 	const int MAX_ARGS = 6;
@@ -621,17 +568,17 @@ int HandleMsg(char* m){
 				 return i;
 				 break;
 
-		case 14: //funcstart:funcIndex:hwnd - CHANGE hwnd no longer optional...
-			     if( argc < 2 ){msg("funcstart needs 2 args\n"); return -1;}
+		case 14: //funcstart:funcIndex:[hwnd] - x64 requires hwnd, legacy 32bit code still ok
+			     if( argc < 1 ){msg("funcstart needs 1 args\n"); return -1;}
 				 x = FunctionStart(_atoi64(args[1]));
-				 SendIntMessage(atoi(args[2]),x);
+				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
-		 case 15: //funcend:funcIndex[:hwnd] - CHANGE hwnd no longer optional...
-			     if( argc < 2 ){msg("funcend needs 1 args\n"); return -1;}
+		 case 15: //funcend:funcIndex[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
+			     if( argc < 1 ){msg("funcend needs 1 args\n"); return -1;}
 				 x = FunctionEnd(_atoi64(args[1]));
-				 SendIntMessage(atoi(args[2]),x);
+				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
@@ -710,16 +657,16 @@ int HandleMsg(char* m){
 					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
-		  case 33: //nextea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...  - CHANGE hwnd no longer optional...
-					if( argc < 2 ){msg("nextea needs 2 args\n"); return -1;}
+		  case 33: //nextea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...   - x64 requires hwnd, legacy 32bit code still ok
+					if( argc < 1 ){msg("nextea needs 1 args\n"); return -1;}
 					x = find_code( _atoi64(args[1]), SEARCH_DOWN | SEARCH_NEXT );
-					SendIntMessage( atoi(args[2]), x);
+					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
-		  case 34: //prevea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably... - CHANGE hwnd no longer optional...
-					if( argc < 2 ){msg("prevea needs 1 args\n"); return -1;}
+		  case 34: //prevea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...  - x64 requires hwnd, legacy 32bit code still ok
+					if( argc < 1 ){msg("prevea needs 1 args\n"); return -1;}
 					x = find_code( _atoi64(args[1]), SEARCH_UP | SEARCH_NEXT );
-					SendIntMessage( atoi(args[2]), x);
+					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
 		  case 35: //makestring:va:[ascii | unicode]
@@ -836,10 +783,10 @@ int idaapi init(void)
 	  }
 	#endif
 
-  if(!CreateMemMapFile("IDASRVR2_VFILE", 2048)){
+  /*if(!CreateMemMapFile("IDASRVR2_VFILE", 2048)){
         msg("Failed to create vfile");
         return 0;
-  }
+  }*/
 
   return PLUGIN_KEEP;
 }
@@ -854,7 +801,7 @@ void idaapi term(void)
 		DestroyWindow(ServerHwnd);
 		HWND saved_hwnd = ReadReg(IPC_NAME);
 		if( !IsWindow(saved_hwnd) ) SetReg(IPC_NAME, 0); 
-		CloseHandle(hMemMapFile);
+		//CloseHandle(hMemMapFile);
 	}
 	catch(...){};
 
@@ -1120,7 +1067,33 @@ int __stdcall GetRefsTo(__int64 offset, int hwnd){
 		SendTextMessage(hwnd,",",2);
     }
 	SendTextMessage(hwnd,"DONE",5);
-	
+
+	/* more efficient to buffer? COPYDATA max is 1048 bytes..
+	__int64 v = 0;
+	int sz = 0; pos = 0;, bufSz = 2000;
+	char tmp[200] = {0};
+	char* buf = (char*)malloc(bufSz);
+	memset(buf,0,bufSz);
+
+	xrefblk_t xb;
+    for ( bool ok=xb.first_to(offset, XREF_ALL); ok; ok=xb.next_to() ){
+		sprintf(tmp, "%llu", xb.from);
+		sz = strlen(tmp);
+		if( (sz+pos) >= 1020){
+			SendTextMessage(hwnd,buf,strlen(buf));
+			memset(buf,0,bufSz);
+			pos=0;
+		}
+		memcpy(&buf[pos], tmp, sz);
+		pos += sz;
+		buf[pos+1] = ',';
+		pos++;
+    }
+
+	SendTextMessage(hwnd,buf,strlen(buf));
+	SendTextMessage(hwnd,"DONE",5);*/
+	*/
+
 	return count;
 
 }
@@ -1194,3 +1167,163 @@ int __stdcall DecompileFunction(__int64 offset, char* fpath)
 #endif
 	}
 
+
+
+
+/*
+
+//memmapped file stuff
+HANDLE hMemMapFile = 0;
+void* gMemMapAddr = 0;
+unsigned int MaxSize = 0;
+
+//another alternative to WM_COPYDATA basically ping back arg1 hwnd arg to get or set text...is it any quicker though?
+leng = SendMessage(h, WM_GETTEXTLENGTH, 0, 0);
+SendMessage(h, WM_GETTEXT, 256, (LPARAM)p);
+printf("%s",p);
+getch();
+
+strcpy(p,"testing!");
+SendMessage(h, WM_SETTEXT, 0, (LPARAM)p);
+getch();
+
+
+
+__int64 write64(unsigned __int64 x){
+	memcpy(gMemMapAddr,&x,8);
+	return x;
+}
+
+int write32(unsigned int x){
+	memcpy(gMemMapAddr,&x,4);
+	return x;
+}
+
+int write16(unsigned int x){
+	memcpy(gMemMapAddr,&x,2);
+	return x;
+}
+
+int write8(unsigned int x){
+	memcpy(gMemMapAddr,&x,1);
+	return x;
+}
+
+int writeStr(char* x){
+	if(x==NULL){
+		memset(gMemMapAddr,0,1);
+		return 0;
+	}
+	int len = strlen(x)+1;
+	memcpy(gMemMapAddr,x,len);
+	return len;
+}
+
+void writeBlob(unsigned char* x, int len){
+	memcpy(gMemMapAddr,x,len);
+}
+
+unsigned __int64 read64u(){
+	unsigned __int64 x=0;
+	memcpy(&x,gMemMapAddr,8);
+	return x;
+}
+
+
+
+
+
+bool CreateMemMapFile(char* fName, int mSize){
+    
+
+    if((int)hMemMapFile!=0){
+        msg("Cannot open multiple virtural files with one class");
+        return false;
+    }
+
+    MaxSize = 0;
+    hMemMapFile = CreateFileMapping((HANDLE)-1, 0, PAGE_READWRITE, 0, mSize, fName);
+
+    if( hMemMapFile == 0 ){
+        msg("Unable to create virtual file");
+        return false;
+    }
+
+     gMemMapAddr = MapViewOfFile(hMemMapFile, FILE_MAP_ALL_ACCESS, 0, 0, mSize);
+
+     if (gMemMapAddr == 0) return false;
+
+	 MaxSize = mSize;
+     return true;
+    
+}
+
+		case 8: // imgbase - changed now memfile output, still 32bit safe old way..
+				return write64(ImageBase());
+				 
+		case 10: //readbyte:lngva - changed now reads address from memFile
+				return get_byte(tmp);
+				 
+		case 11: //orgbyte:lngva  - changed now reads address from memFile
+				return get_original_byte(tmp);		 
+
+
+		case 14: //funcstart:funcIndex - changed to memfile output
+				return write64(FunctionStart( arg1 ));
+				 
+		case 15: //funcend:funcIndex - changed to memfile output
+				 return write64(FunctionEnd( arg1 ));
+				 
+		case 20: //undefine:offset   - changed now reads address from memFile
+				Undefine( tmp );
+				return 0;
+
+		case 22: //hide:offset   - changed now reads address from memFile
+				HideEA( tmp );
+				return 0;
+
+		case 23: //show:offset   - changed now reads address from memFile
+				ShowEA( tmp );
+				return 0;
+
+		case 24: //remname:offset   - changed now reads address from memFile
+				RemvName( tmp );
+				return 0;
+
+		case 25: //makecode:offset   - changed now reads address from memFile
+			    MakeCode( tmp );
+			    return 0;
+
+		case 32: //funcindex:va     - changed now reads address from memFile
+				 return get_func_num( tmp );
+					
+		case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... changed writes to memfile
+				 write64( find_code( tmp , SEARCH_DOWN | SEARCH_NEXT ) );
+				 return 1;
+					
+		case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  changed writes to memfile
+				 write64( find_code( tmp , SEARCH_UP | SEARCH_NEXT ));
+				 return 1;
+
+	    case 37: //screenea: changed writes to memfile
+				 write64( ScreenEA() );
+				 return 1;
+
+		case 44:
+				return isCode(getFlags(tmp));
+		case 45:
+				return isData(getFlags(tmp));
+		case 46:
+				return decode_insn(tmp);
+		case 47:
+				return get_long(tmp);
+		case 48:
+				return get_word(tmp);
+
+
+
+
+
+
+
+*/
