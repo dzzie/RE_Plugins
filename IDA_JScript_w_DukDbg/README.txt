@@ -2,7 +2,7 @@
 Status: late beta
 Link:   http://sandsprite.com/tools.php?id=25
 
-what is this?
+what is this? 
 ----------------------------------------
 
 This is a standalone interface to interact and script commands sent to IDA

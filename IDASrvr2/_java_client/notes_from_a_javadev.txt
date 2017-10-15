@@ -1,0 +1,47 @@
+
+from darkpanda:
+
+By the way, I am on x64, with a 64-bit JVM, so I had to rebuild copydata.dll: when switching to 64-bit, there are 2 places to adjust in copydata.cpp:
+
+    line 195: oldProc = (WNDPROC)SetWindowLongA((HWND)m_ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
+
+    line 221: SetWindowLongA((HWND)m_ServerHwnd, GWLP_WNDPROC, (LONG)oldProc);
+
+ 
+The original "GWL_WNDPROC" is actually undefined from within WinUser.h when 64-bit arch is detected, but the replacement "GWLP_WNDPROC" is always defined, for 32-bit and 64-bit, 
+
+----------------------------------
+
+from jay:
+
+ignore swing at all costs, a lot of java developers use it but frankly, 
+they just don't know why. Anything in the javax package is supposed to 
+be implicitly understood as "Java eXperimental" with varied results. 
+Personally, I always stick with AWT when I need to interact with a 
+system's core ui. Secondly, you should seriously consider implementing -> 
+
+JNIEXPORT jint JNICALL JNI_OnLoad(
+
+JavaVM *vm, 
+
+void *reserved);
+
+JNIEXPORT jint JNICALL JNI_OnUnload(
+
+JavaVM *vm, 
+
+void *reserved);
+
+Instead of your own subsystem; at least as long as you're only using the 
+top-most IPC for it, otherwise I'd implement a java static native method 
+for a list of idb's, which are then passed on constructor initialization 
+to the subsystem for handling. 
+
+Secondly, use ((*JAWT_Win32DrawingSurfaceInfo)JAWT_DrawingSurfaceInfo->platformInfo)->hwnd 
+and create the window using java.awt.Frame, 
+
+it's going to be a lot less of a headache than multi-threading C and Java correctly. 
+Third, I'd dispatch a message and not wait for a response, blocking on an 
+asynchronous IO stream is... An annoyance to say the least, dispatch the 
+message and create a method for handling certain kinds of receive events.
+

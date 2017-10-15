@@ -35,6 +35,12 @@ IDASrvr:
    WM_COPYDATA was chosen because it is synchronous. Sample projects in many languages
    and also contains an ActiveX client library which is very easy to use.
 
+IDASRVR2:
+   in progress...all offsets in this build will support x64 for both plw and p64 builds
+   this is on the path for adding in p64 support for both 32bit and then 64 bit IDA versions
+   grumble grumble.
+
+
 uGrapher:
    replaces default wingraph32, uses uDrawGraph. graphing up, still needs features. once
    idasrvr working again, it can navigate to nodes as you click then in the graph..not 

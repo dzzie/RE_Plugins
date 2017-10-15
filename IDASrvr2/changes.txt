@@ -1,0 +1,31 @@
+
+
+QuickCalls changed:
+case 8: // imgbase changed now memfile output
+case 10: //readbyte:lngva - changed now reads address from memFile
+case 11: //orgbyte:lngva  - changed now reads address from memFile
+case 14: //funcstart:funcIndex changed to memfile output
+case 20: //undefine:offset - changed now reads address from memFile
+case 22: //hide:offset - changed now reads address from memFile
+case 23: //show:offset - changed now reads address from memFile
+case 24: //remname:offset - changed now reads address from memFile
+case 25: //makecode:offset   - changed now reads address from memFile
+case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... changed writes to memfile
+case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  changed writes to memfile
+case 37: //screenea: changed writes to memfile
+case 44: return isCode(getFlags(tmp)); - changed now reads address from memFile
+case 45:return isData(getFlags(tmp)); - changed now reads address from memFile
+case 46:return decode_insn(tmp);- changed now reads address from memFile
+case 47:return get_long(tmp);- changed now reads address from memFile
+case 48:return get_word(tmp);- changed now reads address from memFile
+
+
+QuickCalls removed..
+
+
+all addresses received by HandleMsg now use _atoi64
+
+I should be able to compile this as a p64 now...and maybe as a 64bit version of the plugin for ida 7 64bit..
+still no client updates yet...
+
+clients with an underscore have not yet been worked on
