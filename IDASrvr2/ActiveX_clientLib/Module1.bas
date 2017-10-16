@@ -38,8 +38,8 @@ End Type
  Public Sub Hook(hwnd As Long)
      SUBCLASSED_HWND = hwnd
      lpPrevWndProc = SetWindowLong(SUBCLASSED_HWND, GWL_WNDPROC, AddressOf WindowProc)
-     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER")
-     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL")
+     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER2")
+     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL2")
  End Sub
 
  Function FindActiveIDAWindows() As Long
@@ -79,7 +79,7 @@ End Type
      If uMsg = IDASRVR_BROADCAST_MESSAGE Then
         If IsWindow(lParam) = 1 Then
             If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
-                Servers.Add lParam, "hwnd:" & lParam
+                Servers.add lParam, "hwnd:" & lParam
                 'Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
             End If
         End If

@@ -1,4 +1,7 @@
 
+activex client lib switch to spsubclass so each class can hook its own window?
+or support multiple hooks...
+
 instead of memfile we could use WM_GETTEXT, WM_SETTEXT and pass a texbox hwnd in as arg1 since it is 32bit safe
 
 QuickCalls changed: 
@@ -11,6 +14,7 @@ QuickCalls changed:
    case 15: //funcend:funcIndex - changed to memfile output
 
  wont work for quickcall at all without mods
+   case 1: // jmp:lngAdr
    case 10: //readbyte:lngva - 
    case 11: //orgbyte:lngva  - 
    case 20: //undefine:offset - 
@@ -18,6 +22,7 @@ QuickCalls changed:
    case 23: //show:offset - 
    case 24: //remname:offset - 
    case 25: //makecode:offset   - 
+   case 32: //funcindex:va 
    case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably... 
    case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...  
    case 37: //screenea: 
@@ -47,3 +52,4 @@ regular calls changed:
 	q  15 funcend:funcIndex[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
 	q  33 nextea:va[:hwnd]   - x64 requires hwnd, legacy 32bit code still ok
 	q  34 prevea:va[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
+        q* 37 screenea:[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok

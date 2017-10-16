@@ -1,0 +1,91 @@
+
+
+Function instSize(offset as ULong64 )
+    instSize = QuickCall(qcmInstLen, CLng(offset))
+End Function
+
+Function isCode(offset)
+    isCode = QuickCall(qcmIsCode, CLng(offset))
+End Function
+
+Function isData(offset)
+    isData = QuickCall(qcmIsData, CLng(offset))
+End Function
+
+Function FunctionStart(functionIndex)
+    If functionIndex < 0 Then Exit Function
+    FunctionStart = QuickCall(qcmFuncStart, CLng(functionIndex))
+ End Function
+
+ Function FunctionEnd(functionIndex)
+    If functionIndex < 0 Then Exit Function
+    FunctionEnd = QuickCall(qcmFuncEnd, CLng(functionIndex))
+ End Function
+  
+Function ReadByte(va)
+    If va = 0 Or va = -1 Then Exit Function
+    ReadByte = CByte(QuickCall(qcmReadByte, CLng(va)))
+End Function
+
+Function ReadLong(va) As Long
+    If va = 0 Or va = -1 Then Exit Function
+    ReadLong = CLng(QuickCall(qcmReadLong, CLng(va)))
+End Function
+
+Function ReadShort(va) As Long
+    If va = 0 Or va = -1 Then Exit Function
+    ReadShort = CLng(QuickCall(qcmReadShort, CLng(va)))
+End Function
+
+Function OriginalByte(va)
+    If va = 0 Or va = -1 Then Exit Function
+    OriginalByte = CByte(QuickCall(qcmOrgByte, CLng(va)))
+End Function
+
+Function ImageBase() As Long
+    ImageBase = QuickCall(qcmImgBase)
+End Function
+
+Function ScreenEA() As Long
+    ScreenEA = QuickCall(qcmScreenEA)
+End Function
+
+Function Jump(va As Long, Optional ByVal hwnd As Long = 0)
+    If va = 0 Or va = -1 Then Exit Function
+    QuickCall qcmJmpAddr, va, hwnd
+End Function
+
+Function Undefine(offset)
+    QuickCall qcmUndef, CLng(offset)
+End Function
+
+Function ShowEA(offset)
+    QuickCall qcmShow, CLng(offset)
+End Function
+
+Function HideEA(offset)
+    QuickCall qcmHide, CLng(offset)
+End Function
+
+ Sub RemoveName(offset)
+    QuickCall qcmRemName, CLng(offset)
+ End Sub
+
+Sub MakeCode(offset)
+    QuickCall qcmMakeCode, CLng(offset)
+End Sub
+
+Function FuncIndexFromVA(va)
+    If va = 0 Or va = -1 Then Exit Function
+    FuncIndexFromVA = QuickCall(qcmFuncIdx, CLng(va))
+End Function
+
+Function NextEA(va)
+    If va = 0 Or va = -1 Then Exit Function
+    NextEA = QuickCall(qcmNextEa, CLng(va))
+End Function
+
+Function PrevEA(va)
+    If va = 0 Or va = -1 Then Exit Function
+    PrevEA = QuickCall(qcmPrevEa, CLng(va))
+End Function

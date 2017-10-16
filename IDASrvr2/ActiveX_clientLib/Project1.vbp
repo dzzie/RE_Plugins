@@ -1,14 +1,20 @@
-Type=Exe
+Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{B311B958-E2E6-439A-9613-201DFD6E8499}#3.0#0#..\IDAClientLib.dll#IDA Remote Client Library
-Form=Form1.frm
-IconForm="Form1"
-Startup="Form1"
-ExeName32="vb6Lib_client.exe"
+Module=Module1; Module1.bas
+Class=cIDAClient; CIDA.cls
+Form=Form2.frm
+Class=cIDAClient64; CIDA64.cls
+Class=ULong64; ULong64.cls
+Startup="(None)"
+HelpFile=""
+Title="IDAClientLibrary2"
+ExeName32="IDAClientLib.dll"
 Command32=""
-Name="Project1"
+Name="IDAClientLibrary2"
 HelpContextID="0"
+Description="IDA Remote Client Library 2"
 CompatibleMode="0"
+CompatibleEXE32="IDAClientLib2.dll"
 MajorVer=1
 MinorVer=0
 RevisionVer=0
@@ -25,11 +31,15 @@ OverflowCheck=0
 FlPointCheck=0
 FDIVCheck=0
 UnroundedFP=0
-StartMode=0
+StartMode=1
 Unattended=0
 Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
+DebugStartupOption=0
 
 [MS Transaction Server]
 AutoRefresh=1
+
+[fastBuild]
+fullPath=D:\_code\RE_Plugins\IDASrvr\ActiveX_clientLib\IDAClientLib.dll

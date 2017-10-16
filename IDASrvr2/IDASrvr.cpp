@@ -246,6 +246,10 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 
 		#ifndef __EA64__
 
+				case 1: // jmp:lngAdr
+						Jump( arg1 );
+						return 0;
+
 				case 8: // imgbase 
 						return ImageBase();
 
@@ -280,7 +284,10 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 				case 25: //makecode:offset
 						MakeCode( arg1 );
 						return 0;
-		
+
+				case 32: //funcindex:va 
+						return get_func_num( arg1 );
+					
 				case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably...
 						 return find_code( arg1 , SEARCH_DOWN | SEARCH_NEXT );
 							
@@ -302,11 +309,6 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 						return get_word(arg1);
 
 		#endif
-
-
-		case 1: // jmp:lngAdr
-				Jump( arg1 );
-				return 0;
 
 		case 7: // jmp_rva:lng_rva
 				Jump( ImageBase()+arg1 );
@@ -343,6 +345,13 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 				SetFocusSelectLine();
 				return 0;
 
+		case 49: //isX64 disasm
+				#ifndef __EA64__
+					return 0;
+				#else
+					return 1;
+				#endif
+
 	}
 
 	return -1; //not implemented
@@ -372,14 +381,14 @@ int HandleMsg(char* m){
 	    5 loadedfile:hwnd
 	    6 getasm:lngva:hwnd
 	q   7 jmp_rva:lng_rva
-	q* 	8 imgbase[:hwnd]
+	q* 	8 imgbase[:hwnd]                  hwnd required for x64..
 		9 patchbyte:lng_va:byte_newval
 	q* 10 readbyte:lngva[:hwnd]
 	q* 11 orgbyte:lngva[:hwnd]
 	q  12 refresh:
 	q  13 numfuncs[:hwnd]
-	q* 14 funcstart:funcIndex[:hwnd] - hwnd no longer optional...
-	q* 15 funcend:funcIndex[:hwnd] - hwnd no longer optional...
+	q* 14 funcstart:funcIndex[:hwnd]     hwnd required for x64..
+	q* 15 funcend:funcIndex[:hwnd]       hwnd required for x64..
 	   16 funcname:funcIndex:hwnd  
 	   17 setname:va:name
 	q  18 refsto:offset:hwnd          //multiple call backs to hwnd each int as string, still synchronous  
@@ -397,11 +406,11 @@ int HandleMsg(char* m){
 	   30 delcodexref:offset:tova 
 	   31 deldataxref:offset:tova 
 	q  32 funcindex:va[:hwnd] 
-	q* 33 nextea:va[:hwnd]  - hwnd no longer optional...
-	q* 34 prevea:va[:hwnd]  - hwnd no longer optional...
+	q* 33 nextea:va[:hwnd]  - hwnd required for x64..
+	q* 34 prevea:va[:hwnd]  - hwnd required for x64..
 	   35 makestring:va:[ascii | unicode] 
 	   36 makeunk:va:size 
-	q* 37 screenea: 
+	q* 37 screenea:[:hwnd]  - hwnd required for x64..
 	   38 findcode:start:end:hexstr  //indexes no longer aligned with quick call.. 
 	   39 decompile:va:fpath         //replace the c:\ with c_\ so we dont break tokenization..humm that sucks.. 
 
@@ -433,6 +442,10 @@ int HandleMsg(char* m){
 	                "addcomment","getcomment","addcodexref","adddataxref","delcodexref","deldataxref",
 	/*               32          33         34        35           36        37           38         39    */
 					"funcindex","nextea","prevea","makestring","makeunk", "screenea", "findcode", "decompile",
+    /*               40           41        42        43        44        45        46         47        48 */
+					"qc_only","qc_only","qc_only","qc_only", "iscode", "isdata", "decodeins","getlong","getword",
+
+
 					"\x00"};
 	
 	unsigned __int64 i=0;
@@ -461,7 +474,7 @@ int HandleMsg(char* m){
 
 	//handle specific command
 	switch(i){
-		case -1: msg("IDASrv Unknown Command\n"); break; //unknown command
+		default: msg("IDASrv Unknown Command\n"); break; //unknown command
 		
 		case  0: //msg:UI_MESSAGE
 				if( argc < 1 ){msg("jmp_name needs 1 args\n"); return -1;}
@@ -570,21 +583,27 @@ int HandleMsg(char* m){
 
 		case 14: //funcstart:funcIndex:[hwnd] - x64 requires hwnd, legacy 32bit code still ok
 			     if( argc < 1 ){msg("funcstart needs 1 args\n"); return -1;}
-				 x = FunctionStart(_atoi64(args[1]));
+				 i = atoi(args[1]);
+				 if(i < 0) return -1;
+				 x = FunctionStart(i);
 				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
 		 case 15: //funcend:funcIndex[:hwnd]  - x64 requires hwnd, legacy 32bit code still ok
 			     if( argc < 1 ){msg("funcend needs 1 args\n"); return -1;}
-				 x = FunctionEnd(_atoi64(args[1]));
+				 i = atoi(args[1]);
+				 if(i < 0) return -1;
+				 x = FunctionEnd(i);
 				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
 
 		 case 16: //funcname:funcIndex:hwnd
 			     if( argc != 2 ){msg("funcname needs 2 args\n"); return -1;}
-			     x = FunctionStart(_atoi64(args[1]));
+				 i = atoi(args[1]);
+				 if(i < 0) return -1;
+			     x = FunctionStart(i);
 				 FuncName(x,buf,499);
 				 SendTextMessage(atoi(args[2]),buf,strlen(buf));
 				 break;
@@ -679,8 +698,10 @@ int HandleMsg(char* m){
 					do_unknown_range( _atoi64(args[1]), _atoi64(args[2]), DOUNK_SIMPLE);
 					break;
 
-		  case 37: //screenea: //TODO must return as x64 number can not use return type...
-					return ScreenEA();
+		  case 37: //screenea:[hwnd] - x64 must supply hwnd..
+					i = ScreenEA();
+					if(argc == 1) SendIntMessage( atoi(args[1]), i );
+					return i;
 
 		  case 38: //findcode:start:end:hexstr
 				    if( argc != 3 ){msg("findcode needs 3 args\n"); return -1;}
@@ -692,7 +713,35 @@ int HandleMsg(char* m){
 					if( hasDecompiler == 0) {msg("HexRays Decompiler either not installed or version to old (this binary built against 6.7 SDK)\n"); return -1;}
 					x = _atoi64(args[1]);
 					return DecompileFunction( x, args[2]);
+
 #endif
+
+		  case 44: //iscode
+					if( argc != 1 ){msg("iscode needs 1 args\n"); return -1;}
+					x = _atoi64(args[1]);
+					return isCode(getFlags(x));
+
+		  case 45: //isdata
+			  		if( argc != 1 ){msg("isdata needs 1 args\n"); return -1;}
+					x = _atoi64(args[1]);
+					return isData(getFlags(x));
+
+		  case 46: //decodeins
+			  		if( argc != 1 ){msg("decode_insn needs 1 args\n"); return -1;}
+					x = _atoi64(args[1]);
+					return decode_insn(x);
+
+		  case 47: //getlong
+			  		if( argc != 1 ){msg("getlong needs 1 args\n"); return -1;}
+					x = _atoi64(args[1]);
+					return get_long(x);
+
+		  case 48: //getword
+					if( argc != 1 ){msg("getword needs 1 args\n"); return -1;}
+					x = _atoi64(args[1]);
+					return get_word(x);
+
+
 
 	}				
 
@@ -1091,7 +1140,7 @@ int __stdcall GetRefsTo(__int64 offset, int hwnd){
     }
 
 	SendTextMessage(hwnd,buf,strlen(buf));
-	SendTextMessage(hwnd,"DONE",5);*/
+	SendTextMessage(hwnd,"DONE",5);
 	*/
 
 	return count;

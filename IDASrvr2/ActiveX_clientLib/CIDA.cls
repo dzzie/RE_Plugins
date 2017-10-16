@@ -13,6 +13,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 'allot of these are variant args because they come from IDA_JScript and scripting clients are best used with variants
 
+'other than switching to IDASRVR2 this one should be unchanged and functional..
+'if I did my job right anyway! test me fully
+
 Option Explicit
 
  'quick call offers about 3x performance boost over original..
@@ -46,8 +49,12 @@ Public Enum quickCallMessages
     qcmInstLen = 46
     qcmReadLong = 47
     qcmReadShort = 48
+    qcmIs64 = 49
 End Enum
 
+Property Get is64Bit()
+    is64Bit = QuickCall(qcmIs64)
+End Property
 
 Property Get ActiveIDA() As Long
     ActiveIDA = IDA_HWND
@@ -93,13 +100,13 @@ Function FindClient() As Boolean
     
     On Error Resume Next
     
-    hwnd = CLng(GetSetting("IPC", "Handles", "IDA_SERVER", 0))
+    hwnd = CLng(GetSetting("IPC", "Handles", "IDA_SERVER2", 0))
     If hwnd <> 0 Then
         If IsWindow(hwnd) = 1 Then
             FindClient = True
             Module1.IDA_HWND = hwnd
         Else
-            SaveSetting "IPC", "Handles", "IDA_SERVER", 0
+            SaveSetting "IPC", "Handles", "IDA_SERVER2", 0
             Module1.IDA_HWND = 0
             FindClient = False
         End If

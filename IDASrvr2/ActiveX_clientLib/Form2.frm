@@ -39,7 +39,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
- 
+ 'todo: filter based on 32/64 bit? will work for x64 too using idaClient? should only used api shared in both..
 
 Public Function SelectIDAInstance(ida As cIDAClient, Optional refresh As Boolean = True) As Long
     
@@ -76,6 +76,7 @@ Public Function SelectIDAInstance(ida As cIDAClient, Optional refresh As Boolean
                 IDA_HWND = CLng(x)
                 pth = ida.LoadedFile
                 pth = FileNameFromPath(pth)
+                If ida.is64Bit = 1 Then pth = pth & " *64"
                 List1.AddItem x & ": " & pth
             End If
         Next
