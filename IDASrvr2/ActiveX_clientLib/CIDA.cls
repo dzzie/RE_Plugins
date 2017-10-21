@@ -52,9 +52,9 @@ Public Enum quickCallMessages
     qcmIs64 = 49
 End Enum
 
-Property Get is64Bit()
+Function is64Bit()
     is64Bit = QuickCall(qcmIs64)
-End Property
+End Function
 
 Property Get ActiveIDA() As Long
     ActiveIDA = IDA_HWND

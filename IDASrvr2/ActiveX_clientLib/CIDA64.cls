@@ -18,16 +18,17 @@ Attribute VB_Exposed = True
 Option Explicit
 
  'quick call offers about 3x performance boost over original..
- 'commented out ones arent available in x64 (32bit SendMessage limitation in arg size)
+ 'commented out ones are only available to a 64bit calling process
+ '(32bit SendMessage API has a limitation in arg size)
  
 Public Enum quickCallMessages64
 '    qcmJmpAddr = 1    ' jmp:lngAdr
-    qcmJmpRVA = 7     ' jmp_rva:lng_rva
+    qcm64JmpRVA = 7     ' jmp_rva:lng_rva
 '    qcmImgBase = 8    ' imgbase
 '    qcmReadByte = 10  ' readbyte:lngva
 '    qcmOrgByte = 11   ' orgbyte:lngva
-    qcmRefresh = 12   ' refresh
-    qcmNumFuncs = 13  ' numfuncs
+    qcm64Refresh = 12   ' refresh
+    qcm64NumFuncs = 13  ' numfuncs
 '    qcmFuncStart = 14 ' funcstart:funcIndex
 '    qcmFuncEnd = 15   ' funcend:funcIndex
 '    qcmUndef = 20     ' undefine:offset
@@ -39,20 +40,19 @@ Public Enum quickCallMessages64
 '    qcmNextEa = 33    ' nextea:va
 '    qcmPrevEa = 34    ' prevea:va
 '    qcmScreenEA = 37  ' screenea:
-    qcmDebugMessages = 38
-    qcmDecompilerActive = 39
-    qcmFlushDecomp = 40 'flush cached decompiler results
-    qcmIDAHwnd = 41     'gets main IDA Window HWND
-    qcmGetVersion = 42  'version of interface
-    qcmSetFocusSelectLine = 43 'bring IDA to forefront and select current line
+    qcm64DebugMessages = 38
+    qcm64DecompilerActive = 39
+    qcm64FlushDecomp = 40 'flush cached decompiler results
+    qcm64IDAHwnd = 41     'gets main IDA Window HWND
+    qcm64GetVersion = 42  'version of interface
+    qcm64SetFocusSelectLine = 43 'bring IDA to forefront and select current line
 '    qcmIsCode = 44
 '    qcmIsData = 45
 '    qcmInstLen = 46
 '    qcmReadLong = 47
 '    qcmReadShort = 48
-     qcmIs64 = 49
+     qcm64Is64 = 49
 End Enum
-
 
 Property Get ActiveIDA() As Long
     ActiveIDA = IDA_HWND
@@ -288,7 +288,7 @@ End Function
  
 Function FuncVAByName(name)
     If Len(name) = 0 Then Exit Function
-    FuncVAByName = SendCmdRecvLong("name_va:" & name)
+    Set FuncVAByName = SendCmdRecvLong("name_va:" & name)
 End Function
 
 Function RenameFunc(oldname, newName) As Boolean
@@ -439,6 +439,9 @@ Function EnableIDADebugMessages(Optional enabled As Boolean = True)
     QuickCall qcmDebugMessages, IIf(enabled, 1, 0)
 End Function
 
+Function is64Bit() As Long
+    is64Bit = QuickCall(qcmIs64)
+End Function
 
 Function BenchMark() As Long
     Dim i As LARGE_INTEGER

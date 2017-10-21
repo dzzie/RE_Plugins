@@ -59,6 +59,7 @@ Attribute VB_Exposed = False
 Private Declare Function IsWindow Lib "user32" (ByVal hwnd As Long) As Long
 
 Dim ida As New cIDAClient
+Dim ida64 As New cIDAClient64
 
 Private Sub Command1_Click()
     ida.ActiveIDA = ida.SelectServer()
@@ -102,6 +103,7 @@ End Sub
 
 Sub SampleAPI()
 
+    Dim va64 As ULong64
     Dim va As Long
     Dim hwnd As Long
     Dim a As Long
@@ -117,6 +119,8 @@ Sub SampleAPI()
     
     List1.AddItem "Decompiler plugin is active? " & ida.DecompilerActive
     List1.AddItem "Loaded idb: " & ida.LoadedFile()
+    List1.AddItem "IDASRVR version: " & ida.QuickCall(qcmGetVersion)
+    List1.AddItem "is64Bit: " & ida.is64Bit()
     
     a = ida.BenchMark()
     r = ida.NumFuncs()
@@ -124,22 +128,45 @@ Sub SampleAPI()
     
     List1.AddItem "NumFuncs: " & r & " (org " & b - a & " ticks)"
     
-    va = ida.FunctionStart(0)
-    List1.AddItem "Func[0].start: " & Hex(va)
-    List1.AddItem "Func[0].end: " & Hex(ida.FunctionEnd(0))
-    List1.AddItem "Func[0].name: " & ida.FunctionName(0)
-    List1.AddItem "1st inst: " & ida.GetAsm(va)
+    If ida.is64Bit() = 0 Then
+        va = ida.FunctionStart(0)
+        List1.AddItem "Func[0].start: " & Hex(va)
+        List1.AddItem "Func[0].end: " & Hex(ida.FunctionEnd(0))
+        List1.AddItem "Func[0].name: " & ida.FunctionName(0)
+        List1.AddItem "1st inst: " & ida.GetAsm(va)
+        
+        List1.AddItem "VA For Func 'start': " & Hex(ida.FuncVAByName("start"))
+        
+        List1.AddItem "Jumping to 1st inst"
+        ida.Jump va
+        
+        r = ida.ReadLong(&H4110A4)
+        List1.AddItem "4 byte value at 4110A4 = " & Hex(r)
+        
+        r = ida.ReadShort(&H4110A4)
+        List1.AddItem "2 byte value at 4110A4 = " & Hex(r)
+    Else
     
-    List1.AddItem "VA For Func 'start': " & Hex(ida.FuncVAByName("start"))
+        Set va64 = ida64.FunctionStart(0)
+        List1.AddItem "Func[0].start: " & va64.toString()
+        List1.AddItem "Func[0].end: " & ida64.FunctionEnd(0).toString()
+        List1.AddItem "Func[0].name: " & ida64.FunctionName(0)
+        List1.AddItem "1st inst: " & ida64.GetAsm(va64)
+        
+        List1.AddItem "VA For Func 'start': " & ida64.FuncVAByName("start").toString()
+        
+        List1.AddItem "Jumping to 1st inst"
+        ida64.Jump va64
+        
+        'r = ida64.ReadLong(&H4110A4)
+        'List1.AddItem "4 byte value at 4110A4 = " & Hex(r)
+       '
+       ' r = ida.ReadShort(&H4110A4)
+       ' List1.AddItem "2 byte value at 4110A4 = " & Hex(r)
     
-    List1.AddItem "Jumping to 1st inst"
-    ida.Jump va
     
-    r = ida.ReadLong(&H4110A4)
-    List1.AddItem "4 byte value at 4110A4 = " & Hex(r)
+    End If
     
-    r = ida.ReadShort(&H4110A4)
-    List1.AddItem "2 byte value at 4110A4 = " & Hex(r)
     
     
 End Sub

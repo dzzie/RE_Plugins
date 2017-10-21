@@ -42,4 +42,4 @@ DebugStartupOption=0
 AutoRefresh=1
 
 [fastBuild]
-fullPath=D:\_code\RE_Plugins\IDASrvr\ActiveX_clientLib\IDAClientLib.dll
+fullPath=D:\_code\RE_Plugins\IDASrvr\ActiveX_clientLib\IDAClientLib2.dll

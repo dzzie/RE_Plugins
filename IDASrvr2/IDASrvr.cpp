@@ -231,20 +231,18 @@ bool SendIntMessage(int hwnd, __int64 resp){
 	return SendTextMessage(hwnd,tmp, strlen(tmp));
 }
 
-int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
+int HandleQuickCall(unsigned __int64 fIndex, unsigned __int64 arg1){
 
 	//msg("QuickCall( %d, 0x%x)\n" , fIndex, arg1);
 	
 	switch(fIndex){
 
-		//these are only defined for 32bit disassemblies so we dont 
-		//break compatability with existing clients.. p64 can just use traditional call
-		//having a ida and ida64 access class is slightly annoying but working with x64 numbers
-		//in vb6 which doesnt have them is more annoying and mandatory for x64 num access...so this
-		//way we spare the annoyance for most work...except then our scripts arent cross compatiable...grrr
-		//if we figure out how to implement x64 numbers cleanly in js anyway..we could use our vb Ulong64 class actually
-
-		#ifndef __EA64__
+		/*-------------------------------------------------------------------------------------
+			this next block of indented functions should work for x64 disassemblies
+			IF called from an 64bit client. 32bit clients accessing 64 disasm should not use
+			these quick call functions and use the regular string based versions instead.
+		--------------------------------------------------------------------------------------*/
+		//#ifndef __EA64__
 
 				case 1: // jmp:lngAdr
 						Jump( arg1 );
@@ -308,8 +306,11 @@ int HandleQuickCall(unsigned int fIndex, unsigned int arg1){
 				case 48:
 						return get_word(arg1);
 
-		#endif
+		//#endif
 
+		/*----------------------------------------------------------------------------
+		    quick calls below here are safe for both 32bit and 64bit clients always...
+		  ----------------------------------------------------------------------------*/
 		case 7: // jmp_rva:lng_rva
 				Jump( ImageBase()+arg1 );
 				return 0;
@@ -749,6 +750,7 @@ int HandleMsg(char* m){
 
 
 //we can only assume these args/ret val to be 32bit because we must support a 32 bit sendmessage caller (vb6)
+//The integral types WPARAM , LPARAM , and LRESULT are 32 bits wide on 32-bit systems and 64 bits wide on 64-bit systems
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 		
@@ -756,10 +758,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 		if( uMsg == IDA_QUICKCALL_MESSAGE )//uMsg apparently has to be a registered message to be received...
 		{
 			try{
-				if(m_debug) msg("QuickCall Message Received(%d, %x)\n", (int)wParam, (int)lParam );
-				return HandleQuickCall( (unsigned int)wParam, (unsigned int)lParam );
+				if(m_debug) msg("QuickCall Message Received(%llu, %llu)\n", (__int64)wParam, (__int64)lParam );
+				return HandleQuickCall( (unsigned __int64)wParam, (unsigned __int64)lParam );
 			}catch(...){ 
-				msg("Error in HandleQuickCall(%d, %x)\n", (unsigned int)wParam, (unsigned int)lParam );
+				msg("Error in HandleQuickCall(%llu, %llu)\n", (unsigned int)wParam, (unsigned int)lParam );
 				return -1;
 			}
 		}
