@@ -41,7 +41,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
  'todo: filter based on 32/64 bit? will work for x64 too using idaClient? should only used api shared in both..
 
-Public Function SelectIDAInstance(ida As cIDAClient, Optional refresh As Boolean = True) As Long
+Public Function SelectIDAInstance(ida As Object, Optional refresh As Boolean = True) As Long
     
     Dim x
     Dim cnt As Long

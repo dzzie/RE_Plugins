@@ -13,7 +13,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 'allot of these are variant args because they come from IDA_JScript and scripting clients are best used with variants
 '
-'this class has not yet been tested at all!
+'all 64bit address arguments are variant type which accept
+'64bit number as string (hex, signed, unsigned), long, or a ULong64 class type
 
 Option Explicit
 
@@ -161,12 +162,16 @@ Function Message(msg As String)
     SendCMD "msg:" & msg
 End Function
 
-Function MakeStr(va As ULong64, Optional ascii As Boolean = True)
+Function MakeStr(v, Optional ascii As Boolean = True)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     SendCMD "makestring:" & va.toString(mUnsigned) & ":" & IIf(ascii, "ascii", "unicode")
 End Function
 
-Function MakeUnk(va As ULong64, size)
+Function MakeUnk(v, size)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     SendCMD "makeunk:" & va.toString(mUnsigned) & ":" & size
 End Function
@@ -189,7 +194,9 @@ End Function
 '
 'End Function
 
-Function PatchByte(va As ULong64, newVal)
+Function PatchByte(v, newVal)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     If CInt(newVal) > 255 Or CInt(newVal) < 0 Then Err.Raise 1, "PatchByte", "byte value must be 0-254"
     SendCMD "patchbyte:" & va.toString(mUnsigned) & ":" & newVal
@@ -204,30 +211,38 @@ Function intToHex(x)
     If Err.Number <> 0 Then intToHex = x 'hex can throw overflow bleh...
 End Function
 
-Function GetAsm(va As ULong64)
+Function GetAsm(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     GetAsm = SendCmdRecvText("getasm:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
 End Function
 
-Function XRefsTo(offset As ULong64) 'returns CSV list
+Function XRefsTo(v) 'returns CSV list
     Dim tmp
-    tmp = SendCmdRecvText("refsto:" & offset.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    tmp = SendCmdRecvText("refsto:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
     If Right(tmp, 1) = "," Then tmp = Mid(tmp, 1, Len(tmp) - 1)
     'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
     XRefsTo = tmp
 End Function
 
-Function XRefsFrom(offset As ULong64) 'returns CSV list
+Function XRefsFrom(v) 'returns CSV list
     Dim tmp
-    tmp = SendCmdRecvText("refsfrom:" & offset.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    tmp = SendCmdRecvText("refsfrom:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
     If Right(tmp, 1) = "," Then tmp = Mid(tmp, 1, Len(tmp) - 1)
     'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
     XRefsFrom = tmp
 End Function
 
 
-Function GetName(offset As ULong64)
-    GetName = SendCmdRecvText("getname:" & offset.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
+Function GetName(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    GetName = SendCmdRecvText("getname:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
     If GetName = "NULL" Then GetName = ""
 End Function
 
@@ -255,35 +270,49 @@ End Function
 '    refresh
 'End Function
 
-Sub Setname(offset As ULong64, name)
+Sub Setname(v, name)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If Len(name) = 0 Then Exit Sub
-    SendCMD "setname:" & offset.toString(mUnsigned) & ":" & CStr(name)
+    SendCMD "setname:" & va.toString(mUnsigned) & ":" & CStr(name)
  End Sub
 
-Sub AddComment(offset As ULong64, comment)
-    SendCMD "addcomment:" & offset.toString(mUnsigned) & ":" & comment
+Sub AddComment(v, comment)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "addcomment:" & va.toString(mUnsigned) & ":" & comment
 End Sub
 
-Function GetComment(offset As ULong64)
-    GetComment = SendCmdRecvText("getcomment:" & offset.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
+Function GetComment(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    GetComment = SendCmdRecvText("getcomment:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
     If GetComment = "NULL" Then GetComment = Empty
 End Function
 
 
- Sub AddCodeXRef(offset As ULong64, tova)
-    SendCMD "addcodexref:" & offset.toString(mUnsigned) & ":" & tova
+ Sub AddCodeXRef(v, tova)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "addcodexref:" & va.toString(mUnsigned) & ":" & tova
  End Sub
  
-  Sub AddDataXRef(offset As ULong64, tova)
-    SendCMD "adddataxref:" & offset.toString(mUnsigned) & ":" & tova
+  Sub AddDataXRef(v, tova)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "adddataxref:" & va.toString(mUnsigned) & ":" & tova
  End Sub
  
- Sub DelCodeXRef(offset As ULong64, tova)
-    SendCMD "delcodexref:" & offset.toString(mUnsigned) & ":" & tova
+ Sub DelCodeXRef(v, tova)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "delcodexref:" & va.toString(mUnsigned) & ":" & tova
  End Sub
  
- Sub DelDataXRef(offset As ULong64, tova)
-    SendCMD "deldataxref:" & offset.toString(mUnsigned) & ":" & tova
+ Sub DelDataXRef(v, tova)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "deldataxref:" & va.toString(mUnsigned) & ":" & tova
  End Sub
  
 Function FuncVAByName(name)
@@ -296,15 +325,22 @@ Function RenameFunc(oldname, newName) As Boolean
     RenameFunc = IIf(SendCmdRecvLong("rename:" & oldname & ":" & newName) = 1, True, False)
 End Function
 
-Function Find(startea As ULong64, endea As ULong64, hexstr) '-1 if fail
+Function Find(vstartea, vendea, hexstr)   '-1 if fail
+    Dim startea As New ULong64, endea  As New ULong64
+    
+    Set startea = UlongFromVar(vstartea)
+    Set endea = UlongFromVar(vendea)
+    
     If startea = 0 Or startea = -1 Then Exit Function
     If endea = 0 Or endea = -1 Then Exit Function
     If Len(hexstr) = 0 Then Exit Function
     Find = SendCmdRecvLong("findcode:" & startea.toString(mUnsigned) & ":" & endea.toString(mUnsigned) & ":" & hexstr)
 End Function
 
-Function Decompile(va As ULong64) As String
+Function Decompile(v) As String
     Dim pth As String, r As Long
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     
     If va = 0 Or va = -1 Then Exit Function
     
@@ -321,64 +357,117 @@ End Function
 
 '--------------[ previously were quick calls port me] --------------------
 
-Function instSize(offset As ULong64)
-    instSize = SendCMD("decodeins:" & offset.toString(mUnsigned))
+Function instSize(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    instSize = SendCMD("decodeins:" & va.toString(mUnsigned))
 End Function
 
-Function isCode(offset As ULong64)
-    isCode = SendCMD("iscode:" & offset.toString(mUnsigned))
+Function isCode(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    isCode = SendCMD("iscode:" & va.toString(mUnsigned))
 End Function
 
-Function isData(offset As ULong64)
-    isData = SendCMD("isdata:" & offset.toString(mUnsigned))
+Function isData(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    isData = SendCMD("isdata:" & va.toString(mUnsigned))
 End Function
 
-Function ReadByte(va As ULong64)
+Function UlongFromVar(v) As ULong64
+    Dim ua As New ULong64, t As String
+    
+    t = TypeName(v)
+    
+    If t = "ULong64" Then
+        Set UlongFromVar = v
+    ElseIf t = "String" Then
+        If InStr(v, "-") > 0 Then
+            If Not ua.fromString(v, mSigned) Then Err.Raise 1, "UlongFromVar", "Failed to convert string: " & v
+        Else
+            If Not ua.fromString(v) Then
+               If Not ua.fromString(v, mUnsigned) Then Err.Raise 1, "UlongFromVar", "Failed to convert unsigned string: " & v
+            End If
+        End If
+        Set UlongFromVar = ua
+    ElseIf t = "Long" Or t = "Integer" Or t = "Short" Or t = "Byte" Then
+        ua.SetLongs 0, CLng(v)
+    Else
+        Err.Raise 1, "UlongFromVar", "Unsupported input type: " & t
+    End If
+    
+End Function
+
+
+Function ReadByte(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     ReadByte = CByte(SendCMD("readbyte:" & va.toString(mUnsigned)))
 End Function
 
-Function ReadLong(va As ULong64) As Long
+Function ReadLong(v) As Long
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     ReadLong = CLng(SendCMD("getlong:" & va.toString(mUnsigned)))
 End Function
 
-Function ReadShort(va As ULong64) As Long
+Function ReadShort(v) As Long
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     ReadShort = CLng(SendCMD("getword:" & va.toString(mUnsigned)))
 End Function
 
-Function OriginalByte(va As ULong64)
+Function OriginalByte(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     OriginalByte = CByte(SendCMD("orgbyte:" & va.toString(mUnsigned)))
 End Function
 
-Function Jump(va As ULong64, Optional ByVal hwnd As Long = 0)
+Function Jump(v, Optional ByVal hwnd As Long = 0)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     SendCMD "jmp:" & va.toString(mUnsigned)
 End Function
 
-Function Undefine(offset As ULong64)
-    SendCMD "undefine:" & offset.toString(mUnsigned)
+Function Undefine(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "undefine:" & va.toString(mUnsigned)
 End Function
 
-Function ShowEA(offset As ULong64)
-   SendCMD "show:" & offset.toString(mUnsigned)
+Function ShowEA(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+   SendCMD "show:" & va.toString(mUnsigned)
 End Function
 
-Function HideEA(offset As ULong64)
-    SendCMD "hide:" & offset.toString(mUnsigned)
+Function HideEA(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "hide:" & va.toString(mUnsigned)
 End Function
 
- Sub RemoveName(offset As ULong64)
-    SendCMD "remname:" & offset.toString(mUnsigned)
+ Sub RemoveName(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "remname:" & va.toString(mUnsigned)
  End Sub
 
-Sub MakeCode(offset As ULong64)
-    SendCMD "makecode:" & offset.toString(mUnsigned)
+Sub MakeCode(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
+    SendCMD "makecode:" & va.toString(mUnsigned)
 End Sub
 
-Function FuncIndexFromVA(va As ULong64)
+Function FuncIndexFromVA(v)
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     If va = 0 Or va = -1 Then Exit Function
     FuncIndexFromVA = SendCMD("funcindex" & va.toString(mUnsigned))
 End Function
@@ -393,11 +482,15 @@ Function ScreenEA() As ULong64
     Set ScreenEA = SendCmdRecvLong("screenea:" & SUBCLASSED_HWND)
 End Function
 
-Function NextEA(va As ULong64) As ULong64
+Function NextEA(v) As ULong64
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     Set NextEA = SendCmdRecvLong("nextea:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
 End Function
 
-Function PrevEA(va As ULong64) As ULong64
+Function PrevEA(v) As ULong64
+    Dim va As New ULong64
+    Set va = UlongFromVar(v)
     Set PrevEA = SendCmdRecvLong("prevea:" & va.toString(mUnsigned) & ":" & SUBCLASSED_HWND)
 End Function
 
