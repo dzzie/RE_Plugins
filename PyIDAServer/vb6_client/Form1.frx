@@ -1,0 +1,2 @@
+Iea = ScreenEA()
+reply( len(list(Functions(SegStart(ea), SegEnd(ea)))))
