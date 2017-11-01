@@ -29,19 +29,38 @@ def registerServer(h):
     wreg.SetValueEx(key, 'PIDA_SERVER', 0, wreg.REG_SZ, str(h))
     key.Close()     
     
-# todo if message > 1024 bytes chunk it
-def sendCommand(w, message):
-    print "sending msg '%s' to %s" % (message, w)
-    isWindow = win32gui.IsWindow(int(w))
-    if isWindow != 1:
-        print "not a valid hwnd"
-        return
+def chunkString(s,sz=1000):
+    o = []
+    while s:
+        o.append(s[:sz])
+        s = s[sz:]
+    return o
+
+def __sendData(w,message):
     CopyDataStruct = "IIP"
-    char_buffer = array('c', message)
+    char_buffer = array('c', str(message))
     char_buffer_address = char_buffer.buffer_info()[0]
     char_buffer_size = char_buffer.buffer_info()[1]
     cds = struct.pack(CopyDataStruct, WM_DISPLAY_TEXT, char_buffer_size, char_buffer_address)
-    v = win32gui.SendMessage(int(w), win32con.WM_COPYDATA, 0, cds)
+    v = win32gui.SendMessage(int(w), win32con.WM_COPYDATA, 0, cds)    
+
+def sendCommand(w, message):
+    print "sending msg '%s' to %s" % (message, w)
+    isWindow = win32gui.IsWindow(int(w))
+    
+    if isWindow != 1:
+        print "not a valid hwnd"
+        return
+    
+    if len(message) > 1000:
+        chunks = chunkString(message)
+        __sendData(w,"=CHUNKED=")
+        for c in chunks:
+            __sendData(w,c)
+        __sendData(w,"=CHUNKED_COMPLETE=")
+    else:
+        __sendData(w,message)
+
     #print "done retval = %d" % v
     
 #for use in exec scripts to return a value...    
@@ -63,14 +82,14 @@ def recvCommand(msg):
                 ret = str(eval(ary[2]))
                 sendCommand(lastHWND,ret)
             except:
-                sendCommand(lastHWND,"ERROR:"+str(sys.exc_info()[0]))            
+                sendCommand(lastHWND,"ERROR:"+str(sys.exc_info()))            
             handled = 1
         if ary[0] == "EXEC":  
             try:
                 exec ary[2] 
                 sendCommand(lastHWND,"OK")
             except:
-                sendCommand(lastHWND,"ERROR:"+str(sys.exc_info()[0]))
+                sendCommand(lastHWND,"ERROR:"+str(sys.exc_info()))
             handled = 1  
             
     if handled == 0:
