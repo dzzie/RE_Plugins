@@ -1,4 +1,7 @@
 Attribute VB_Name = "Module1"
+Option Explicit
+'this was all ripped from IDASrvr, in turn ripped from my even older IPC demos
+
 Private Type COPYDATASTRUCT
     dwFlag As Long
     cbSize As Long
@@ -28,9 +31,9 @@ End Type
  Public Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As LARGE_INTEGER) As Long
 
  Private Const HWND_BROADCAST = &HFFFF&
-
- Private IDA_QUICKCALL_MESSAGE As Long
- Private IDASRVR_BROADCAST_MESSAGE As Long
+ Private PYIDA_QUICKCALL_MESSAGE As Long
+ Private PYIDASRVR_BROADCAST_MESSAGE As Long
+ Public Servers As New Collection
  
 Function d(msg, Optional isList2 As Boolean)
     Dim l As ListBox
@@ -48,27 +51,58 @@ End Function
  Public Sub Hook(hwnd As Long)
      subclassed_hwnd = hwnd
      lpPrevWndProc = SetWindowLong(subclassed_hwnd, GWL_WNDPROC, AddressOf WindowProc)
-     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER")
-     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL")
+     PYIDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("PYIDA_SERVER")
+     PYIDA_QUICKCALL_MESSAGE = RegisterWindowMessage("PYIDA_QUICKCALL")
+     'Form1.List1.AddItem "QuickCall: " & Hex(PYIDA_QUICKCALL_MESSAGE) & " Broadcast: " & Hex(PYIDASRVR_BROADCAST_MESSAGE)
  End Sub
 
-' Function FindActiveIDAWindows() As Long
-'     Dim ret As Long
-'     'so a client starts up, it gets the message to use (system wide) and it broadcasts a message to all windows
-'     'looking for IDASrvr instances that are active. It passes its command window hwnd as wParam
-'     'IDASrvr windows will receive this, and respond to the HWND with the same IDASRVR message as a pingback
-'     'sending thier command window hwnd as the lParam to register themselves with the clients.
-'     'clients track these hwnds.
-'
-'     Form1.List2.AddItem "Broadcasting message looking for IDASrvr instances msg= " & IDASRVR_BROADCAST_MESSAGE
-'     SendMessageTimeout HWND_BROADCAST, IDASRVR_BROADCAST_MESSAGE, subclassed_hwnd, 0, 0, 100, ret
-'
-'     ValidateActiveIDAWindows
-'     FindActiveIDAWindows = Servers.Count
-'
-' End Function
 
- 
+ 'will find last opened instance if still active
+Function FindClient() As Boolean
+    Dim hwnd As Long
+    
+    On Error Resume Next
+    
+    hwnd = CLng(GetSetting("IPC", "Handles", "PIDA_SERVER", 0))
+    If hwnd <> 0 Then
+        If IsWindow(hwnd) = 1 Then
+            FindClient = True
+            Module1.IDA_HWND = hwnd
+        Else
+            SaveSetting "IPC", "Handles", "PIDA_SERVER", 0
+            Module1.IDA_HWND = 0
+            FindClient = False
+        End If
+    End If
+    
+End Function
+
+'enumerates all open instances, returns count, access hwnds through servers collection
+ Function FindActive_PYIDAWindows() As Long
+     Dim ret As Long
+     'so a client starts up, it gets the message to use (system wide) and it broadcasts a message to all windows
+     'looking for IDASrvr instances that are active. It passes its command window hwnd as wParam
+     'IDASrvr windows will receive this, and respond to the HWND with the same IDASRVR message as a pingback
+     'sending thier command window hwnd as the lParam to register themselves with the clients.
+     'clients track these hwnds.
+
+     Form1.List2.AddItem "Broadcasting message looking for IDASrvr instances msg= " & PYIDASRVR_BROADCAST_MESSAGE
+     SendMessageTimeout HWND_BROADCAST, PYIDASRVR_BROADCAST_MESSAGE, subclassed_hwnd, 0, 0, 100, ret
+
+     ValidateActiveIDAWindows
+     FindActive_PYIDAWindows = Servers.Count
+
+ End Function
+
+ Function ValidateActiveIDAWindows()
+     On Error Resume Next
+     Dim x
+     For Each x In Servers 'remove any that arent still valid..
+        If IsWindow(x) = 0 Then
+            Servers.Remove "hwnd:" & x
+        End If
+     Next
+ End Function
  
  Public Sub Unhook()
      If lpPrevWndProc <> 0 And subclassed_hwnd <> 0 Then
@@ -78,14 +112,14 @@ End Function
 
  Function WindowProc(ByVal hw As Long, ByVal uMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
      
-'     If uMsg = IDASRVR_BROADCAST_MESSAGE Then
-'        If IsWindow(lParam) = 1 Then
-'            If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
-'                Servers.Add lParam, "hwnd:" & lParam
-'                Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
-'            End If
-'        End If
-'     End If
+     If uMsg = PYIDASRVR_BROADCAST_MESSAGE Then
+        If IsWindow(lParam) = 1 Then
+            If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
+                Servers.Add lParam, "hwnd:" & lParam
+                Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
+            End If
+        End If
+     End If
      
      If uMsg = WM_COPYDATA Then RecieveTextMessage lParam
      WindowProc = CallWindowProc(lpPrevWndProc, hw, uMsg, wParam, lParam)
@@ -160,6 +194,6 @@ Function SendCmdRecvLong(cmd As String, Optional ByVal hwnd As Long) As Long
     SendCmdRecvLong = SendCMD(cmd, hwnd)
 End Function
 
-'Function QuickCall(msg As quickCallMessages, Optional arg1 As Long = 0) As Long
-'    QuickCall = SendMessageByVal(IDA_HWND, IDA_QUICKCALL_MESSAGE, msg, arg1)
-'End Function
+Function QuickCall(msg As Long, Optional arg1 As Long = 0) As Long
+    QuickCall = SendMessageByVal(IDA_HWND, PYIDA_QUICKCALL_MESSAGE, msg, arg1)
+End Function

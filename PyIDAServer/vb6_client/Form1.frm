@@ -9,10 +9,26 @@ Begin VB.Form Form1
    ScaleHeight     =   7245
    ScaleWidth      =   10665
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton Command6 
+      Caption         =   "QuickCall"
+      Height          =   375
+      Left            =   5265
+      TabIndex        =   10
+      Top             =   6795
+      Width           =   1185
+   End
+   Begin VB.CommandButton Command5 
+      Caption         =   "Enum Servers"
+      Height          =   375
+      Left            =   4050
+      TabIndex        =   9
+      Top             =   6795
+      Width           =   1140
+   End
    Begin VB.CommandButton Command4 
       Caption         =   "Clear"
-      Height          =   330
-      Left            =   3465
+      Height          =   375
+      Left            =   2610
       TabIndex        =   8
       Top             =   6795
       Width           =   1275
@@ -20,7 +36,7 @@ Begin VB.Form Form1
    Begin VB.CommandButton Command3 
       Caption         =   "reconnect"
       Height          =   375
-      Left            =   2025
+      Left            =   1395
       TabIndex        =   7
       Top             =   6795
       Width           =   1050
@@ -116,28 +132,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
- 'will find last opened instance if still active
-Function FindClient() As Boolean
-    Dim hwnd As Long
-    
-    On Error Resume Next
-    
-    hwnd = CLng(GetSetting("IPC", "Handles", "PIDA_SERVER", 0))
-    If hwnd <> 0 Then
-        If IsWindow(hwnd) = 1 Then
-            FindClient = True
-            Module1.IDA_HWND = hwnd
-        Else
-            SaveSetting "IPC", "Handles", "PIDA_SERVER", 0
-            Module1.IDA_HWND = 0
-            FindClient = False
-        End If
-    End If
-    
-End Function
-
-
-
 Private Sub Command1_Click()
         
     If IsWindow(IDA_HWND) = 0 Then
@@ -176,6 +170,14 @@ Private Sub Command4_Click()
     List2.Clear
 End Sub
 
+Private Sub Command5_Click()
+    FindActive_PYIDAWindows
+End Sub
+
+Private Sub Command6_Click()
+    List2.AddItem "Sending quickCall message: 0x" & Hex(QuickCall(21, 21))
+End Sub
+
 Private Sub Form_Load()
 
     Dim windows As Long
@@ -183,6 +185,8 @@ Private Sub Form_Load()
     
     Me.Visible = True
     
+    'in actual production use I would switch to a subclass library
+    'over doing it manually skipping here for simple demo
     Hook Me.hwnd
     d "Listening for messages on hwnd: " & Me.hwnd
 

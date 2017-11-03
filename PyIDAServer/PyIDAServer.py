@@ -15,7 +15,7 @@ except:
 WM_DISPLAY_TEXT = 3
 lastHWND = 0
 debugLevel = 1
-
+    
 class COPYDATASTRUCT(ctypes.Structure):
     _fields_ = [
         ('dwData', ctypes.wintypes.LPARAM),
@@ -98,14 +98,23 @@ def recvCommand(msg):
 class Listener:
     # https://stackoverflow.com/questions/5249903/receiving-wm-copydata-in-python   
     def __init__(self):
+   
+        self.PYIDA_QUICKCALL_MESSAGE     = win32gui.RegisterWindowMessage("PYIDA_QUICKCALL")
+        self.PYIDASRVR_BROADCAST_MESSAGE = win32gui.RegisterWindowMessage("PYIDA_SERVER")
+        if debugLevel > 1: print "QuickCall: %x BroadCast: %x" % (self.PYIDA_QUICKCALL_MESSAGE, self.PYIDASRVR_BROADCAST_MESSAGE)
+        
         message_map = {
-            win32con.WM_COPYDATA: self.OnCopyData
+            self.PYIDA_QUICKCALL_MESSAGE:      self.OnQuickCall,
+            self.PYIDASRVR_BROADCAST_MESSAGE:  self.OnBroadcast,
+            win32con.WM_COPYDATA:              self.OnCopyData,
         }
+        
         wc = win32gui.WNDCLASS()
         wc.lpfnWndProc = message_map
         wc.lpszClassName = 'MyWindowClass'
         hinst = wc.hInstance = win32api.GetModuleHandle(None)
         self.classAtom = win32gui.RegisterClass(wc)
+        
         self.hwnd = win32gui.CreateWindow (
             self.classAtom,
             "win32gui test",
@@ -119,6 +128,7 @@ class Listener:
             hinst, 
             None
         )
+        
         registerServer(self.hwnd)
         print "Python listening for WM_COPYDATA on hwnd = %d" % self.hwnd
         
@@ -137,6 +147,17 @@ class Listener:
         recvCommand(msg)
         return 1
 
+    # so our controller can broadcast a message and have each PyIda instance identify itself
+    def OnBroadcast(self, hwnd, msg, wparam, lparam):
+        print "PyIDA Broadcast Message received"
+        win32gui.SendMessage(wparam, self.PYIDASRVR_BROADCAST_MESSAGE, 0, self.hwnd);
+        
+    # 3x performance bump - limits: wparam = function id, lparam = optional 32bit arg, optional 32bit ret val
+    def OnQuickCall(self, hwnd, msg, wparam, lparam):
+        print "QuickCall received funcID: %d, arg0: %d" % (wparam,lparam)
+        # todo: handle wparam functionID we just return a static value for testing
+        return 0xDEADBEEF
+        
     def Shutdown(self):
         print "shutting down message pump window.."
         #win32gui.SendMessage(self.hwnd, win32con.WM_QUIT, 0, 0)  
