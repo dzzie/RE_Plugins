@@ -73,6 +73,8 @@ End Function
 
 Function pythonTest(cmd)
     'since we use : as a token and so does python..we might need to transpose it with it another character...
+    cmd = Replace(cmd, ":", Chr(5))
     SendCMD "pycmd:" & Form1.hwnd & ":" & cmd
+    pythonTest = ResponseBuffer
 End Function
 

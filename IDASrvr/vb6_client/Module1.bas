@@ -155,7 +155,7 @@ Private Sub RecieveTextMessage(lParam As Long)
         'heres where we work with the intercepted message
         Form1.List2.AddItem "Recv(" & Temp & ")"
         Form1.List2.AddItem ""
-        ResponseBuffer = Temp
+        ResponseBuffer = ResponseBuffer & Temp
     End If
      
 End Sub
@@ -189,5 +189,6 @@ Function SendCmdRecvLong(cmd As String, Optional ByVal hwnd As Long) As Long
 End Function
 
 Function QuickCall(msg As quickCallMessages, Optional arg1 As Long = 0) As Long
+    ResponseBuffer = Empty
     QuickCall = SendMessageByVal(IDA_HWND, IDA_QUICKCALL_MESSAGE, msg, arg1)
 End Function

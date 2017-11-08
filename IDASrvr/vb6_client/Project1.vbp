@@ -35,3 +35,6 @@ MaxNumberOfThreads=1
 
 [MS Transaction Server]
 AutoRefresh=1
+
+[fastBuild]
+fullPath=%ap%\vb6_client.exe

@@ -1,0 +1,19 @@
+
+import idasrvr
+
+def chunkString(s,sz=1000):
+    o = []
+    while s:
+        o.append(s[:sz])
+        s = s[sz:]
+    return o
+
+def reply(message):
+    print "sending msg '%s'" % message
+  
+    if len(message) > 1000:
+        chunks = chunkString(message)
+        for c in chunks:
+            idasrvr.reply(c)
+    else:
+        idasrvr.reply(message)

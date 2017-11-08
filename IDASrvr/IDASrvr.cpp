@@ -28,6 +28,8 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 #include <search.hpp>
 #include <xref.hpp>
 
+bool SendTextMessage(int hwnd, char *Buffer, int blen); 
+
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
 
 #ifdef HAS_DECOMPILER
@@ -36,7 +38,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 	int __stdcall DecompileFunction(int offset, char* fpath);
 #endif
 
-//#define PYTHON_TEST
+#define PYTHON_TEST
 #ifdef PYTHON_TEST
 //note changed to cdecl as default calling convention..
 //otherwise in pyport.h had to: define PyAPI_FUNC(RTYPE) __declspec(dllimport)  RTYPE __cdecl
@@ -49,6 +51,56 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 #else
 	#include <python27\Python.h>
 #endif
+
+int hPYClient = 0;
+
+static PyObject *pyreply(PyObject *self, PyObject* args)
+{
+    const char *command;
+    if (!PyArg_ParseTuple(args, "s", &command)) return NULL;
+    int rv = SendTextMessage(hPYClient, (char*)command, strlen(command)); 
+    return PyLong_FromLong(rv);
+}
+
+static PyObject *pytest(PyObject *self, PyObject* args)
+{
+    return PyInt_FromLong(42L);
+}
+
+static PyMethodDef pyClient_methods[] = {
+	{"reply", pyreply, METH_VARARGS,  NULL},
+	{"test",  pytest,  METH_NOARGS,   NULL},
+    {NULL,NULL}           /* sentinel */
+};
+
+void init_pyClient(void)
+{
+    PyImport_AddModule("idasrvr");
+    Py_InitModule("idasrvr", pyClient_methods);
+}
+
+//we take care of some housekeeping so client scripts are easier..
+char* pyStub = 
+"import idasrvr\r\n"
+"def chunkString(s,sz=1000):\r\n"
+"    o = []\r\n"
+"    while s:\r\n"
+"        o.append(s[:sz])\r\n"
+"        s = s[sz:]\r\n"
+"    return o\r\n"
+"\r\n"
+"def reply(message):\r\n"
+"    message = str(message)\r\n"
+"    print \"sending msg '%s'\" % message\r\n"
+"  \r\n"
+"    if len(message) > 1000:\r\n"
+"        chunks = chunkString(message)\r\n"
+"        for c in chunks:\r\n"
+"            idasrvr.reply(c)\r\n"
+"    else:\r\n"
+"        idasrvr.reply(message)\r\n"
+;
+
 #endif
 
 
@@ -665,14 +717,17 @@ int HandleMsg(char* m){
 #endif
 
 #ifdef PYTHON_TEST
-          //this one is just a test 
-		  //since we use : as a token and so does python..we might need to transpose it with it another character...
-		  //we also need a way to return values..ie call SendTextMessage/SendIntMessage from python
-		  case 40: //pycmd:hwnd:cmd
+		  case 40: //pycmd:hwnd:replace(cmd,":",chr(5))
 			  if( argc != 2 ){msg("pycmd needs 2 args\n"); return -1;}
+			  hPYClient = atoi(args[1]);                    //hwnd used in idasrvr.reply so we dont have to track in py
+			  for(i=0;i<strlen(args[2]);i++){               //since we use : as a token transpose back..
+				  if(args[2][i] == 5) args[2][i] = ':';     // use idasrvr.reply to ret vals to caller through ipc
+			  }
 			  PyGILState_STATE state = PyGILState_Ensure(); // Acquire the GIL
-			  PyRun_SimpleString(args[2]);
-			  PyGILState_Release(state); // Release the GIL
+			  init_pyClient();                              // add our idasrvr extension to the pyEnv
+			  PyRun_SimpleString(pyStub);
+			  PyRun_SimpleString(args[2]);                  // execute the python code passed to us by remote client
+			  PyGILState_Release(state);                    // Release the GIL
 #endif
 
 	}				
