@@ -71,4 +71,8 @@ Function FindClient() As Boolean
     
 End Function
 
- 
+Function pythonTest(cmd)
+    'since we use : as a token and so does python..we might need to transpose it with it another character...
+    SendCMD "pycmd:" & Form1.hwnd & ":" & cmd
+End Function
+

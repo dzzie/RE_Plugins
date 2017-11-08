@@ -36,6 +36,23 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 	int __stdcall DecompileFunction(int offset, char* fpath);
 #endif
 
+//#define PYTHON_TEST
+#ifdef PYTHON_TEST
+//note changed to cdecl as default calling convention..
+//otherwise in pyport.h had to: define PyAPI_FUNC(RTYPE) __declspec(dllimport)  RTYPE __cdecl
+//pyconfig.h ifdef _DEBUG pragma comment(lib,"python27_d.lib") <-- IDA uses release build of dll always
+//was causing plugin load fail for debug build
+#ifdef _DEBUG
+	#undef _DEBUG
+	#include <python27\Python.h>
+	#define _DEBUG
+#else
+	#include <python27\Python.h>
+#endif
+#endif
+
+
+
 int hasDecompiler = 0;
 int InterfaceVersion = 1;
 
@@ -386,6 +403,8 @@ int HandleMsg(char* m){
 	                "addcomment","getcomment","addcodexref","adddataxref","delcodexref","deldataxref",
 	/*               32          33         34        35           36        37           38         39    */
 					"funcindex","nextea","prevea","makestring","makeunk", "screenea", "findcode", "decompile",
+    /*               40 */
+					"pycmd",
 					"\x00"};
 	int i=0;
 	int argc=0;
@@ -409,7 +428,7 @@ int HandleMsg(char* m){
 		if(strcmp(cmds[i],args[0])==0 ) break;
 	}
 
-	//if(m_debug) msg("command handler: %d",i);
+	if(m_debug) msg("command handler: %d",i);
 
 	//handle specific command
 	switch(i){
@@ -645,6 +664,17 @@ int HandleMsg(char* m){
 					return DecompileFunction( atoi(args[1]), args[2]);
 #endif
 
+#ifdef PYTHON_TEST
+          //this one is just a test 
+		  //since we use : as a token and so does python..we might need to transpose it with it another character...
+		  //we also need a way to return values..ie call SendTextMessage/SendIntMessage from python
+		  case 40: //pycmd:hwnd:cmd
+			  if( argc != 2 ){msg("pycmd needs 2 args\n"); return -1;}
+			  PyGILState_STATE state = PyGILState_Ensure(); // Acquire the GIL
+			  PyRun_SimpleString(args[2]);
+			  PyGILState_Release(state); // Release the GIL
+#endif
+
 	}				
 
 };
@@ -733,7 +763,7 @@ int idaapi init(void)
 	  }
 	#endif
 
-  return PLUGIN_KEEP;
+  return PLUGIN_KEEP; //keeps it loaded into mem always..(for server to always be running)
 }
 
 void idaapi term(void)

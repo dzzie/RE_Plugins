@@ -50,7 +50,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\include"
+				AdditionalIncludeDirectories="$(IDASDK)\include\"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;__NT__;__IDP__;MAXSTR=1024"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -59,10 +59,10 @@
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
-				BrowseInformation="1"
+				BrowseInformation="0"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				CallingConvention="2"
+				CallingConvention="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -79,10 +79,10 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/export:PLUGIN"
 				AdditionalDependencies="odbc32.lib odbccp32.lib ida.lib"
-				OutputFile="C:\IDA\plugins\IDASrvr.plw"
+				OutputFile="./bin/IDASrvr.plw"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\libvc.w32"
+				AdditionalLibraryDirectories="$(IDASDK)\libvc.w32;$(IDASDK)\lib\x86_win_vc_32"
 				ModuleDefinitionFile=".\IDASrvr.def"
 				ProgramDatabaseFile=".\Release/IDASrvr.pdb"
 				RandomizedBaseAddress="1"
@@ -112,6 +112,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="./bin/install.bat"
 			/>
 		</Configuration>
 		<Configuration
@@ -163,7 +164,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CallingConvention="2"
+				CallingConvention="0"
 				CompileAs="2"
 			/>
 			<Tool
@@ -295,6 +296,18 @@
 			</File>
 			<File
 				RelativePath="..\..\idasdk55\idasdk55\include\name.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\vs2008\VC\include\python27\pyconfig.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\vs2008\VC\include\python27\pystate.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\vs2008\VC\include\python27\Python.h"
 				>
 			</File>
 			<File

@@ -160,6 +160,8 @@ Sub SampleAPI()
     List1.AddItem "Jumping to 1st inst"
     ida.Jump va
     
+    ida.pythonTest "print 'test python command from IDASrvr Client!'"
+    
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)

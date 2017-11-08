@@ -42,7 +42,9 @@ LIBRARY IDASrvr
 		ImageBase
 	    DecompileFunction
 	    SetFocusSelectLine
-
+        HandleQuickCall
+        HandleMsg
+        WindowProc
 
 
 
