@@ -81,7 +81,7 @@ namespace gleeGraph
             
             ida = new ida_client(this.Handle);
 
-            List<uint> Servers = ida.FindServers();
+            List<uint> Servers = ida.FindServers(); //remember IDASRVR does nto exist for x64 disasm yet...
 
             if (Servers.Count == 0)
             {
@@ -474,6 +474,39 @@ namespace gleeGraph
         private void zoomToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (selNode != null) gViewer.ShowBBox(selNode.BBox); //zoom to node..
+        }
+
+        private void prefixAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string prefix = Program.InputBox("Enter prefix to use for unnamed subs");
+            if (prefix.Length == 0) return;
+
+            foreach (ListViewItem li in lvNodes.Items)
+            {
+                if (li.Text.IndexOf("sub_") == 0)
+                {
+                    string newName = prefix + li.Text;
+                    if (ida.Rename(li.Text, newName))
+                    {
+                        li.Text = newName;
+                    }
+                    else
+                    {
+                        debugLog("Fail rename " + li.Text);
+                    }
+                }
+                else
+                {
+                    debugLog("skipping rename " + li.Text);
+                }
+            }
+            gViewer.Invalidate();
+            lvNodes.Refresh();
+        }
+
+        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        {
+
         }
 
     }

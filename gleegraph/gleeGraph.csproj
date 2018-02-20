@@ -152,11 +152,6 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>if not exist C:\IDA6 goto skipInstall
-if not exist C:\IDA6\_$(TargetFileName) (
-    copy C:\IDA6\$(TargetFileName) C:\IDA6\_$(TargetFileName)
-)
-copy $(TargetFileName) c:\IDA6\$(TargetFileName)
-:skipInstall</PostBuildEvent>
+    <PostBuildEvent>install.bat $(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>

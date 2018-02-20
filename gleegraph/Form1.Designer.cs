@@ -50,6 +50,7 @@
             this.searchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.copyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.prefixAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.mnuPopup.SuspendLayout();
             this.mnuLVPopup.SuspendLayout();
@@ -105,6 +106,7 @@
             this.menuStrip1.Size = new System.Drawing.Size(1011, 24);
             this.menuStrip1.TabIndex = 2;
             this.menuStrip1.Text = "menuStrip1";
+            this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
             // 
             // toolsToolStripMenuItem
             // 
@@ -208,9 +210,10 @@
             this.mnuLVPopup.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.searchToolStripMenuItem,
             this.copyToolStripMenuItem,
-            this.zoomToolStripMenuItem});
+            this.zoomToolStripMenuItem,
+            this.prefixAllToolStripMenuItem});
             this.mnuLVPopup.Name = "mnuLVPopup";
-            this.mnuLVPopup.Size = new System.Drawing.Size(163, 70);
+            this.mnuLVPopup.Size = new System.Drawing.Size(163, 92);
             // 
             // searchToolStripMenuItem
             // 
@@ -232,6 +235,13 @@
             this.zoomToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.zoomToolStripMenuItem.Text = "Zoom to Node";
             this.zoomToolStripMenuItem.Click += new System.EventHandler(this.zoomToolStripMenuItem_Click);
+            // 
+            // prefixAllToolStripMenuItem
+            // 
+            this.prefixAllToolStripMenuItem.Name = "prefixAllToolStripMenuItem";
+            this.prefixAllToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.prefixAllToolStripMenuItem.Text = "Prefix All";
+            this.prefixAllToolStripMenuItem.Click += new System.EventHandler(this.prefixAllToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -281,6 +291,7 @@
         private System.Windows.Forms.ToolStripMenuItem copyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem searchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zoomToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem prefixAllToolStripMenuItem;
     }
 }
 

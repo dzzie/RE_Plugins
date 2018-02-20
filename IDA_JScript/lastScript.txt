@@ -1,4 +1,35 @@
-a = 0x1122334455667788
-a++
-b = a.toString(16)
-alert(b + " len: " + b.length)
+base = "C:\\Documents and Settings\\david\\Desktop\\53784\\"
+dat = fso.readfile(base+"\\apitable2.txt")
+//$+4      >77DD6C17  ADVAPI32.RegCloseKey
+tmp = dat.split("\r\n")
+j=0;x=''
+lookup = new Array()
+for(i=0;i<tmp.length;i++){
+   a = tmp[i].lastIndexOf('.')+1
+   n = tmp[i].substring(a)
+   //t(j + ' ' + n)
+   if(n.length==0) n = "UNKNOWN"
+   lookup[j] = n
+   x +=n+','
+   j+=4;
+}
+
+app.setclipboard(x)
+die()
+dat = fso.readfile(base+"\\api_table_calls.txt")
+
+
+//.text:10003D8B odfa                         call    dword ptr [eax+108h]
+tmp = dat.split("\r\n")
+for(i=0;i<tmp.length;i++){
+   addr = tmp[i].substring(6,14)
+   a = tmp[i].lastIndexOf('+')+1
+   offset = parseInt('0x'+tmp[i].substring(a).replace(']','').replace('h',''))
+   //t(addr + '->' + lookup[offset])
+   //ida.addcomment(parseInt('0x'+addr),lookup[offset])
+   t('MakeComm(0x'+addr+',"'+lookup[offset]+'");')
+}
+
+
+
+
