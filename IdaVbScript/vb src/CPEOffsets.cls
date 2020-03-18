@@ -82,8 +82,8 @@ Private Type IMAGE_NT_HEADERS
 End Type
 
 Private Type IMAGE_SECTION_HEADER
-    nameSec As String * 6
-    PhisicalAddress As Integer
+    nameSec As String * 8
+    'PhisicalAddress As Integer
     VirtualSize As Long
     VirtualAddress As Long
     SizeOfRawData As Long

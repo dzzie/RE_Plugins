@@ -1,7 +1,7 @@
 Attribute VB_Name = "Module1"
 Public Type IMAGE_SECTION_HEADER
-    nameSec As String * 6
-    PhisicalAddress As Integer
+    nameSec As String * 8
+    'PhisicalAddress As Integer
     VirtualSize As Long
     VirtualAddress As Long
     SizeOfRawData As Long

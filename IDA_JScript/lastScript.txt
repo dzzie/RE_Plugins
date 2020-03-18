@@ -1,35 +1,22 @@
-base = "C:\\Documents and Settings\\david\\Desktop\\53784\\"
-dat = fso.readfile(base+"\\apitable2.txt")
-//$+4      >77DD6C17  ADVAPI32.RegCloseKey
-tmp = dat.split("\r\n")
-j=0;x=''
-lookup = new Array()
-for(i=0;i<tmp.length;i++){
-   a = tmp[i].lastIndexOf('.')+1
-   n = tmp[i].substring(a)
-   //t(j + ' ' + n)
-   if(n.length==0) n = "UNKNOWN"
-   lookup[j] = n
-   x +=n+','
-   j+=4;
+start = 0x66106D14 //main offset table
+start = 0x66107114 //_tblDispatch_Lead0
+start = 0x66107514 //_tblLead1   
+start = 0x66107914 //tblLead2
+start = 0x66107D14 //tblLead3
+start = 0x66108114 //tblLead4
+
+nl="\r\n";
+tmp = ("index,funcPointer,funcOffset,name")+nl
+for(i=0;i<256;i++){
+    r = ida.xrefsfrom(start)
+    n = ida.getname(r)
+    tmp+=([h(i),h(start),h(r),n].join(','))+nl
+    start+=4
 }
 
-app.setclipboard(x)
-die()
-dat = fso.readfile(base+"\\api_table_calls.txt")
-
-
-//.text:10003D8B odfa                         call    dword ptr [eax+108h]
-tmp = dat.split("\r\n")
-for(i=0;i<tmp.length;i++){
-   addr = tmp[i].substring(6,14)
-   a = tmp[i].lastIndexOf('+')+1
-   offset = parseInt('0x'+tmp[i].substring(a).replace(']','').replace('h',''))
-   //t(addr + '->' + lookup[offset])
-   //ida.addcomment(parseInt('0x'+addr),lookup[offset])
-   t('MakeComm(0x'+addr+',"'+lookup[offset]+'");')
-}
-
+t(tmp)
+sa = app.savefiledialog()
+fso.writefile(sa, tmp)
 
 
 

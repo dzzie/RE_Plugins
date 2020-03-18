@@ -16,7 +16,7 @@ Option Explicit
 'http://sandsprite.com
 
 Public nameSec As String
-Public PhisicalAddress As Integer
+'Public PhisicalAddress As Integer
 Public VirtualSize As Long
 Public VirtualAddress As Long
 Public SizeOfRawData As Long
@@ -34,8 +34,8 @@ Public index As Long 'used for collection index
  Friend Function LoadStruc(sh As IMAGE_SECTION_HEADER)
     
     With sh
-        nameSec = Replace(.nameSec, Chr(0), "") 'string *6 extra null
-        PhisicalAddress = .PhisicalAddress
+        nameSec = Replace(.nameSec, Chr(0), "") 'string *8 extra null
+        'PhisicalAddress = .PhisicalAddress
         VirtualSize = .VirtualSize
         VirtualAddress = .VirtualAddress
         SizeOfRawData = .SizeOfRawData
@@ -53,7 +53,7 @@ Public index As Long 'used for collection index
     
     With GetStruc
         .nameSec = nameSec & Chr(0)
-        .PhisicalAddress = PhisicalAddress
+        '.PhisicalAddress = PhisicalAddress
         .VirtualSize = VirtualSize
         .VirtualAddress = VirtualAddress
         .SizeOfRawData = SizeOfRawData

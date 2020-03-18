@@ -14,7 +14,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Public nameSec As String
-Public PhisicalAddress As Integer
+'Public PhisicalAddress As Integer
 Public VirtualSize As Long
 Public VirtualAddress As Long
 Public SizeOfRawData As Long
@@ -28,7 +28,7 @@ Friend Sub LoadStruc(sh As SECTION_HEADER)
     
     With sh
         nameSec = .nameSec
-        PhisicalAddress = .PhisicalAddress
+        'PhisicalAddress = .PhisicalAddress
         VirtualSize = .VirtualSize
         VirtualAddress = .VirtualAddress
         SizeOfRawData = .SizeOfRawData
@@ -45,7 +45,7 @@ Friend Sub GetStruc(sh As SECTION_HEADER)
 
     With sh
         .nameSec = nameSec
-        .PhisicalAddress = PhisicalAddress
+        '.PhisicalAddress = PhisicalAddress
         .VirtualSize = VirtualSize
         .VirtualAddress = VirtualAddress
         .SizeOfRawData = SizeOfRawData
