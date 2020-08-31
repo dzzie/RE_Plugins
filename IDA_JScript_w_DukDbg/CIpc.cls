@@ -32,36 +32,42 @@ End Type
 
 'quick call offers about 3x performance boost over original..
 Public Enum quickCallMessages
-    qcmJmpAddr = 1    ' jmp:lngAdr
     qcmJmpRVA = 7     ' jmp_rva:lng_rva
-    qcmImgBase = 8    ' imgbase
-    qcmReadByte = 10  ' readbyte:lngva
-    qcmOrgByte = 11   ' orgbyte:lngva
     qcmRefresh = 12   ' refresh
     qcmNumFuncs = 13  ' numfuncs
-    qcmFuncStart = 14 ' funcstart:funcIndex
-    qcmFuncEnd = 15   ' funcend:funcIndex
-    qcmUndef = 20     ' undefine:offset
-    qcmHide = 22      ' hide:offset
-    qcmShow = 23      ' show:offset
-    qcmRemName = 24   ' remname:offset
-    qcmMakeCode = 25  ' makecode:offset
-    qcmFuncIdx = 32   ' funcindex:va
-    qcmNextEa = 33    ' nextea:va
-    qcmPrevEa = 34    ' prevea:va
-    qcmScreenEA = 37  ' screenea:
     qcmDebugMessages = 38
     qcmhasDecompiler = 39
     qcmFlushDecompilationResults = 40
-    qcmIDAHwnd = 41     'gets main IDA Window HWND
+    'qcmIDAHwnd = 41     'gets main IDA Window HWND  'todo? unsupported now it seems
     qcmGetVersion = 42  'version of interface
     qcmSetFocusSelectLine = 43 'bring IDA to forefront and select current line
-    qcmIsCode = 44
-    qcmIsData = 45
-    qcmInstLen = 46
-    qcmReadLong = 47
-    qcmReadShort = 48
+    qcmIsX64Disasm = 49
+    
+    'not x64 safe
+    qcmJmpAddr_32 = 1    ' jmp:lngAdr
+    qcmImgBase_32 = 8    ' imgbase
+    qcmReadByte_32 = 10  ' readbyte:lngva
+    qcmOrgByte_32 = 11   ' orgbyte:lngva
+    qcmFuncStart_32 = 14 ' funcstart:funcIndex
+    qcmFuncEnd_32 = 15   ' funcend:funcIndex
+    qcmUndef_32 = 20     ' undefine:offset
+    qcmHide_32 = 22      ' hide:offset
+    qcmShow_32 = 23      ' show:offset
+    qcmRemName_32 = 24   ' remname:offset
+    qcmMakeCode_32 = 25  ' makecode:offset
+    qcmFuncIdx_32 = 32   ' funcindex:va
+    qcmNextEa_32 = 33    ' nextea:va
+    qcmPrevEa_32 = 34    ' prevea:va
+    qcmScreenEA_32 = 37  ' screenea:
+    qcmIsCode_32 = 44
+    qcmIsData_32 = 45
+    qcmInstLen_32 = 46
+    qcmReadLong_32 = 47
+    qcmReadShort_32 = 48
 End Enum
+
+
+
 
 Private Const WM_COPYDATA = &H4A
 Private Const HWND_BROADCAST = &HFFFF&
@@ -92,8 +98,8 @@ Function Listen(hwnd As Long) As String
     If Not sc.AttachMessage(subclassed_hwnd, WM_COPYDATA) Then Exit Function
         
     isListening = True
-    IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER")
-    IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL")
+    IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage("IDA_SERVER2")
+    IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL2")
     sc.AttachMessage subclassed_hwnd, IDASRVR_BROADCAST_MESSAGE
     
     'FindActiveIDAWindows

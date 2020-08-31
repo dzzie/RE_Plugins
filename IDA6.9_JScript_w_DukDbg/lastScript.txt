@@ -1,0 +1,9 @@
+e = 0x00413050
+r = ida.xRefsTo(e).split(',');
+
+for(i=0;i<r.length;i++){
+    a = ida.getAsm(ida.prevEA(r[i]))
+    if(a.indexOf('241') > 0) t(a)
+}
+
+t('done')

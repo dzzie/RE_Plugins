@@ -1,0 +1,11 @@
+
+for(i=0 ; i < ida.funcCount(); i++){
+    n = ida.functionName(i)
+    if(n.indexOf('after_exportCerts') == 0){
+        //n = n.subString('after_exportCerts'.length+1)
+        ida.removeName(ida.functionStart(i));
+    }
+    
+}
+
+alert('done');

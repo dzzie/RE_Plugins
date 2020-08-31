@@ -1,0 +1,78 @@
+
+str = ida.prevea(0x0040A91C);
+buf = ida.prevea(str);
+key = ida.prevea(buf);
+
+//t('str '+h(str))
+//t('buf '+h(buf))
+//t('key '+h(key))
+
+if(isPush(str)){
+    b = '0x'+ h(getLastRef(str))
+    s = extractUniString(b);
+    k = getConst(key)
+    t( b + ' ' + s);
+    t('key: '+ k + ' decode: ' + decodeString(s,k) )
+}
+
+function getLastRef(ea){
+    
+    x = ida.getrefsfrom(parseInt(ea)).split(',');
+    //alert(h(x))
+    return x[x.length-2];
+
+}
+
+function isPush(ea){
+    
+    a = ida.getasm(parseInt(ea))
+    return a.indexOf('push') >= 0 ? true : false;
+
+}
+
+function getConst(ea){
+    a = ida.getasm(parseInt(ea))
+    b = a.indexOf(' ') 
+    if(b >= 0) return a.substring(b+1)
+    return a
+}
+
+function extractUniString(ea){
+    
+    tmp='';
+    max=500
+    ea = parseInt(ea);
+    
+    do{
+        b1 = parseInt(ida.readbyte(ea))
+        //b2 = ida.readbyte(parseInt(ea)+1)
+        ea+=2;
+        tmp+=String.fromCharCode(b1);
+        max--;
+        if(max==0) break;
+    }while(b1 !=0)
+    
+    return tmp;
+    
+}
+
+function decodeString(s,key){
+    key = parseInt(key);
+    tmp='';
+    for(i=0;i<s.length;i++){
+        b = s.charCodeAt(i);
+        b ^= key;
+        tmp+= String.fromCharCode(b);
+    }
+    return tmp;
+}
+
+
+
+
+
+
+
+
+
+

@@ -12,14 +12,20 @@ Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
+'still a bunch of  'todo x64
 
 Public ipc As CIpc
 Attribute ipc.VB_VarHelpID = -1
+Private tmp_x As New ULong64
+Public is64BitMode As Boolean
+
 
 Private Sub Class_Initialize()
     Set ipc = New CIpc
     ipc.FindClient "IDA_SERVER"
     ipc.Listen Form1.hwnd
+    tmp_x.use0x = True
+    tmp_x.useTick = False
 End Sub
 
 Property Get timeout()
@@ -34,6 +40,16 @@ End Property
 Property Get isUp() As Boolean
     isUp = IIf(IsWindow(ipc.RemoteHWND) = 1, True, False)
 End Property
+
+Function targetIs_x86() As Boolean
+    If ipc.quickCall(qcmIsX64Disasm) = 0 Then
+        targetIs_x86 = True
+        is64BitMode = False
+    Else
+        is64BitMode = True
+        targetIs_x86 = False
+    End If
+End Function
 
 Sub do_events()
     DoEvents
@@ -120,15 +136,15 @@ Function getAsm(va)
 End Function
 
 Function instSize(offset)
-    instSize = quickCall(qcmInstLen, CLng(offset))
+    instSize = ipc.SendCmdRecvInt("decodeins:" & offset) ' quickCall(qcmInstLen, CLng(offset))
 End Function
 
 Function isCode(offset)
-    isCode = quickCall(qcmIsCode, CLng(offset))
+    isCode = ipc.SendCmdRecvInt("iscode:" & offset) 'quickCall(qcmIsCode, CLng(offset))
 End Function
 
 Function isData(offset)
-    isData = quickCall(qcmIsData, CLng(offset))
+    isData = ipc.SendCmdRecvInt("isdata:" & offset) 'quickCall(qcmIsData, CLng(offset))
 End Function
 
 Function xRefsTo(offset) 'returns CSV list
@@ -201,23 +217,27 @@ Function getComment(offset)
     If getComment = "NULL" Then getComment = Empty
 End Function
 
-
+ 'todo x64
  Sub addCodeXRef(offset, tova)
     ipc.Send "addcodexref:" & offset & ":" & tova
  End Sub
  
+  'todo x64
   Sub addDataXRef(offset, tova)
     ipc.Send "adddataxref:" & offset & ":" & tova
  End Sub
  
+  'todo x64
  Sub delCodeXRef(offset, tova)
     ipc.Send "delcodexref:" & offset & ":" & tova
  End Sub
  
+  'todo x64
  Sub delDataXRef(offset, tova)
     ipc.Send "deldataxref:" & offset & ":" & tova
  End Sub
  
+ 'todo x64
 Function funcVAByName(name)
     funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
 End Function
@@ -226,6 +246,7 @@ Function renameFunc(oldname, newName) As Boolean
     renameFunc = IIf(ipc.SendCmdRecvInt("rename:" & oldname & ":" & newName) = 1, True, False)
 End Function
 
+ 'todo x64
 Function find(startea, endea, hexstr) '-1 if fail
     'findcode:start:end:hexstr
     find = ipc.SendCmdRecvInt("findcode:" & startea & ":" & endea & ":" & hexstr)
@@ -249,9 +270,24 @@ End Function
 
 '--------------[ QUICK CALLS ]----------------------------------------
 
+'x86 is unchanged with quickcalls because
+' 1) already debugged, 2) 3x faster,
+' --> 3) it lets JS deal with results as numbers normally and not make everything an x64 string! <--
+' yes I hate the extra code and special cases js (and vb) problem...
+
 Function jump(va)
     On Error Resume Next
-    ipc.quickCall qcmJmpAddr, CLng(va)
+    
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmJmpAddr_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        ipc.Send "jmp:" & tmp_x.toString(mHex)
+    End If
+    
 End Function
 
 Function jumpRVA(rva)
@@ -263,44 +299,108 @@ Function refresh()
     ipc.quickCall qcmRefresh
 End Function
 
-Function undefine(offset)
+Function undefine(va)
     On Error Resume Next
-    ipc.quickCall qcmUndef, CLng(offset)
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmUndef_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        ipc.Send "undefine:" & tmp_x.toString(mHex)
+    End If
 End Function
 
-Function showEA(offset)
+Function showEA(va)
     On Error Resume Next
-    ipc.quickCall qcmShow, CLng(offset)
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmShow_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        ipc.Send "show:" & tmp_x.toString(mHex)
+    End If
 End Function
 
-Function hideEA(offset)
+Function hideEA(va)
     On Error Resume Next
-    ipc.quickCall qcmHide, CLng(offset)
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmHide_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        ipc.Send "hide:" & tmp_x.toString(mHex)
+    End If
 End Function
 
- Sub removeName(offset)
+ Sub removeName(va)
     On Error Resume Next
-    ipc.quickCall qcmRemName, CLng(offset)
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmRemName_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Sub
+        End If
+        ipc.Send "remname:" & tmp_x.toString(mHex)
+    End If
  End Sub
 
-Sub makeCode(offset)
+Sub makeCode(va)
     On Error Resume Next
-    ipc.quickCall qcmMakeCode, CLng(offset)
+    If Me.targetIs_x86 Then
+        ipc.quickCall qcmMakeCode_32, CLng(va)
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Sub
+        End If
+        ipc.Send "makecode:" & tmp_x.toString(mHex)
+    End If
 End Sub
 
 Function funcIndexFromVA(va)
     On Error Resume Next
-    funcIndexFromVA = ipc.quickCall(qcmFuncIdx, CLng(va))
+    If Me.targetIs_x86 Then
+        funcIndexFromVA = ipc.quickCall(qcmFuncIdx_32, CLng(va))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        funcIndexFromVA = ipc.SendCmdRecvInt("funcindex:" & tmp_x.toString(mHex))
+    End If
 End Function
 
 Function nextEA(va)
     On Error Resume Next
-    nextEA = ipc.quickCall(qcmNextEa, CLng(va))
+    If Me.targetIs_x86 Then
+        nextEA = ipc.quickCall(qcmNextEa_32, CLng(va))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        nextEA = ipc.SendCmdRecvText("nextea:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+    End If
 End Function
 
 Function prevEA(va)
     On Error Resume Next
-    prevEA = ipc.quickCall(qcmPrevEa, CLng(va))
+    If Me.targetIs_x86 Then
+        prevEA = ipc.quickCall(qcmPrevEa_32, CLng(va))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        prevEA = ipc.SendCmdRecvText("prevea:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+    End If
 End Function
 
 Function funcCount() As Long 'alias for numfuncs for intellisense which is sorted alphabetically..
@@ -313,42 +413,92 @@ End Function
 
  Function functionStart(functionIndex)
      On Error Resume Next
-    functionStart = ipc.quickCall(qcmFuncStart, CLng(functionIndex))
+     If Me.targetIs_x86 Then
+        functionStart = ipc.quickCall(qcmFuncStart_32, CLng(functionIndex))
+     Else
+        functionStart = ipc.SendCmdRecvText("funcstart:" & functionIndex & ":" & Form1.hwnd)
+     End If
  End Function
 
  Function functionEnd(functionIndex)
      On Error Resume Next
-    functionEnd = ipc.quickCall(qcmFuncEnd, CLng(functionIndex))
+     If Me.targetIs_x86 Then
+        functionEnd = ipc.quickCall(qcmFuncEnd_32, CLng(functionIndex))
+     Else
+        functionEnd = ipc.SendCmdRecvText("funcend:" & functionIndex & ":" & Form1.hwnd)
+     End If
  End Function
   
  Function readByte(va)
      On Error Resume Next
-    readByte = CByte(ipc.quickCall(qcmReadByte, CLng(va)))
+     If Me.targetIs_x86 Then
+        readByte = CByte(ipc.quickCall(qcmReadByte_32, CLng(va)))
+     Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        readByte = ipc.SendCmdRecvText("readByte:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+     End If
 End Function
 
 Function readLong(va)
     On Error Resume Next
-    If va = 0 Or va = -1 Then Exit Function
-    readLong = CLng(ipc.quickCall(qcmReadLong, CLng(va)))
+    If Me.targetIs_x86 Then
+         If va = 0 Or va = -1 Then Exit Function
+         readLong = CLng(ipc.quickCall(qcmReadLong_32, CLng(va)))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        readLong = ipc.SendCmdRecvText("readlong:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+    End If
 End Function
 
 Function readShort(va)
     On Error Resume Next
-    If va = 0 Or va = -1 Then Exit Function
-    readShort = CLng(ipc.quickCall(qcmReadShort, CLng(va)))
+    If Me.targetIs_x86 Then
+         If va = 0 Or va = -1 Then Exit Function
+         readShort = CLng(ipc.quickCall(qcmReadShort_32, CLng(va)))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        readShort = ipc.SendCmdRecvText("readshort:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+    End If
 End Function
 
 Function originalByte(va)
     On Error Resume Next
-    originalByte = CByte(ipc.quickCall(qcmOrgByte, CLng(va)))
+    
+    If Me.targetIs_x86 Then
+         If va = 0 Or va = -1 Then Exit Function
+         originalByte = CByte(ipc.quickCall(qcmOrgByte_32, CLng(va)))
+    Else
+        If Not tmp_x.fromString(va) Then
+            Form1.List1.AddItem "Failed to convert va: " & va
+            Exit Function
+        End If
+        originalByte = ipc.SendCmdRecvInt("orgbyte:" & tmp_x.toString(mHex))
+    End If
 End Function
 
 Function imageBase()
-    imageBase = ipc.quickCall(qcmImgBase)
+    If Me.targetIs_x86 Then
+         imageBase = ipc.quickCall(qcmImgBase_32)
+    Else
+        imageBase = ipc.SendCmdRecvText("imgbase:" & Form1.hwnd)
+    End If
 End Function
 
 Function screenEA() As Long
-    screenEA = ipc.quickCall(qcmScreenEA)
+    If Me.targetIs_x86 Then
+        screenEA = ipc.quickCall(qcmScreenEA_32)
+    Else
+        screenEA = ipc.SendCmdRecvText("screenea:" & Form1.hwnd)
+    End If
 End Function
 
 Function enableIDADebugMessages(Optional enabled As Boolean = True)

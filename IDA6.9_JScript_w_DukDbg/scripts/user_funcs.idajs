@@ -1,0 +1,27 @@
+x = new Array();
+a=0;
+for(i=0; i< ida.funcCount(); i++){
+    n = ida.functionName(i)
+    if(n.indexOf("sub_") !=0 
+       && n.indexOf('@')== -1
+       && n.indexOf('_')!=0
+       && n.indexOf('nullsub_') !=0
+       && n.indexOf('unknown_') == -1
+       && n.indexOf('j_') != 0
+       && n.indexOf('$') == -1
+    ){
+        x[a] = "MakeName( 0x" 
+        x[a] += h(ida.functionStart(i)) + ',"'
+        x[a++] += n + '");'
+    }
+}
+
+n = x.join('\r\n')
+t(n)
+app.setClipboard(n);
+
+f = fso.saveFileDialog()
+if(f.length > 0) fso.writeFile(f, n)
+
+//app.alert("done!")
+

@@ -1,0 +1,25 @@
+d = '.data:0041E4DC  Corey Weiner'
+
+d = fso.getClipboard();
+d = d.split('\r\n');
+alert(d.length)
+for(i=0;i<d.length;i++){ 
+    ida.patchstring(parseInt(offset(d[i])),data(d[i]),false );
+    ida.makestr(parseInt(offset(d[i])),true)
+}
+//alert(offset(d) + '+' + data(d));
+alert("done!");
+
+function offset(x){
+     a = x.indexOf(':');
+     b = x.indexOf(' ');
+     if(a>0&& b>0){
+        c = x.substring(a+1,b);
+        return '0x'+c;
+     }
+     return 0;
+}
+
+function data(x){
+    return  x.substring(x.indexOf('  ')+2) ;
+}

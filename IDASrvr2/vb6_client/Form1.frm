@@ -9,12 +9,28 @@ Begin VB.Form Form1
    ScaleHeight     =   5385
    ScaleWidth      =   10620
    StartUpPosition =   2  'CenterScreen
+   Begin VB.TextBox Text1 
+      Height          =   285
+      Left            =   9225
+      TabIndex        =   5
+      Text            =   "Text1"
+      Top             =   2610
+      Width           =   960
+   End
+   Begin VB.CommandButton Command2 
+      Caption         =   "Reg Find"
+      Height          =   195
+      Left            =   7695
+      TabIndex        =   4
+      Top             =   2610
+      Width           =   1095
+   End
    Begin VB.CommandButton Command1 
       Caption         =   "Connect to Active IDA Windows"
       Height          =   315
-      Left            =   7680
+      Left            =   7650
       TabIndex        =   2
-      Top             =   2400
+      Top             =   2250
       Width           =   2955
    End
    Begin VB.ListBox List2 
@@ -73,28 +89,69 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 'http://support.microsoft.com/kb/176058
-'this uses inline subclassing code, I would recommend using a library such as
-'my spSubclass or VBaccelerator's subclass lib for stability when running in the IDE.
-'ps dont hit end from within IDE or it will crash as subclass isnt cleaned up.
+'note both apps must be at same permission level to communicate over windows messages now..
 
 Public ida As New CIDA
+Dim sc As New cSubclass
+Implements iSubclass
 
+Const WM_COPYDATA = &H4A
+ 
 Private Sub Command1_Click()
-    
     IDA_HWND = Form2.SelectIDAInstance
     SampleAPI
-    
 End Sub
+
+Private Sub Command2_Click()
+    If ida.FindClient Then
+        Text1 = Hex(IDA_HWND)
+        SampleAPI
+    Else
+        List2.AddItem "Srvr2 window not found"
+    End If
+End Sub
+
+Public Sub Hook(hWnd As Long)
+     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(WINDOW_MSG_NAME)
+     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage(QUICKCALL_MSG_NAME)
+     sc.Subclass hWnd, Me
+     sc.AddMsg hWnd, IDASRVR_BROADCAST_MESSAGE, MSG_BEFORE
+     sc.AddMsg hWnd, IDA_QUICKCALL_MESSAGE, MSG_BEFORE
+     sc.AddMsg hWnd, WM_COPYDATA, MSG_BEFORE
+ End Sub
+
+ Public Sub Unhook()
+     sc.Unsubclass Me.hWnd
+ End Sub
+
+Private Sub iSubclass_WndProc( _
+    ByVal bBefore As Boolean, bHandled As Boolean, lReturn As Long, _
+    ByVal hWnd As Long, ByVal uMsg As Long, ByVal wParam As Long, ByVal lParam As Long _
+)
+     
+     If uMsg = IDASRVR_BROADCAST_MESSAGE Then
+        If IsWindow(lParam) = 1 Then
+            If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
+                Servers.add lParam, "hwnd:" & lParam
+                Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
+            End If
+        End If
+     End If
+     
+     If uMsg = WM_COPYDATA Then RecieveTextMessage lParam
+      
+End Sub
+ 
 
 Private Sub Form_Load()
 
     Dim windows As Long
-    Dim hwnd As Long
+    Dim hWnd As Long
     
     Me.Visible = True
     
-    Hook Me.hwnd
-    List1.AddItem "Listening for messages on hwnd: " & Me.hwnd
+    Hook Me.hWnd
+    List1.AddItem "Listening for messages on hwnd: " & Me.hWnd
 
     'ida.FindClient() this will load the last open IDASrvr, below we show how to detect multiple windows and select one..
     
@@ -108,9 +165,9 @@ Private Sub Form_Load()
     ElseIf windows = 1 Then
         IDA_HWND = Servers(1)
     Else
-        hwnd = Form2.SelectIDAInstance(False)
-        If hwnd = 0 Then Exit Sub
-        IDA_HWND = hwnd
+        hWnd = Form2.SelectIDAInstance(False)
+        If hWnd = 0 Then Exit Sub
+        IDA_HWND = hWnd
     End If
         
     SampleAPI
@@ -121,7 +178,7 @@ End Sub
 Sub SampleAPI()
 
     Dim va As ULong64
-    Dim hwnd As Long
+    Dim hWnd As Long
     Dim a As Long
     Dim b As Long
     Dim r As Long
@@ -155,7 +212,7 @@ Sub SampleAPI()
     List1.AddItem "Func[0].name: " & ida.FunctionName(1)
     List1.AddItem "1st inst: " & ida.GetAsm(va)
     
-    List1.AddItem "VA For Func 'start': " & Hex(ida.FuncAddrFromName("start"))
+    'List1.AddItem "VA For Func 'start': " & Hex(ida.FuncAddrFromName("start"))
     
     List1.AddItem "Jumping to 1st inst"
     ida.Jump va
@@ -166,4 +223,5 @@ Private Sub Form_Unload(Cancel As Integer)
     Unhook
 End Sub
  
+
 

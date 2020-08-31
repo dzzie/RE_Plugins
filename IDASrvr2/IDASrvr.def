@@ -42,6 +42,7 @@ LIBRARY IDASrvr
 		ImageBase
 	    DecompileFunction
 	    SetFocusSelectLine
+		WindowProc
 
 
 

@@ -451,7 +451,7 @@ Function installPLW(Optional alert As Boolean = False, Optional forceUpdate As B
     Dim pluginDir As String, plwPath As String
     Dim ida As String
     
-    Const plw = "IDASrvr.plw"
+    Const plw = "IDASrvr2.dll"
     
     ida = IDAPath()
     If Len(ida) = 0 Then

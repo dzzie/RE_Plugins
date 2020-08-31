@@ -1,0 +1,56 @@
+//emit_with_disasm.idajs
+ea = ida.screenEA()
+funcIndex = ida.funcIndexFromVA(ea)
+if(funcIndex == -1) throw("Cursor not in a function");
+
+fName = ida.functionName(funcIndex);
+fStart = ida.functionStart(funcIndex);
+fEnd = ida.functionEnd(funcIndex);
+
+tmp = '';x = new Array();
+x.push("// opcodes for " + fName + " size: 0x" + h(fEnd-fStart) + " bytes");
+
+i = parseInt(fStart); //duk takes i as string if not weird..
+while(i < fEnd){  
+    sz = ida.instSize(i);
+    if(sz < 1){
+        alert("Inst size 0 @ "+h(i));
+        break;
+    }
+    for(j = 0; j < sz; j++){    
+        tmp+= "_asm _emit 0x" + h(ida.readByte(i+j)) + " ";
+    }
+    tmp = padAsm(i) + tmp;
+    
+    i+=sz;
+    x.push('\t'+tmp);
+    tmp = ''
+}
+
+x = x.join('\r\n')
+app.setClipboard(x)
+t(x)
+
+function padAsm(va){
+   defLen = 45;
+   asm = ida.getAsm(va);
+   a = asm.indexOf(';'); //ida strip comments
+   if(a > 0) asm = asm.substring(0,a);
+   while(asm.length < 30) asm+=' ';
+   asm = "/* " + asm + " */  "
+   return asm;
+}
+
+
+//example output
+/*
+	/ * push    ebp                    * /  _asm _emit 0x55 
+	/ * mov     ebp, esp               * /  _asm _emit 0x8B _asm _emit 0xEC 
+	/ * sub     esp, 0Ch               * /  _asm _emit 0x83 _asm _emit 0xEC _asm _emit 0x0C 
+	/ * push    4                      * /  _asm _emit 0x6A _asm _emit 0x04 
+	/ * lea     eax, [ebp+arg_8]       * /  _asm _emit 0x8D _asm _emit 0x45 _asm _emit 0x10 
+	/ * push    eax                    * /  _asm _emit 0x50 
+*/
+	
+	
+

@@ -1,4 +1,6 @@
 
+--- Note this is for IDASRVR2 and the new 64bit compiles of IDA 7.0+ ---
+
 Status: late beta
 Link:   http://sandsprite.com/tools.php?id=25
 

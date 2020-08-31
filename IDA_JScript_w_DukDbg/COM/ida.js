@@ -102,7 +102,7 @@ function idaClass(){
 	this.message = function(msg){
 		return resolver('ida.Message', arguments.length,0, msg);
 	}
-
+	
 	this.makeStr = function(va, ascii){
 		return resolver('ida.MakeStr', arguments.length,0, va, ascii);
 	}

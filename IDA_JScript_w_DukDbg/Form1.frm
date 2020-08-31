@@ -1,7 +1,7 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "mscomctl.ocx"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{047848A0-21DD-421D-951E-B4B1F3E1718D}#89.0#0"; "dukDbg.ocx"
-Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "RICHTX32.OCX"
+Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "richtx32.ocx"
 Object = "{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0"; "MSWINSCK.OCX"
 Begin VB.Form Form1 
    Caption         =   "IDA JScript - http://sandsprite.com"
@@ -160,6 +160,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -227,6 +228,7 @@ Public ida As New CIDAScript
 Public loadedFile As String
 Public sci As sci2.SciSimple
 Public remote As New CRemoteExportClient
+Public x64 As New CX64
 
 Private Sub cboSaved_Click()
     On Error Resume Next
@@ -298,6 +300,8 @@ Private Sub txtjs_StateChanged(state As dukDbg.dbgStates)
                 Exit Sub
             End If
         End If
+        
+        If ida.isUp Then ida.targetIs_x86 'sets public ida.is64BitMode used internally (cached)
 
     End If
     
@@ -330,6 +334,8 @@ Private Sub Form_Load()
 
     'to use with duk we MUST use correct case on these since the relay is through JS
     
+    txtjs.AddIntellisense "x64", "add subtract"
+    
     txtjs.AddIntellisense "fso", "readFile writeFile appendFile fileExists deleteFile openFileDialog saveFileDialog"
     
     txtjs.AddIntellisense "ida", "isUp message makeStr makeUnk loadedFile patchString patchByte getAsm instSize " & _
@@ -360,6 +366,10 @@ Private Sub Form_Load()
     txtjs.userCOMDir = App.path & "\COM"
     If Not txtjs.AddObject(ida, "ida") Then
         MsgBox "Failed to add ida object?"
+    End If
+    
+    If Not txtjs.AddObject(x64, "x64") Then
+        MsgBox "Failed to add x64 object?"
     End If
     
     If Not txtjs.AddObject(List1, "list") Then

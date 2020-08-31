@@ -1,0 +1,3 @@
+VBGROUP 5.0
+Project=..\..\duk4vb\vb_examples\full_ocx\Project1.vbp
+StartupProject=Project1.vbp

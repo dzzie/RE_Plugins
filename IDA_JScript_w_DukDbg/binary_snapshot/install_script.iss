@@ -23,6 +23,7 @@ Source: scivb2.ocx; DestDir: {app}; Flags: regserver   replacesameversion
 Source: vbDevKit.dll; DestDir: {app}; Flags: regserver
 Source: Duk4VB.dll; DestDir: {app}; Flags: replacesameversion
 Source: ..\COM\ida.js; DestDir: {app}\COM\
+Source: ..\COM\x64.js; DestDir: {app}\COM\
 Source: ..\COM\list.js; DestDir: {app}\COM\
 Source: ..\COM\TextBox.js; DestDir: {app}\COM\
 Source: ..\COM\remote.js; DestDir: {app}\COM\

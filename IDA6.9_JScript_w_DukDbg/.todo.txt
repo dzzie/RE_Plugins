@@ -1,0 +1,12 @@
+
+readLong
+startBenchMark/endBenchMark
+
+add filestream class for incremental writes to one open file..
+
+compatiable icon
+use the dukdbg js engine / debugger component once binary compat set
+
+instSize must return an integer/long (may be handled as a string type)
+x - instSize can return something absurd like 500, it is calculating the next code address not cur disasm byte length..
+quickcall direct access from script not working?

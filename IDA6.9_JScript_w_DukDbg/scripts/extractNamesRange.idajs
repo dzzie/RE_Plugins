@@ -1,0 +1,33 @@
+
+//creates an IDC script of all of the user defined names in an IDB and saves them to the clipboard.
+
+x = new Array();
+a=0;
+for(i=0; i< ida.funcCount(); i++){
+    n = ida.functionName(i)
+    if(n.indexOf("sub_") !=0 
+       && n.indexOf('@')== -1
+       && n.indexOf('_')!=0
+       && n.indexOf('nullsub_') !=0
+       && n.indexOf('unknown_') == -1
+       && n.indexOf('j_') != 0
+       && n.indexOf('$') == -1
+    ){
+        x[a] = "MakeName( 0x" 
+        x[a] += h(ida.functionStart(i)) + ',"'
+        x[a++] += n + '");'
+    }
+}
+
+n = x.join('\r\n')
+t(n)
+app.setClipboard(n);
+//app.alert("done!")
+
+alert("User defined names IDC saved to clipboard");
+
+
+
+
+
+

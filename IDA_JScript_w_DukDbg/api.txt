@@ -1,3 +1,5 @@
+add(x64Str1, strorInt2)
+subtract(x64Str1, strorInt2)
 alert(msg)
 imagebase()
 loadedfile (property get)

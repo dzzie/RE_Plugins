@@ -1,10 +1,13 @@
 Type=Exe
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{60E64C4D-86E1-4F70-9D74-82C8C8F7745C}#8b.0#0#..\..\_code\libs-master\dzrt\dzrt.dll#.DZ Runtime from Sandsprite.com
 Form=Form1.frm
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
 Module=Module1; Module1.bas
 Class=CIDA; CIDA.cls
 Form=Form2.frm
 Class=ULong64; ULong64.cls
+Class=cSubclass; cSubclass.cls
+Class=iSubclass; iSubclass.cls
 IconForm="Form1"
 Startup="Form1"
 ExeName32="vb6_client.exe"

@@ -1,0 +1,31 @@
+
+bugs..h() will overflow if x > signed int
+
+
+y=''
+x = ida.numfuncs()
+for(i=0;i<5;i++){
+    y += ida.functionstart(i) + " " + ida.functionend(i) + " " + 
+          ida.functionname(i) + "\r\n";
+}
+
+ida.t(x + "\r\n" + y)
+
+-------------------------------------------------
+
+y='';
+va = 0x004014B0;
+for(i=0;i<5;i++){
+   sz = ida.instsize(va);
+   y+= h(va) + "     " + ida.getasm(va) + "\r\n";
+   va+=sz;
+}
+t(y)
+
+-------------------------------------------------
+
+tmp = ida.getrefsto(0x004832C8);
+tmp = tmp.split(',')
+ //ida.alert(tmp)
+for(i=0;i<tmp.length;i++) t(tmp[i])
+

@@ -18,13 +18,13 @@ End Type
  Global ResponseBuffer As String
  
  Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (hpvDest As Any, hpvSource As Any, ByVal cbCopy As Long)
- Private Declare Function CallWindowProc Lib "user32" Alias "CallWindowProcA" (ByVal lpPrevWndFunc As Long, ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
- Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hwnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
- Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
- Private Declare Function SendMessageByVal Lib "user32" Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Any) As Long
- Declare Function IsWindow Lib "user32" (ByVal hwnd As Long) As Long
- Private Declare Function RegisterWindowMessage Lib "user32" Alias "RegisterWindowMessageA" (ByVal lpString As String) As Long
- Private Declare Function SendMessageTimeout Lib "user32" Alias "SendMessageTimeoutA" (ByVal hwnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal fuFlags As Long, ByVal uTimeout As Long, lpdwResult As Long) As Long
+' Private Declare Function CallWindowProc Lib "user32" Alias "CallWindowProcA" (ByVal lpPrevWndFunc As Long, ByVal hWnd As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+' Private Declare Function SetWindowLong Lib "user32" Alias "SetWindowLongA" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+ Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+ Private Declare Function SendMessageByVal Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Any) As Long
+ Declare Function IsWindow Lib "user32" (ByVal hWnd As Long) As Long
+ Declare Function RegisterWindowMessage Lib "user32" Alias "RegisterWindowMessageA" (ByVal lpString As String) As Long
+ Private Declare Function SendMessageTimeout Lib "user32" Alias "SendMessageTimeoutA" (ByVal hWnd As Long, ByVal Msg As Long, ByVal wParam As Long, ByVal lParam As Long, ByVal fuFlags As Long, ByVal uTimeout As Long, lpdwResult As Long) As Long
  Public Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As LARGE_INTEGER) As Long
 
  Private Const HWND_BROADCAST = &HFFFF&
@@ -68,12 +68,12 @@ Function BenchMark() As Long
     BenchMark = i.lowpart
 End Function
 
- Public Sub Hook(hwnd As Long)
-     subclassed_hwnd = hwnd
-     lpPrevWndProc = SetWindowLong(subclassed_hwnd, GWL_WNDPROC, AddressOf WindowProc)
-     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(WINDOW_MSG_NAME)
-     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage(QUICKCALL_MSG_NAME)
- End Sub
+' Public Sub Hook(hwnd As Long)
+'     subclassed_hwnd = hwnd
+'     lpPrevWndProc = SetWindowLong(subclassed_hwnd, GWL_WNDPROC, AddressOf WindowProc)
+'     IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(WINDOW_MSG_NAME)
+'     IDA_QUICKCALL_MESSAGE = RegisterWindowMessage(QUICKCALL_MSG_NAME)
+' End Sub
 
  Function FindActiveIDAWindows() As Long
      Dim ret As Long
@@ -101,27 +101,27 @@ End Function
      Next
  End Function
  
- Public Sub Unhook()
-     If lpPrevWndProc <> 0 And subclassed_hwnd <> 0 Then
-            SetWindowLong subclassed_hwnd, GWL_WNDPROC, lpPrevWndProc
-     End If
- End Sub
-
- Function WindowProc(ByVal hw As Long, ByVal uMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-     
-     If uMsg = IDASRVR_BROADCAST_MESSAGE Then
-        If IsWindow(lParam) = 1 Then
-            If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
-                Servers.add lParam, "hwnd:" & lParam
-                Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
-            End If
-        End If
-     End If
-     
-     If uMsg = WM_COPYDATA Then RecieveTextMessage lParam
-     WindowProc = CallWindowProc(lpPrevWndProc, hw, uMsg, wParam, lParam)
-     
- End Function
+' Public Sub Unhook()
+'     If lpPrevWndProc <> 0 And subclassed_hwnd <> 0 Then
+'            SetWindowLong subclassed_hwnd, GWL_WNDPROC, lpPrevWndProc
+'     End If
+' End Sub
+'
+' Function WindowProc(ByVal hw As Long, ByVal uMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+'
+'     If uMsg = IDASRVR_BROADCAST_MESSAGE Then
+'        If IsWindow(lParam) = 1 Then
+'            If Not KeyExistsInCollection(Servers, "hwnd:" & lParam) Then
+'                Servers.add lParam, "hwnd:" & lParam
+'                Form1.List2.AddItem "New IDASrvr registering itself hwnd= " & lParam
+'            End If
+'        End If
+'     End If
+'
+'     If uMsg = WM_COPYDATA Then RecieveTextMessage lParam
+'     WindowProc = CallWindowProc(lpPrevWndProc, hw, uMsg, wParam, lParam)
+'
+' End Function
 
 Function KeyExistsInCollection(c As Collection, val As String) As Boolean
     On Error GoTo nope
@@ -132,7 +132,7 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
 nope: KeyExistsInCollection = False
 End Function
 
-Private Sub RecieveTextMessage(lParam As Long)
+Sub RecieveTextMessage(lParam As Long)
    
     Dim CopyData As COPYDATASTRUCT
     Dim Buffer(1 To 2048) As Byte
@@ -164,42 +164,42 @@ Private Sub RecieveTextMessage(lParam As Long)
 End Sub
 
 'returns the SendMessage return value which can be an int response.
-Function SendCMD(msg As String, Optional ByVal hwnd As Long) As Long
+Function SendCMD(Msg As String, Optional ByVal hWnd As Long) As Long
     Dim cds As COPYDATASTRUCT
     Dim buf(1 To 255) As Byte
     
-    If hwnd = 0 Then hwnd = IDA_HWND
+    If hWnd = 0 Then hWnd = IDA_HWND
     
     ResponseBuffer = Empty
-    Form1.List2.AddItem "SendingCMD(hwnd=" & hwnd & ", msg=" & msg & ")"
+    Form1.List2.AddItem "SendingCMD(hwnd=" & hWnd & ", msg=" & Msg & ")"
     
-    Call CopyMemory(buf(1), ByVal msg, Len(msg))
+    Call CopyMemory(buf(1), ByVal Msg, Len(Msg))
     cds.dwFlag = 3
-    cds.cbSize = Len(msg) + 1
+    cds.cbSize = Len(Msg) + 1
     cds.lpData = VarPtr(buf(1))
-    SendCMD = SendMessage(hwnd, WM_COPYDATA, subclassed_hwnd, cds)
+    SendCMD = SendMessage(hWnd, WM_COPYDATA, subclassed_hwnd, cds)
     'since SendMessage is syncrnous if the command has a response it will be received before this returns..
     
 End Function
 
-Function SendCmdRecvText(cmd As String, Optional ByVal hwnd As Long) As String
-    SendCMD cmd, hwnd
+Function SendCmdRecvText(cmd As String, Optional ByVal hWnd As Long) As String
+    SendCMD cmd, hWnd
     SendCmdRecvText = ResponseBuffer
 End Function
 
-Function SendCmdRecvX64(cmd As String, Optional ByVal hwnd As Long) As ULong64
+Function SendCmdRecvX64(cmd As String, Optional ByVal hWnd As Long) As ULong64
     Dim u As New ULong64, buf As String
-    buf = SendCmdRecvText(cmd, hwnd)
+    buf = SendCmdRecvText(cmd, hWnd)
     If Not u.fromString(buf, mUnsigned) Then
         MsgBox "Failed to recv x64 number for " & cmd
     End If
     Set SendCmdRecvX64 = u
 End Function
 
-Function SendCmdRecvLong(cmd As String, Optional ByVal hwnd As Long) As Long
-    SendCmdRecvLong = SendCMD(cmd, hwnd)
+Function SendCmdRecvLong(cmd As String, Optional ByVal hWnd As Long) As Long
+    SendCmdRecvLong = SendCMD(cmd, hWnd)
 End Function
 
-Function QuickCall(msg As quickCallMessages, Optional arg1 As Long = 0) As Long
-    QuickCall = SendMessageByVal(IDA_HWND, IDA_QUICKCALL_MESSAGE, msg, arg1)
+Function QuickCall(Msg As quickCallMessages, Optional arg1 As Long = 0) As Long
+    QuickCall = SendMessageByVal(IDA_HWND, IDA_QUICKCALL_MESSAGE, Msg, arg1)
 End Function

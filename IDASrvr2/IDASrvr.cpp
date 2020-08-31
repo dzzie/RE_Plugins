@@ -12,7 +12,7 @@ in an alternative manner..probably memory mapped files..
 
 NOTE: to build this project it is assumed you have an envirnoment variable 
 named IDASDK set to point to the base SDK directory. this env var is used in
-the C/C++ property tab, Preprocessor catagory, Additional include directories
+the C/C++ property tab, Preprocessor catagory, Additional include directoriestodo
 texbox so that this project can be built without having to be in a specific path
 Also used in the Linker - additional include directories.
 
@@ -23,14 +23,14 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 bool m_debug = true;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-//#define __EA64__  //create the plugin for the 32 bit, 64 bit capable IDA
+//#define __EA64__  //create the plugin for the 64 bit databases
 
 #ifdef __EA64__
-	#pragma comment(linker, "/out:./bin/IDASrvr2.p64")
-	#pragma comment(lib, "D:\\idasdk67\\idasdk67\\lib\\x86_win_vc_64\\ida.lib")
+	#pragma comment(linker, "/out:./bin/IDASrvr2_64.dll")
+	#pragma comment(lib, "D:\\idasdk75\\lib\\x64_win_vc_64\\ida.lib")
 #else
-	#pragma comment(linker, "/out:./bin/IDASrvr2.plw")
-	#pragma comment(lib, "D:\\idasdk67\\idasdk67\\lib\\x86_win_vc_32\\ida.lib")
+	#pragma comment(linker, "/out:./bin/IDASrvr2.dll")
+	#pragma comment(lib, "D:\\idasdk75\\lib\\x64_win_vc_32\\ida.lib")
 #endif
 
 #pragma warning(disable:4996) //may be unsafe function
@@ -51,7 +51,6 @@ bool m_debug = true;
 #include <auto.hpp>
 #include <frame.hpp>
 #include <dbg.hpp>
-#include <area.hpp>
 #include <stdio.h>
 #include <search.hpp>
 #include <xref.hpp>
@@ -76,11 +75,18 @@ int InterfaceVersion = 2;
 
 xrefblk_t xb;
 
+
 typedef struct{
     int dwFlag;
     int cbSize;
     int lpData;
-} cpyData; 
+} cpyData32;
+
+typedef struct {
+	ULONG_PTR dwFlag; // dwData;
+	DWORD     cbSize; // cbData;
+	PVOID     lpData;
+} cpyData;
 
 char baseKey[200] = "Software\\VB and VBA Program Settings\\IPC\\Handles";
 char *IPC_NAME = "IDA_SERVER2";
@@ -96,20 +102,21 @@ __int64 __stdcall ImageBase(void);
 void __stdcall SetFocusSelectLine(void);
 
 
+
+
 int EaForFxName(char* fxName){
 	
 	func_t *fx;
 	int x = get_func_qty();
-	char buf[200];
+	qstring q;
 
 	for(int i=0;i<x;i++){
 		fx = getn_func(i);
-		get_func_name(fx->startEA, (char*)buf, 199);
-		if(buf){
+		if(get_func_name(&q, fx->start_ea) > 0){
 			//if(m_debug) msg("on index %d name=%s\n", i, buf);
-			if(strcmp(buf, fxName)==0){
-				if(m_debug) msg("Found ea for name %s=%x\n", fxName, fx->startEA );
-				return fx->startEA;
+			if(q == fxName){
+				if(m_debug) msg("Found ea for name %s=%x\n", fxName, fx->start_ea );
+				return fx->start_ea;
 			}
 		}
 	}
@@ -211,7 +218,7 @@ bool SendTextMessage(int hwnd, char *Buffer, int blen)
 		  if(m_debug) msg("Trying to send message to %x size:%d\n", hwnd, blen);
 		  cpyData cpStructData;  
 		  cpStructData.cbSize = blen ;
-		  cpStructData.lpData = (int)Buffer;
+		  cpStructData.lpData = (PVOID)Buffer;
 		  cpStructData.dwFlag = 3;
 		  SendMessage((HWND)hwnd, WM_COPYDATA, (WPARAM)hwnd,(LPARAM)&cpStructData);  
 		  return true;
@@ -234,79 +241,82 @@ bool SendIntMessage(int hwnd, __int64 resp){
 int HandleQuickCall(unsigned __int64 fIndex, unsigned __int64 arg1){
 
 	//msg("QuickCall( %d, 0x%x)\n" , fIndex, arg1);
-	
+	insn_t ins;
+
 	switch(fIndex){
 
 		/*-------------------------------------------------------------------------------------
-			this next block of indented functions should work for x64 disassemblies
-			IF called from an 64bit client. 32bit clients accessing 64 disasm should not use
-			these quick call functions and use the regular string based versions instead.
-		--------------------------------------------------------------------------------------*/
-		//#ifndef __EA64__
+		this next block of indented functions should work for x64 disassemblies
+		IF called from an 64bit client. 32bit clients accessing 64 disasm should not use
+		these quick call functions and use the regular string based versions instead.
+	     -------------------------------------------------------------------------------------*/
+	//#ifndef __EA64__
 
-				case 1: // jmp:lngAdr
-						Jump( arg1 );
-						return 0;
+			case 1: // jmp:lngAdr
+					Jump( arg1 );
+					return 0;
 
-				case 8: // imgbase 
-						return ImageBase();
+			case 8: // imgbase
+					return ImageBase();
 
-				case 10: //readbyte:lngva 
-						return get_byte(arg1);
-						 
-				case 11: //orgbyte:lngva 
-						return get_original_byte(arg1);		 
+			case 10: //readbyte:lngva
+					return get_byte(arg1);
 
-				case 14: //funcstart:funcIndex 
-						 return FunctionStart( arg1 );
-						 
-				case 15: //funcend:funcIndex 
-						 return FunctionEnd( arg1 );
+			case 11: //orgbyte:lngva
+					return get_original_byte(arg1);
 
-				case 20: //undefine:offset
-						Undefine( arg1 );
-						return 0;		
+			case 14: //funcstart:funcIndex
+					 return FunctionStart( arg1 );
 
-				case 22: //hide:offset
-						HideEA( arg1 );
-						return 0;
+			case 15: //funcend:funcIndex
+					 return FunctionEnd( arg1 );
 
-				case 23: //show:offset
-						ShowEA( arg1 );
-						return 0;
+			case 20: //undefine:offset
+					Undefine( arg1 );
+					return 0;
 
-				case 24: //remname:offset
-						RemvName( arg1 );
-						return 0;
+			case 22: //hide:offset
+					HideEA( arg1 );
+					return 0;
 
-				case 25: //makecode:offset
-						MakeCode( arg1 );
-						return 0;
+			case 23: //show:offset
+					ShowEA( arg1 );
+					return 0;
 
-				case 32: //funcindex:va 
-						return get_func_num( arg1 );
-					
-				case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably...
-						 return find_code( arg1 , SEARCH_DOWN | SEARCH_NEXT );
-							
-				case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...
-						 return find_code( arg1 , SEARCH_UP | SEARCH_NEXT );
+			case 24: //remname:offset
+					RemvName( arg1 );
+					return 0;
 
-				case 37: //screenea:
-						 return ScreenEA();
+			case 25: //makecode:offset
+					MakeCode( arg1 );
+					return 0;
 
-				case 44:
-						return isCode(getFlags(arg1));
-				case 45:
-						return isData(getFlags(arg1));
-				case 46:
-						return decode_insn(arg1);
-				case 47:
-						return get_long(arg1);
-				case 48:
-						return get_word(arg1);
+			case 32: //funcindex:va
+					return get_func_num( arg1 );
 
-		//#endif
+			case 33: //nextea:va  should this return null if it crosses function boundaries? yes probably...
+					 return find_code( arg1 , SEARCH_DOWN | SEARCH_NEXT );
+
+			case 34: //prevea:va  should this return null if it crosses function boundaries? yes probably...
+					 return find_code( arg1 , SEARCH_UP | SEARCH_NEXT );
+
+			case 37: //screenea:
+					 return ScreenEA();
+
+			case 44:
+					return is_code(get_flags(arg1));
+			case 45:
+					return is_data(get_flags(arg1));
+			case 46:
+					decode_insn(&ins, arg1);
+					return ins.size;
+			case 47:
+					return get_32bit(arg1);  //todo: IDA 7 this is now 32bit specific..add an x64?
+			case 48:
+					return get_16bit(arg1);
+
+	//#endif  
+
 
 		/*----------------------------------------------------------------------------
 		    quick calls below here are safe for both 32bit and 64bit clients always...
@@ -336,8 +346,8 @@ int HandleQuickCall(unsigned __int64 fIndex, unsigned __int64 arg1){
 			#endif
 				return 0;
 
-		case 41: //getIDAHwnd
-				return (int)callui(ui_get_hwnd).vptr;
+		//case 41: //getIDAHwnd  todo: IDA 7?
+				//return (int)callui(ui_notification_t::ui_get_hwnd).vptr;
 
 		case 42: //getVersion
 				return InterfaceVersion;
@@ -414,13 +424,14 @@ int HandleMsg(char* m){
 	q* 37 screenea:[:hwnd]  - hwnd required for x64..
 	   38 findcode:start:end:hexstr  //indexes no longer aligned with quick call.. 
 	   39 decompile:va:fpath         //replace the c:\ with c_\ so we dont break tokenization..humm that sucks.. 
+	   44 iscode:va
+	   45 isdata:va
+	   46 decodeins:va (instr length)
+	   47 getlong:va
+	   48 getword:va
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
-			  case 44: return isCode(getFlags(tmp)); - 
-			  case 45:return isData(getFlags(tmp)); - 
-			  case 46:return decode_insn(tmp);- 
-			  case 47:return get_long(tmp);- 
-			  case 48:return get_word(tmp);- 
+	     case 49: //isX64 disasm
 
     */
 
@@ -429,6 +440,7 @@ int HandleMsg(char* m){
 	char *token=0;
 	char buf[500];
 	char tmp[500];
+	insn_t ins;
 
 	memset(buf, 0,500);
 	memset(tmp, 0,500);
@@ -445,7 +457,8 @@ int HandleMsg(char* m){
 					"funcindex","nextea","prevea","makestring","makeunk", "screenea", "findcode", "decompile",
     /*               40           41        42        43        44        45        46         47        48 */
 					"qc_only","qc_only","qc_only","qc_only", "iscode", "isdata", "decodeins","getlong","getword",
-
+    /*               49           50        51        52        53        54        55         56        57 */
+		             "isx64", "getx64",
 
 					"\x00"};
 	
@@ -453,6 +466,15 @@ int HandleMsg(char* m){
 	unsigned __int64 x=0;
 	int argc=0;
 	int* zz = 0; //used only for returning 8 bit values with mask always 32bit safe and used as return value...
+
+	if (m == 0) {
+		msg("HandleMsg had null arg");
+		return 0;
+	}
+
+	/*MessageBox(0, m, "Message", 0);
+	msg("HandleMsg len: %d", strlen(m));
+	return 0;*/
 
 	//split command string into args array
 	token = strtok(m,":");
@@ -691,12 +713,13 @@ int HandleMsg(char* m){
 					break;
 		  case 35: //makestring:va:[ascii | unicode]
 					if( argc != 2 ){msg("makestring needs 2 args\n"); return -1;}
-					x = strcmp(args[2],"ascii") == 0 ? ASCSTR_TERMCHR : ASCSTR_UNICODE ;
-					make_ascii_string( _atoi64(args[1]), 0 /*auto*/, x);
+					x = strcmp(args[2],"ascii") == 0 ? STRTYPE_TERMCHR : STRTYPE_C;
+					create_strlit(_atoi64(args[1]), 0 /*auto*/, x);
 					break;
 		  case 36: //makeunk:va:size
 					if( argc != 2 ){msg("makeunk needs 2 args\n"); return -1;}
-					do_unknown_range( _atoi64(args[1]), _atoi64(args[2]), DOUNK_SIMPLE);
+					//do_unknown_range( _atoi64(args[1]), _atoi64(args[2]), DOUNK_SIMPLE);
+					del_items(_atoi64(args[1]), DELIT_SIMPLE, _atoi64(args[2]));
 					break;
 
 		  case 37: //screenea:[hwnd] - x64 must supply hwnd..
@@ -720,28 +743,33 @@ int HandleMsg(char* m){
 		  case 44: //iscode
 					if( argc != 1 ){msg("iscode needs 1 args\n"); return -1;}
 					x = _atoi64(args[1]);
-					return isCode(getFlags(x));
+					return is_code(get_flags(x));
 
 		  case 45: //isdata
 			  		if( argc != 1 ){msg("isdata needs 1 args\n"); return -1;}
 					x = _atoi64(args[1]);
-					return isData(getFlags(x));
+					return is_data(get_flags(x));
 
-		  case 46: //decodeins
+		  case 46: //decodeins  qcmInstLen = 46
 			  		if( argc != 1 ){msg("decode_insn needs 1 args\n"); return -1;}
 					x = _atoi64(args[1]);
-					return decode_insn(x);
+					decode_insn(&ins, x); 
+					return ins.size;
 
 		  case 47: //getlong
 			  		if( argc != 1 ){msg("getlong needs 1 args\n"); return -1;}
 					x = _atoi64(args[1]);
-					return get_long(x);
+					return get_32bit(x);
 
 		  case 48: //getword
 					if( argc != 1 ){msg("getword needs 1 args\n"); return -1;}
 					x = _atoi64(args[1]);
-					return get_word(x);
+					return get_16bit(x);
 
+		  case 50: //getx64
+					if (argc != 1) { msg("getx64 needs 1 args\n"); return -1; }
+					x = _atoi64(args[1]);
+					return get_64bit(x);
 
 
 	}				
@@ -755,6 +783,8 @@ int HandleMsg(char* m){
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 		
 		
+		//msg("WindowProc(hwnd=%x ,uMsg=%x, wParam=%x, lParam=%x)", hwnd, uMsg, wParam, lParam);
+
 		if( uMsg == IDA_QUICKCALL_MESSAGE )//uMsg apparently has to be a registered message to be received...
 		{
 			try{
@@ -767,39 +797,41 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 		}
 	
 		if( uMsg == IDASRVR_BROADCAST_MESSAGE){ //so clients can sent a broadcast to all windows with wparam of their command hwnd
+			if (m_debug) msg("IDASRVR_BROADCAST_MESSAGE Message Received\n");
 			if( IsWindow((HWND)wParam) ){       //we ping them back with with lParam = ServerHwnd to say were alive 
 				SendMessage((HWND)wParam, IDASRVR_BROADCAST_MESSAGE, 0, (LPARAM)ServerHwnd);
 			}
 			return 0;
 		}
 
-		if( uMsg != WM_COPYDATA) return 0;
-		if( lParam == 0) return 0;
+		if( uMsg != WM_COPYDATA) return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		if( lParam == 0)         return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		
 		int retVal = 0;
 		EnterCriticalSection(&m_cs);
 		memcpy((void*)&CopyData, (void*)lParam, sizeof(cpyData));
     
-		if( CopyData.dwFlag == 3 ){
-			if( CopyData.cbSize >= sizeof(m_msg) - 2 ) CopyData.cbSize = sizeof(m_msg) - 2;
- 
+		if (CopyData.dwFlag == 3 && CopyData.cbSize > 0) {
+
+			if (CopyData.cbSize >= sizeof(m_msg) - 2) CopyData.cbSize = sizeof(m_msg) - 2;
+
 			memcpy((void*)&m_msg[0], (void*)CopyData.lpData, CopyData.cbSize);
 			m_msg[CopyData.cbSize] = 0; //always null terminate..
 
-			if(m_debug)	msg("Message Received: %s \n", m_msg); 
+			if (m_debug)	msg("Message Received: %s \n", m_msg);
 
-			try{
-				retVal = HandleMsg(m_msg); 				    
-			}catch(...){ //remember this doesnt help any if we did anything that led to memory corruption...
-				msg("Caught an Error in HandleMsg!");
-				if(!m_debug) msg("Message: %s \n", m_msg); 
+			try {
+				retVal = HandleMsg(m_msg);
 			}
+			catch (...) { //remember this doesnt help any if we did anything that led to memory corruption...
+				msg("Caught an Error in HandleMsg!");
+				if (!m_debug) msg("Message: %s \n", m_msg);
+			}
+			 
 		}
 			
-		 
-	
-	LeaveCriticalSection(&m_cs);
-    return retVal;
+		LeaveCriticalSection(&m_cs);
+		return retVal;
 }
 
 /*
@@ -813,62 +845,189 @@ void DoEvents()
 
 } 
 */
+ 
 
-int idaapi init(void) 
+ 
+
+struct plugin_data_t : public plugmod_t, public event_listener_t
 {
-  //immediatly create server window for use (no need to explicitly launch plugin)  
-  ServerHwnd = CreateWindow("EDIT","MESSAGE_WINDOW", 0, 0, 0, 0, 0, 0, 0, 0, 0);
-  oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWL_WNDPROC, (LONG)WindowProc);
-  SetReg(IPC_NAME, (int)ServerHwnd);
-  IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(IPC_NAME);
-  IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL2");
-  InitializeCriticalSection(&m_cs);
-  msg("idasrvr2: initializing...\n");
 
-	#ifdef HAS_DECOMPILER
-	  if( init_hexrays_plugin(0) ){
-		  hasDecompiler = 1;
-		  msg("IDASrvr2: detected hexrays decompiler version %s\n", get_hexrays_version() );
-	  }else{
-		  msg("idasrvr2: init_hexrays_plugin failed...\n");
-	  }
-	#endif
+	virtual ssize_t idaapi on_event(ssize_t event_id, va_list) override;
+	virtual bool idaapi run(size_t arg) override;
 
-  /*if(!CreateMemMapFile("IDASRVR2_VFILE", 2048)){
-        msg("Failed to create vfile");
-        return 0;
-  }*/
+	idaapi ~plugin_data_t();
+};
 
-  return PLUGIN_KEEP;
+//--------------------------------------------------------------------------
+// This callback is called for UI notification events
+ssize_t idaapi plugin_data_t::on_event(ssize_t event_id, va_list)
+{
+	return 0; // 0 means "continue processing the event"
 }
 
-void idaapi term(void)
+void CreateServerWindow()
 {
-	try{	
-		#ifdef HAS_DECOMPILER 
-			if ( hasDecompiler ) term_hexrays_plugin();
-		#endif
-		SetWindowLong(ServerHwnd, GWL_WNDPROC, (LONG)oldProc);
-		DestroyWindow(ServerHwnd);
-		HWND saved_hwnd = ReadReg(IPC_NAME);
-		if( !IsWindow(saved_hwnd) ) SetReg(IPC_NAME, 0); 
-		//CloseHandle(hMemMapFile);
+	WNDCLASSEX wc = { };
+	MSG msg;
+	HWND hwnd;
+
+	wc.cbSize = sizeof(wc);
+	wc.style = 0;
+	wc.lpfnWndProc = WindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = GetModuleHandle(NULL);
+	wc.hIcon = NULL;
+	wc.hCursor = NULL;
+	wc.hbrBackground = NULL;
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = IPC_NAME;
+	wc.hIconSm = NULL;
+
+	if (!RegisterClassEx(&wc)) {
+		MessageBox(NULL, TEXT("Could not register window class"),NULL, MB_ICONERROR);
+		return;
 	}
-	catch(...){};
+
+	ServerHwnd = CreateWindowEx(WS_EX_LEFT,
+		IPC_NAME,
+		NULL,
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		NULL,
+		NULL,
+		GetModuleHandle(NULL),
+		NULL);
+
+	if (!ServerHwnd) {
+		MessageBox(NULL, TEXT("Could not create window"), NULL, MB_ICONERROR);
+		return;
+	}
+
+	//msg("ServerHWND = %x oldProc=%x newProc=%x", ServerHwnd, oldProc, WindowProc);
+}
+
+/*
+DWORD WINAPI ThreadProc(LPVOID lpParam)
+{
+	//immediatly create server window for use (no need to explicitly launch plugin)  
+	ServerHwnd = CreateWindow("EDIT", "MESSAGE_WINDOW", 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
+	SetReg(IPC_NAME, (int)ServerHwnd);
+	msg("idasrvr2: new thread hwnd=%x ThreadID=%x\n", ServerHwnd, GetCurrentThreadId());
+
+	MSG msg;
+	while (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return 0;
 
 }
 
-void idaapi run(int arg)
+
+BOOL CALLBACK CB_EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+	DWORD lpdwProcessId;
+	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
+	if (lpdwProcessId == lParam)
+	{
+		ServerHwnd = hwnd;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+void CALLBACK mTimerProc(HWND hwnd, UINT uMsg, UINT timerId, DWORD dwTime)
+{
+	msg("TimerProc threadID=%x", GetCurrentThreadId());
+	SendMessage(ServerHwnd, IDA_QUICKCALL_MESSAGE, 1, 1);
+}*/
+
+static plugmod_t* idaapi init()
 {
  
-  Launch_IdaJscript();
+	if (inf_get_filetype() == f_ELF)
+		return nullptr; // we do not want to work with this idb
+
+	//plugin_data_t* pd = new plugin_data_t;
+	// an example how to retrieve plugin options
+	const char* options = get_plugin_options("IDASrvr3");
+	if (options != nullptr)
+		warning("command line options: %s", options);
+
+	//immediatly create server window for use (no need to explicitly launch plugin)  
+	ServerHwnd = CreateWindow("EDIT", "MESSAGE_WINDOW", 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
+	//SetTimer(NULL, 0, 1000 , (TIMERPROC)&mTimerProc); //works, but WinProc not called w/sendmessage
+
+	CreateServerWindow();
+	//EnumWindows(CB_EnumWindowsProc, GetCurrentProcessId() );
+	//oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
+
+	DWORD hThread1Data = 0;
+
+	SetReg(IPC_NAME, (int)ServerHwnd);
+	IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(IPC_NAME);
+	IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL2");
+//	HANDLE hThread = CreateThread(NULL, 0, ThreadProc, &hThread1Data, 0, NULL);
+
+	InitializeCriticalSection(&m_cs);
+	msg("idasrvr2: initializing... hwnd=%x BROADCAST=%x QUICKCALL=%x ThreadID=%x\n", ServerHwnd, IDASRVR_BROADCAST_MESSAGE, IDA_QUICKCALL_MESSAGE, GetCurrentThreadId());
+
+#ifdef HAS_DECOMPILER
+	if (init_hexrays_plugin(0)) {
+		hasDecompiler = 1;
+		msg("IDASrvr2: detected hexrays decompiler version %s\n", get_hexrays_version());
+	}
+	else {
+		msg("idasrvr2: init_hexrays_plugin failed...\n");
+	}
+#endif
+
+	/*if(!CreateMemMapFile("IDASRVR2_VFILE", 2048)){
+		  msg("Failed to create vfile");
+		  return 0;
+	}*/
+
+	//return pd;
+	return PLUGIN_KEEP;
 
 }
 
+plugin_data_t::~plugin_data_t()
+{
+	if (m_debug) msg("~plugin_data_t");
+
+	try {
+#ifdef HAS_DECOMPILER 
+		if (hasDecompiler) term_hexrays_plugin();
+#endif
+		//SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)oldProc);
+		DestroyWindow(ServerHwnd);
+		HWND saved_hwnd = ReadReg(IPC_NAME);
+		if (!IsWindow(saved_hwnd)) SetReg(IPC_NAME, 0);
+		//CloseHandle(hMemMapFile);
+	}
+	catch (...) {};
+}
+
+//--------------------------------------------------------------------------
+bool idaapi plugin_data_t::run(size_t arg)
+{
+	warning("IDASRVR3 plugin has been called with arg %" FMT_Z, arg);
+	Launch_IdaJscript();
+	return true;
+}
+ 
 
 
 char comment[] = "";
-char help[] ="";
+char help[] = "";
 char wanted_name[] = "IDA JScript2";
 char wanted_hotkey[] = "Alt-0";
 
@@ -878,8 +1037,8 @@ plugin_t PLUGIN =
   IDP_INTERFACE_VERSION,
   0,                    // plugin flags
   init,                 // initialize
-  term,                 // terminate. this pointer may be NULL.
-  run,                  // invoke plugin
+  nullptr,              // terminate. this pointer may be NULL.
+  nullptr,              // invoke plugin
   comment,              // long comment about the plugin (status line or hint)
   help,                 // multiline help about the plugin
   wanted_name,          // the preferred short name of the plugin
@@ -888,21 +1047,19 @@ plugin_t PLUGIN =
 
 
 
- 
-
-
 //Export API for the VB app to call and access IDA API data
 //_________________________________________________________________
 
+
 void __stdcall SetFocusSelectLine(void){ 
-	HWND ida = (HWND)callui(ui_get_hwnd).vptr;
+	/*HWND ida = (HWND)callui(ui_get_hwnd).vptr;   //todo IDA7
 	SetForegroundWindow(ida);	//make ida window active and send HOME+ SHIFT+END keys to select the current line
 	keybd_event(VK_HOME,0x4F,KEYEVENTF_EXTENDEDKEY | 0,0);
 	keybd_event(VK_HOME,0x4F,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
 	keybd_event(VK_SHIFT,0x2A,0,0);
 	keybd_event(VK_END,0x4F,KEYEVENTF_EXTENDEDKEY | 0,0);
 	keybd_event(VK_END,0x4F,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
-	keybd_event(VK_SHIFT,0x2A,KEYEVENTF_KEYUP,0); 
+	keybd_event(VK_SHIFT,0x2A,KEYEVENTF_KEYUP,0); */
 }
 
 void __stdcall Jump(__int64 addr)  { jumpto(addr);}
@@ -922,16 +1079,35 @@ void __stdcall PatchByte(__int64 addr, char val){ patch_byte(addr, val); }
 void __stdcall PatchWord(__int64 addr, int val){  patch_word(addr, val); }
 void __stdcall DelFunc(__int64 addr){ del_func(addr); }
 int  __stdcall FuncIndex(__int64 addr){ return get_func_num(addr); }
-void __stdcall SelBounds( ea_t* selStart, ea_t* selEnd){ read_selection(selStart, selEnd);}
-void __stdcall FuncName(__int64 addr, char *buf, size_t bufsize){ get_func_name(addr, buf, bufsize);}
-int  __stdcall GetBytes(__int64 offset, void *buf, int length){ return get_many_bytes(offset, buf, length);}
-void __stdcall Undefine(__int64 offset){ autoMark(offset, AU_UNK); }
+void __stdcall SelBounds( ea_t* selStart, ea_t* selEnd){ /*read_selection(selStart, selEnd);*/} //todo IDA7
+void __stdcall Undefine(__int64 offset){ auto_mark(offset, AU_UNK); }
 char __stdcall OriginalByte(__int64 offset){ return get_original_byte(offset); }
 
 void __stdcall SetComment(__int64 offset, char* comm){set_cmt(offset,comm,false);}
 
-void __stdcall GetComment(__int64 offset, char* buf, int bufSize){ 
-	int retlen = get_cmt(offset,false,buf,bufSize); 
+int  __stdcall GetBytes(__int64 offset, void* buf, int length) 
+{ 
+	return get_bytes(buf, length, offset);
+}
+
+void __stdcall FuncName(__int64 addr, char* buf, size_t bufsize) 
+{
+	qstring q;
+	get_func_name(&q, addr); 
+	memset(buf, 0, bufsize);
+	if (q.length() < (bufsize -1) ) {
+		qstrncpy(buf, q.c_str(), q.length());
+	}
+
+}
+
+void __stdcall GetComment(__int64 offset, char* buf, int bufsize){ 
+	qstring q;
+	int retlen = get_cmt(&q, offset,false); 
+	memset(buf, 0, bufsize);
+	if (q.length() < (bufsize - 1)) {
+		qstrncpy(buf, q.c_str(), q.length());
+	}
 }
 
 int __stdcall ProcessState(void){ return get_process_state(); }
@@ -939,15 +1115,12 @@ int __stdcall ProcessState(void){ return get_process_state(); }
 int __stdcall FilePath(char *buf, int bufsize){ 
 	int retlen=0;
 	char *str;
-
 	retlen = get_input_file_path(buf,bufsize);
 	return retlen;
 }
 
 int __stdcall RootFileName(char *buf, int bufsize){ 
 	int retlen=0;
-	char *str;
-
 	retlen = get_root_filename(buf,bufsize);
 	return retlen;
 }
@@ -975,9 +1148,19 @@ void __stdcall AnalyzeArea(__int64 startat, __int64 endat){ /*analyse_area(start
 //now works to get local labels
 void __stdcall GetName(__int64 offset, char* buf, int bufsize){
 
-	get_true_name( BADADDR, offset, buf, bufsize );
+	qstring q;
+	q = get_name(offset);
+	memset(buf, 0, bufsize);
 
-	if(strlen(buf) == 0){
+	if (q.length() > 0)
+	{
+		if (q.length() < bufsize - 1)
+		{
+			qstrncpy(buf, q.c_str(), q.length());
+		}
+	}
+	/*else  todo: IDA 7
+	{
 		func_t* f = get_func(offset);
 		for(int i=0; i < f->llabelqty; i++){
 			if( f->llabels[i].ea == offset ){
@@ -986,13 +1169,13 @@ void __stdcall GetName(__int64 offset, char* buf, int bufsize){
 				return;
 			}
 		}
-	}
+	}*/
 
 }
 
 //not workign to make code and analyze
 void __stdcall MakeCode(__int64 offset){
-	 autoMark(offset, AU_CODE);
+	 auto_mark(offset, AU_CODE);
 	 /*analyse_area(offset, (offset+1) );*/
 }
 
@@ -1003,7 +1186,7 @@ __int64 __stdcall FunctionStart(int n){
 		return -1;
 	}
 	func_t *clsFx = getn_func(n);
-	return clsFx->startEA;
+	return clsFx->start_ea;
 }
 
 __int64 __stdcall FunctionEnd(int n){
@@ -1012,7 +1195,7 @@ __int64 __stdcall FunctionEnd(int n){
 		return -1;
 	}
 	func_t *clsFx = getn_func(n);
-	return clsFx->endEA;
+	return clsFx->end_ea;
 }
 
 int __stdcall FuncArgSize(int index){
@@ -1037,11 +1220,16 @@ int __stdcall GetAsm(__int64 addr, char* buf, int bufLen){
 
     flags_t flags;                                                       
     int sLen=0;
+	qstring q; 
 
-    flags = getFlags(addr);                        
-    if(isCode(flags)) {                            
-        generate_disasm_line(addr, buf, bufLen, GENDSM_MULTI_LINE );
-        sLen = tag_remove(buf, buf, bufLen);  
+	memset(buf, 0, bufLen);
+    flags = get_flags(addr);                        
+    if(is_code(flags)) {                            
+        generate_disasm_line(&q, addr, GENDSM_MULTI_LINE );
+		sLen = tag_remove(&q);
+		if (sLen > 0 && sLen < bufLen) {
+			qstrncpy(buf, q.c_str(),sLen);
+		}
     }
 
 	return sLen;
@@ -1084,7 +1272,7 @@ __int64 __stdcall ImageBase(void){
 
 }
 
-//idaman ea_t ida_export find_text(ea_t startEA, int y, int x, const char *ustr, int sflag);
+//idaman ea_t ida_export find_text(ea_t start_ea, int y, int x, const char *ustr, int sflag);
 //#define SEARCH_UP       0x000		// only one of SEARCH_UP or SEARCH_DOWN can be specified
 //#define SEARCH_DOWN     0x001
 //#define SEARCH_NEXT     0x002
@@ -1174,7 +1362,8 @@ int __stdcall DecompileFunction(__int64 offset, char* fpath)
 {
 #ifdef HAS_DECOMPILER
 			
-	 
+		qstring buf;
+
 		if(fpath==NULL) return 0;
 		if(strlen(fpath)==0) return 0;
 	
@@ -1202,14 +1391,13 @@ int __stdcall DecompileFunction(__int64 offset, char* fpath)
 			return 0;
 		}
 		
-		/*if(debug)*/ msg("%a: successfully decompiled\n", pfn->startEA);
+		/*if(debug)*/ msg("%a: successfully decompiled\n", pfn->start_ea);
 
 		const strvec_t &sv = cfunc->get_pseudocode(); //not available in 6.2 known ok in 6.5..
 		for ( int i=0; i < sv.size(); i++ )
 		{
-			char buf[MAXSTR];
-			tag_remove(sv[i].line.c_str(), buf, MAXSTR);
-			fprintf(f,"%s\n", buf);
+			tag_remove(&buf, sv[i].line, 0);
+			fprintf(f,"%s\n", buf.c_str());
 		}
 		fclose(f);
 		return 1;
@@ -1378,3 +1566,5 @@ bool CreateMemMapFile(char* fName, int mSize){
 
 
 */
+
+

@@ -1,0 +1,52 @@
+Type=Exe
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{60FF6824-F68B-4DF1-9ECF-6F0893AAD2B8}#1.2#0#..\..\libs\Subclass\spSubclass.dll#SandSprite_SubClass Component
+Reference=*\G{DDC88AC2-2723-4C1B-9D61-C4F4D7CF5375}#2.7#0#..\..\libs\vbDevKit\vbDevKit.dll#Vb Developers Library From Sandsprite.com
+Object={831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0; mscomctl.ocx
+Object={047848A0-21DD-421D-951E-B4B1F3E1718D}#89.0#0; dukDbg.ocx
+Object={2668C1EA-1D34-42E2-B89F-6B92F3FF627B}#5.0#0; scivb2.ocx
+Form=Form1.frm
+Class=CIpc; CIpc.cls
+Class=CIDAScript; CIDAScript.cls
+Module=Module1; Module1.bas
+Form=Form2.frm
+RelatedDoc=api.txt
+Object={3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0; RICHTX32.OCX
+Class=CRemoteExportClient; CRemoteExportClient.cls
+Object={248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0; MSWINSCK.OCX
+IconForm="Form1"
+Startup="Form1"
+HelpFile=""
+Title="Project1"
+ExeName32="IDA_JScript.exe"
+Command32=""
+Name="Project1"
+HelpContextID="0"
+CompatibleMode="0"
+MajorVer=1
+MinorVer=0
+RevisionVer=0
+AutoIncrementVer=0
+ServerSupportFiles=0
+VersionCompanyName="BLAH"
+CompilationType=0
+OptimizationType=0
+FavorPentiumPro(tm)=0
+CodeViewDebugInfo=-1
+NoAliasing=0
+BoundsCheck=0
+OverflowCheck=0
+FlPointCheck=0
+FDIVCheck=0
+UnroundedFP=0
+StartMode=0
+Unattended=0
+Retained=0
+ThreadPerObject=0
+MaxNumberOfThreads=1
+
+[MS Transaction Server]
+AutoRefresh=1
+
+[fastBuild]
+fullPath=D:\_code\RE_Plugins\IDA_JScript_w_DukDbg\IDA_JScript.exe
