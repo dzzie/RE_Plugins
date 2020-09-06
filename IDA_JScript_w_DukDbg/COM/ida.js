@@ -33,7 +33,7 @@
 	Function RenameFunc(oldname, newName) As Boolean
 	Function Find(startea, endea, hexstr) 
 	Function Decompile(va) As String
-	Function Jump(va As Long)
+	Function Jump(va)
 	Function JumpRVA(rva As Long)
 	Function refresh()
 	Function Undefine(offset)
@@ -50,9 +50,9 @@
 	Function FunctionEnd(functionIndex)
 	Function ReadByte(va)
 	Function OriginalByte(va)
-	Function ImageBase() As Long
-	Function ScreenEA() As Long
-	Function EnableIDADebugMessages( enabled)
+	Function ImageBase() 
+	Function ScreenEA() 
+	Function EnableIDADebugMessages(enabled)
 	Function quickCall(msg, arg1) As Long
 #	'Sub AddProgramComment(cmt)
 #	' Function ScreenEA()

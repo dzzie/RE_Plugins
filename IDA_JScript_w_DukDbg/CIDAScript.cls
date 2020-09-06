@@ -278,7 +278,7 @@ End Function
 Function jump(va)
     On Error Resume Next
     
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmJmpAddr_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -301,7 +301,7 @@ End Function
 
 Function undefine(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmUndef_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -314,7 +314,7 @@ End Function
 
 Function showEA(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmShow_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -327,7 +327,7 @@ End Function
 
 Function hideEA(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmHide_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -340,7 +340,7 @@ End Function
 
  Sub removeName(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmRemName_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -353,7 +353,7 @@ End Function
 
 Sub makeCode(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         ipc.quickCall qcmMakeCode_32, CLng(va)
     Else
         If Not tmp_x.fromString(va) Then
@@ -366,7 +366,7 @@ End Sub
 
 Function funcIndexFromVA(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         funcIndexFromVA = ipc.quickCall(qcmFuncIdx_32, CLng(va))
     Else
         If Not tmp_x.fromString(va) Then
@@ -379,7 +379,7 @@ End Function
 
 Function nextEA(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         nextEA = ipc.quickCall(qcmNextEa_32, CLng(va))
     Else
         If Not tmp_x.fromString(va) Then
@@ -392,7 +392,7 @@ End Function
 
 Function prevEA(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         prevEA = ipc.quickCall(qcmPrevEa_32, CLng(va))
     Else
         If Not tmp_x.fromString(va) Then
@@ -413,7 +413,7 @@ End Function
 
  Function functionStart(functionIndex)
      On Error Resume Next
-     If Me.targetIs_x86 Then
+     If Not is64BitMode Then
         functionStart = ipc.quickCall(qcmFuncStart_32, CLng(functionIndex))
      Else
         functionStart = ipc.SendCmdRecvText("funcstart:" & functionIndex & ":" & Form1.hwnd)
@@ -422,7 +422,7 @@ End Function
 
  Function functionEnd(functionIndex)
      On Error Resume Next
-     If Me.targetIs_x86 Then
+     If Not is64BitMode Then
         functionEnd = ipc.quickCall(qcmFuncEnd_32, CLng(functionIndex))
      Else
         functionEnd = ipc.SendCmdRecvText("funcend:" & functionIndex & ":" & Form1.hwnd)
@@ -431,7 +431,7 @@ End Function
   
  Function readByte(va)
      On Error Resume Next
-     If Me.targetIs_x86 Then
+     If Not is64BitMode Then
         readByte = CByte(ipc.quickCall(qcmReadByte_32, CLng(va)))
      Else
         If Not tmp_x.fromString(va) Then
@@ -444,7 +444,7 @@ End Function
 
 Function readLong(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
          readLong = CLng(ipc.quickCall(qcmReadLong_32, CLng(va)))
     Else
@@ -458,7 +458,7 @@ End Function
 
 Function readShort(va)
     On Error Resume Next
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
          readShort = CLng(ipc.quickCall(qcmReadShort_32, CLng(va)))
     Else
@@ -473,7 +473,7 @@ End Function
 Function originalByte(va)
     On Error Resume Next
     
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
          originalByte = CByte(ipc.quickCall(qcmOrgByte_32, CLng(va)))
     Else
@@ -486,7 +486,7 @@ Function originalByte(va)
 End Function
 
 Function imageBase()
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
          imageBase = ipc.quickCall(qcmImgBase_32)
     Else
         imageBase = ipc.SendCmdRecvText("imgbase:" & Form1.hwnd)
@@ -494,7 +494,7 @@ Function imageBase()
 End Function
 
 Function screenEA() As Long
-    If Me.targetIs_x86 Then
+    If Not is64BitMode Then
         screenEA = ipc.quickCall(qcmScreenEA_32)
     Else
         screenEA = ipc.SendCmdRecvText("screenea:" & Form1.hwnd)

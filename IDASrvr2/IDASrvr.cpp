@@ -9,6 +9,7 @@ IDASRVR2: move to support x64 addresses everywhere, even between 32bit and 64 bi
 Soo..since I have to work between a 32bit client and 64bit server now..I cant pass offset args
 via SendMessage because a 32bit sendMessage is limited...I guess all offsets now have to be passed
 in an alternative manner..probably memory mapped files..
+in an alternative manner..probably memory mapped files..
 
 NOTE: to build this project it is assumed you have an envirnoment variable 
 named IDASDK set to point to the base SDK directory. this env var is used in
@@ -23,7 +24,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 bool m_debug = true;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-//#define __EA64__  //create the plugin for the 64 bit databases
+#define __EA64__  //create the plugin for the 64 bit databases
 
 #ifdef __EA64__
 	#pragma comment(linker, "/out:./bin/IDASrvr2_64.dll")
@@ -236,6 +237,21 @@ bool SendIntMessage(int hwnd, __int64 resp){
 	sprintf(tmp, "%llu", resp);
 	if(m_debug) msg("SendIntMsg(%d, %s)", hwnd, tmp);
 	return SendTextMessage(hwnd,tmp, strlen(tmp));
+}
+
+//__atoi64 does not support 0x prefix
+bool get64(char* str, unsigned __int64* outval)
+{
+	char* end;
+	*outval = strtoull(str, &end, 0); //base determined by string (supports 0x prefix)
+	if (*outval == 0 && end == str) {
+		return false; // str was not a number 
+	}
+	else if (*outval == ULLONG_MAX) {
+		return false; // the value of str does not fit in int64
+	}
+	//else if (*end) { //junk left over at the end dont care
+	return true;
 }
 
 int HandleQuickCall(unsigned __int64 fIndex, unsigned __int64 arg1){
@@ -493,6 +509,13 @@ int HandleMsg(char* m){
 		if(strcmp(cmds[i],args[0])==0 ) break;
 	}
 
+	unsigned __int64 ua1 = 0; bool b1 = false;
+	unsigned __int64 ua2 = 0; bool b2 = false;
+
+	if (argc >= 1) if(get64(args[1], &ua1)) b1 = true;
+	if (argc >= 2) if(get64(args[2], &ua2)) b2 = true;
+
+
 	//if(m_debug) msg("command handler: %d",i);
 
 	//handle specific command
@@ -500,13 +523,13 @@ int HandleMsg(char* m){
 		default: msg("IDASrv Unknown Command\n"); break; //unknown command
 		
 		case  0: //msg:UI_MESSAGE
-				if( argc < 1 ){msg("jmp_name needs 1 args\n"); return -1;}
+				if( argc < 1 ){msg("msg needs 1 args\n"); return -1;}
 				msg(args[1]);					  
 				break; 
 		
 		case  1: //jmp:lngAdr
 				if( argc != 1 ){msg("jmp needs 1 args\n"); return -1;}
-				Jump( _atoi64(args[1]) );		  
+				Jump(ua1);
 				break; 
 		case  2: //jmp_name:fx_name
 			     if( argc != 1 ){msg("jmp_name needs 1 args\n"); return -1;}
@@ -547,17 +570,17 @@ int HandleMsg(char* m){
 
 		case 6: //getasm:va:hwnd
 			     if( argc != 2 ){msg("getasm needs 2 args\n"); return -1;}
-				  x = GetAsm(_atoi64(args[1]),buf,499);
-				  if(x==0) sprintf(buf,"Fail");
-				  SendTextMessage(atoi(args[2]),buf,strlen(buf));
-				  break;
+				 x = GetAsm(ua1, buf, 499);
+				 if (x == 0) sprintf(buf, "Fail");
+				 SendTextMessage(atoi(args[2]), buf, strlen(buf)); 
+				 break;
 
 		case 7: //jmp_rva:rva
 				if( argc != 1 ){msg("jmp_rva needs 1 args\n"); return -1;}
 				i = ImageBase();  
-			    x = _atoi64(args[1]);
-				if(x == 0 || x > i){ msg("Invalid rva to jmp_rva\n"); break;}
-				Jump(i+x);
+			    //x = _atoi64(args[1]);
+				if (ua1 == 0 || ua1 > i) { msg("Invalid rva to jmp_rva\n"); break; }
+				Jump(i + ua1);
 				break;
 
 		case 8: //imgbase[:HWND]
@@ -568,27 +591,27 @@ int HandleMsg(char* m){
 
 		case 9: //patchbyte:lng_va:byte_newval
 			    if( argc != 2 ){msg("patchbyte needs 1 args\n"); return -1;}
-				PatchByte( _atoi64(args[1]), atoi(args[2]) );
+				PatchByte(ua1, atoi(args[2]));
 				break;
 
 		case 10: //readbyte:lngva[:HWND]
 			    if( argc < 1 ){msg("readbyte needs 1 args\n"); return -1;}
-				GetBytes( _atoi64(args[1]), buf, 1); //on a patched byte this is reading a 4 byte int?
-				if(argc == 2){
-					sprintf( tmp, "%x", buf[0]);
-					memset(&buf[1],0,4); 
-					SendTextMessage(atoi(args[2]),tmp, strlen(tmp) );
+				GetBytes(ua1, buf, 1); //on a patched byte this is reading a 4 byte int?
+				if (argc == 2) {
+					sprintf(tmp, "%x", buf[0]);
+					memset(&buf[1], 0, 4);
+					SendTextMessage(atoi(args[2]), tmp, strlen(tmp));
 				}
 				zz = (int*)&buf;
-				return *zz & 0x000000FF ;
+				return *zz & 0x000000FF;
 				break;
 
 		case 11: //orgbyte:lngva[:HWND]
 			    if( argc < 1 ){msg("orgbyte needs 1 args\n"); return -1;}
-				buf[0] = OriginalByte(_atoi64(args[1]));
-				if(argc == 2){ 
-					sprintf( tmp, "%x", buf[0]);
-					SendTextMessage( atoi(args[2]),tmp, strlen(tmp) );
+				buf[0] = OriginalByte(ua1);
+				if (argc == 2) {
+					sprintf(tmp, "%x", buf[0]);
+					SendTextMessage(atoi(args[2]), tmp, strlen(tmp));
 				}
 				zz = (int*)&buf;
 				return *zz & 0x000000FF;
@@ -633,93 +656,93 @@ int HandleMsg(char* m){
 
 		  case 17: //setname:va:name
 			      if( argc != 2 ){msg("setname needs 2 args\n"); return -1;}
-				  Setname( _atoi64(args[1]), args[2]);
+				  Setname(ua1, args[2]);
 				  break;
 
 		  case 18: //refsto:offset:hwnd
 			        if( argc != 2 ){msg("refsto needs 2 args\n"); return -1;}
-					GetRefsTo( _atoi64(args[1]), atoi(args[2]) );
+					GetRefsTo(ua1, atoi(args[2]));
 					break;
 		  case 19: //refsfrom:offset:hwnd
 			        if( argc != 2 ){msg("refsfrom needs 2 args\n"); return -1;}
-					GetRefsFrom( _atoi64(args[1]), atoi(args[2]) );
+					GetRefsFrom(ua1, atoi(args[2]));
 					break;
 		  case 20: //undefine:offset
 			        if( argc != 1 ){msg("undefine needs 1 args\n"); return -1;}
-					Undefine(_atoi64(args[1]));
+					Undefine(ua1);
 					break;
 		  case 21: //getname:offset:hwnd
 				    if( argc != 2 ){msg("getname needs 2 args\n"); return -1;}
-					GetName(_atoi64(args[1]), buf,499);
-					SendTextMessage( atoi(args[2]), buf, strlen(buf));
+					GetName(ua1, buf, 499);
+					SendTextMessage(atoi(args[2]), buf, strlen(buf));
 					break;
 		  case 22: //hide:offset
 			        if( argc != 1 ){msg("hide needs 1 args\n"); return -1;}
-					HideEA( _atoi64(args[1]) );
+					HideEA(ua1);
 					break;
 		  case 23: //show:offset
 			        if( argc != 1 ){msg("show needs 1 args\n"); return -1;}
-					ShowEA( _atoi64(args[1]) );
+					ShowEA(ua1);
 					break;
 		  case 24: //remname:offset
 			        if( argc != 1 ){msg("remname needs 1 args\n"); return -1;}
-					RemvName(  _atoi64(args[1]) );
+					RemvName(ua1);
 					break;
 		  case 25: //makecode:offset
 				   if( argc != 1 ){msg("makecode needs 1 args\n"); return -1;}
-				   MakeCode( _atoi64(args[1]) );
+				   MakeCode(ua1);
 				   break;
 		  case 26: //addcomment:offset:comment
 				   if( argc != 2 ){msg("addcomment needs 2 args\n"); return -1;}
-				   SetComment( _atoi64(args[1]), args[2] );
+				   SetComment(ua1, args[2]);
 				   break;
 		  case 27: //getcomment:offset:hwnd
 				   if( argc != 2 ){msg("getcomment needs 2 args\n"); return -1;}
-				   GetComment( _atoi64(args[1]),buf, 499);
-				   SendTextMessage( atoi(args[2]), buf, strlen(buf) );
+				   GetComment(ua1, buf, 499);
+				   SendTextMessage(atoi(args[2]), buf, strlen(buf));
 				   break;
 		  case 28: //addcodexref:offset:tova
-				   AddCodeXRef( _atoi64(args[1]), _atoi64(args[2]) );
+				   AddCodeXRef(ua1, ua2);
 				   break;
 		  case 29: //adddataxref:offset:tova
 				   if( argc != 2 ){msg("adddataxref needs 2 args\n"); return -1;}
-				   AddDataXRef( _atoi64(args[1]), _atoi64(args[2]) );
+				   AddDataXRef(ua1, ua2);
 			       break;
 		  case 30: //delcodexref:offset:tova
 				   if( argc != 2 ){msg("delcodexref needs 2 args\n"); return -1;}
-                   DelCodeXRef( _atoi64(args[1]),_atoi64(args[2]) );
+				   DelCodeXRef(ua1,ua2);
 				   break;
 		  case 31: //deldataxref:offset:tova
 				   if( argc != 2 ){msg("deldataxref needs 2 args\n"); return -1;}
-				   DelDataXRef( _atoi64(args[1]), _atoi64(args[2]) );
+				   DelDataXRef(ua1,ua2);
 				   break;
 		  case 32: //funcindex:va[:hwnd]
 					if( argc < 1 ){msg("funcindex needs 1 args\n"); return -1;}
-					x = get_func_num( _atoi64(args[1]) );
+					x = get_func_num(ua1);
 					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
 		  case 33: //nextea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...   - x64 requires hwnd, legacy 32bit code still ok
 					if( argc < 1 ){msg("nextea needs 1 args\n"); return -1;}
-					x = find_code( _atoi64(args[1]), SEARCH_DOWN | SEARCH_NEXT );
+					x = find_code(ua1, SEARCH_DOWN | SEARCH_NEXT );
 					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
 		  case 34: //prevea:va[:hwnd]  should this return null if it crosses function boundaries? yes probably...  - x64 requires hwnd, legacy 32bit code still ok
 					if( argc < 1 ){msg("prevea needs 1 args\n"); return -1;}
-					x = find_code( _atoi64(args[1]), SEARCH_UP | SEARCH_NEXT );
+					x = find_code(ua1, SEARCH_UP | SEARCH_NEXT );
 					if( argc == 2 ) SendIntMessage( atoi(args[2]), x);
 					return x;
 					break;
 		  case 35: //makestring:va:[ascii | unicode]
 					if( argc != 2 ){msg("makestring needs 2 args\n"); return -1;}
 					x = strcmp(args[2],"ascii") == 0 ? STRTYPE_TERMCHR : STRTYPE_C;
-					create_strlit(_atoi64(args[1]), 0 /*auto*/, x);
+					create_strlit(ua1, 0 /*auto*/, x);
 					break;
 		  case 36: //makeunk:va:size
 					if( argc != 2 ){msg("makeunk needs 2 args\n"); return -1;}
 					//do_unknown_range( _atoi64(args[1]), _atoi64(args[2]), DOUNK_SIMPLE);
-					del_items(_atoi64(args[1]), DELIT_SIMPLE, _atoi64(args[2]));
+					del_items(ua1, DELIT_SIMPLE, ua2);
 					break;
 
 		  case 37: //screenea:[hwnd] - x64 must supply hwnd..
@@ -729,47 +752,40 @@ int HandleMsg(char* m){
 
 		  case 38: //findcode:start:end:hexstr
 				    if( argc != 3 ){msg("findcode needs 3 args\n"); return -1;}
-					return find_binary( _atoi64(args[1]), _atoi64(args[2]), args[3], 16, SEARCH_DOWN);
+					return find_binary(ua1, ua2, args[3], 16, SEARCH_DOWN);
 
 #ifdef HAS_DECOMPILER
 		  case 39: //decompile:va:fpath
 					if( argc != 2 ){msg("decompile needs 2 args\n"); return -1;}
 					if( hasDecompiler == 0) {msg("HexRays Decompiler either not installed or version to old (this binary built against 6.7 SDK)\n"); return -1;}
-					x = _atoi64(args[1]);
-					return DecompileFunction( x, args[2]);
+					return DecompileFunction(ua1, args[2]);
 
 #endif
 
 		  case 44: //iscode
 					if( argc != 1 ){msg("iscode needs 1 args\n"); return -1;}
-					x = _atoi64(args[1]);
-					return is_code(get_flags(x));
+					return is_code(get_flags(ua1));
 
 		  case 45: //isdata
 			  		if( argc != 1 ){msg("isdata needs 1 args\n"); return -1;}
-					x = _atoi64(args[1]);
-					return is_data(get_flags(x));
+					return is_data(get_flags(ua1));
 
 		  case 46: //decodeins  qcmInstLen = 46
 			  		if( argc != 1 ){msg("decode_insn needs 1 args\n"); return -1;}
-					x = _atoi64(args[1]);
-					decode_insn(&ins, x); 
+					decode_insn(&ins, ua1);
 					return ins.size;
 
 		  case 47: //getlong
 			  		if( argc != 1 ){msg("getlong needs 1 args\n"); return -1;}
-					x = _atoi64(args[1]);
-					return get_32bit(x);
+					return get_32bit(ua1);
 
 		  case 48: //getword
 					if( argc != 1 ){msg("getword needs 1 args\n"); return -1;}
-					x = _atoi64(args[1]);
-					return get_16bit(x);
+					return get_16bit(ua1);
 
 		  case 50: //getx64
 					if (argc != 1) { msg("getx64 needs 1 args\n"); return -1; }
-					x = _atoi64(args[1]);
-					return get_64bit(x);
+					return get_64bit(ua1);
 
 
 	}				
