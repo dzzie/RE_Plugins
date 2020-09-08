@@ -1,38 +1,39 @@
 [Setup]
-AppName=IdaJSDBG
-AppVerName=IdaJSDBG 0.0.1
-DefaultDirName=c:\IdaJSDBG
-DefaultGroupName=IdaJSDBG
+AppName=IDAJS
+AppVerName=IDAJS v2 Beta (x64 IDA >= 7.0)
+DefaultDirName=c:\IDAJS2
+DefaultGroupName=IDAJS
 UninstallDisplayIcon={app}\unins000.exe
 OutputDir=./
-OutputBaseFilename=IdaJSDBG_Setup
+OutputBaseFilename=IDAJSDBG_Setup
 
 
 [Dirs]
 Name: {app}\COM
 Name: {app}\scripts
-Name: {app}\scripts
 
 
 [Files]
+Source: Duk4VB.dll; DestDir: {app}; Flags: replacesameversion
 Source: dukDbg.ocx; DestDir: {app}; Flags: regserver replacesameversion
 Source: IDA_JScript.exe; DestDir: {app}; Flags: replacesameversion
 Source: spSubclass.dll; DestDir: {app}; Flags: regserver
 Source: SciLexer.dll; DestDir: {app}; Flags: replacesameversion
 Source: scivb2.ocx; DestDir: {app}; Flags: regserver   replacesameversion
 Source: vbDevKit.dll; DestDir: {app}; Flags: regserver
-Source: Duk4VB.dll; DestDir: {app}; Flags: replacesameversion
 Source: ..\COM\ida.js; DestDir: {app}\COM\
 Source: ..\COM\x64.js; DestDir: {app}\COM\
 Source: ..\COM\list.js; DestDir: {app}\COM\
 Source: ..\COM\TextBox.js; DestDir: {app}\COM\
 Source: ..\COM\remote.js; DestDir: {app}\COM\
+Source: ..\COM\x64.js; DestDir: {app}\COM\
 ;Source: ..\scripts\funcCalls.idajs; DestDir: {app}\scripts\
 Source: ..\api.txt; DestDir: {app}
 Source: ..\beautify.js; DestDir: {app}
 Source: ..\java.hilighter; DestDir: {app}
 Source: ..\userlib.js; DestDir: {app}
-Source: ..\..\IDASrvr\bin\IDASrvr.plw; DestDir: {app}
+Source: ..\..\IDASrvr2\bin\IDASrvr2.dll; DestDir: {app}
+Source: ..\..\IDASrvr2\bin\IDASrvr2_64.dll; DestDir: {app}
 ;Source: MSCOMCTL.OCX; DestDir: {win}; Flags: regserver uninsneveruninstall
 Source: richtx32.ocx; DestDir: {sys}; Flags: regserver uninsneveruninstall
 Source: MSWINSCK.OCX; DestDir: {sys}; Flags: regserver uninsneveruninstall
@@ -55,6 +56,6 @@ Name: {group}\Readme.txt; Filename: {app}\readme.txt
 
 
 [Messages]
-FinishedLabel=Remember to install the plw into your IDA plugins directory.
+FinishedLabel=Remember to install the IDA plugins!.
 [Run]
 Filename: {app}\IDA_JScript.exe; Parameters: /install; StatusMsg: Installing plw and setting registry keys

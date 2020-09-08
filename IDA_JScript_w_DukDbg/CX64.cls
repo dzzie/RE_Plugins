@@ -13,6 +13,13 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+Function toHex(x)
+    Dim m As New ULong64
+    m.use0x = True
+    m = x
+    toHex = m.toString(mHex)
+End Function
+
 Function Add(x, y)
     Dim m As modes
     Dim x2 As ULong64

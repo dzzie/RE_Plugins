@@ -22,7 +22,7 @@ Public is64BitMode As Boolean
 
 Private Sub Class_Initialize()
     Set ipc = New CIpc
-    ipc.FindClient "IDA_SERVER"
+    ipc.FindClient "IDA_SERVER2"
     ipc.Listen Form1.hwnd
     tmp_x.use0x = True
     tmp_x.useTick = False
@@ -147,20 +147,38 @@ Function isData(offset)
     isData = ipc.SendCmdRecvInt("isdata:" & offset) 'quickCall(qcmIsData, CLng(offset))
 End Function
 
+Private Function csvToHex(csv) As String
+    On Error Resume Next
+    Dim tmp() As String, x, y()
+    tmp = Split(csv, ",")
+    For Each x In tmp
+        push y, tmp_x.setVal(x).toString(mHex)
+    Next
+    csvToHex = Join(y, ",")
+End Function
+
 Function xRefsTo(offset) 'returns CSV list
     Dim tmp
     tmp = ipc.SendCmdRecvText("refsto:" & offset & ":" & Form1.hwnd)
     If Right(tmp, 1) = "," Then tmp = Mid(tmp, 1, Len(tmp) - 1)
-    'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
-    xRefsTo = tmp
+    If is64BitMode Then
+        xRefsTo = csvToHex(tmp)
+    Else
+       'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
+       xRefsTo = tmp
+    End If
 End Function
 
 Function xRefsFrom(offset) 'returns CSV list
     Dim tmp
     tmp = ipc.SendCmdRecvText("refsfrom:" & offset & ":" & Form1.hwnd)
     If Right(tmp, 1) = "," Then tmp = Mid(tmp, 1, Len(tmp) - 1)
-    'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
-    xRefsFrom = tmp
+    If is64BitMode Then
+        xRefsFrom = csvToHex(tmp)
+    Else
+        'tmp = Split(tmp, ",") javascript cant deal with string() must be variant()?
+        xRefsFrom = tmp
+    End If
 End Function
 
 
@@ -239,7 +257,12 @@ End Function
  
  'todo x64
 Function funcVAByName(name)
-    funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
+    If Not is64BitMode Then
+        funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
+    Else
+        funcVAByName = ipc.SendCmdRecvText("name_va:" & name & ":" & Form1.hwnd)
+        funcVAByName = tmp_x.setVal(funcVAByName).toString(mHex)
+    End If
 End Function
 
 Function renameFunc(oldname, newName) As Boolean
@@ -387,6 +410,7 @@ Function nextEA(va)
             Exit Function
         End If
         nextEA = ipc.SendCmdRecvText("nextea:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        nextEA = tmp_x.setVal(nextEA).toString(mHex)
     End If
 End Function
 
@@ -400,6 +424,7 @@ Function prevEA(va)
             Exit Function
         End If
         prevEA = ipc.SendCmdRecvText("prevea:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        prevEA = tmp_x.setVal(prevEA).toString(mHex)
     End If
 End Function
 
@@ -417,6 +442,7 @@ End Function
         functionStart = ipc.quickCall(qcmFuncStart_32, CLng(functionIndex))
      Else
         functionStart = ipc.SendCmdRecvText("funcstart:" & functionIndex & ":" & Form1.hwnd)
+        functionStart = tmp_x.setVal(functionStart).toString(mHex)
      End If
  End Function
 
@@ -426,6 +452,7 @@ End Function
         functionEnd = ipc.quickCall(qcmFuncEnd_32, CLng(functionIndex))
      Else
         functionEnd = ipc.SendCmdRecvText("funcend:" & functionIndex & ":" & Form1.hwnd)
+        functionEnd = tmp_x.setVal(functionEnd).toString(mHex)
      End If
  End Function
   
@@ -490,14 +517,16 @@ Function imageBase()
          imageBase = ipc.quickCall(qcmImgBase_32)
     Else
         imageBase = ipc.SendCmdRecvText("imgbase:" & Form1.hwnd)
+        imageBase = tmp_x.setVal(imageBase).toString(mHex)
     End If
 End Function
 
-Function screenEA() As Long
+Function screenEA()
     If Not is64BitMode Then
         screenEA = ipc.quickCall(qcmScreenEA_32)
     Else
         screenEA = ipc.SendCmdRecvText("screenea:" & Form1.hwnd)
+        screenEA = tmp_x.setVal(screenEA).toString(mHex)
     End If
 End Function
 

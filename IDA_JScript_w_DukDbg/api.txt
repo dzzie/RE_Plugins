@@ -1,3 +1,4 @@
+toHex(str1)
 add(x64Str1, strorInt2)
 subtract(x64Str1, strorInt2)
 alert(msg)

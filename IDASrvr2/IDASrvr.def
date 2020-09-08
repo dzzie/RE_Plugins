@@ -9,7 +9,7 @@ LIBRARY IDASrvr
 		Jump
 		Refresh
 		ScreenEA
-		SelBounds
+		;SelBounds
 		Setname
 		RemvName
 		PatchByte
@@ -41,7 +41,7 @@ LIBRARY IDASrvr
 		FirstCodeTo
 		ImageBase
 	    DecompileFunction
-	    SetFocusSelectLine
+	    ;SetFocusSelectLine
 		WindowProc
 
 

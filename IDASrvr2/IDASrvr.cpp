@@ -24,9 +24,16 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 bool m_debug = true;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-#define __EA64__  //create the plugin for the 64 bit databases
+//#define __EA64__  //create the plugin for the 64 bit databases
+
+#ifndef _WIN64
+	#error "You can only compile this as an x64 binary, 32/64 bit mode is set with __EA64__ define above"
+#endif
 
 #ifdef __EA64__
+	#ifndef  _DEBUG
+		#error "For some reason the x64 version requires debug builds only right now or IDA crash on init...yay plugins.."
+	#endif
 	#pragma comment(linker, "/out:./bin/IDASrvr2_64.dll")
 	#pragma comment(lib, "D:\\idasdk75\\lib\\x64_win_vc_64\\ida.lib")
 #else
@@ -100,7 +107,7 @@ UINT IDASRVR_BROADCAST_MESSAGE=0;
 UINT IDA_QUICKCALL_MESSAGE = 0;
 
 __int64 __stdcall ImageBase(void);
-void __stdcall SetFocusSelectLine(void);
+//void __stdcall SetFocusSelectLine(void);
 
 
 
@@ -134,9 +141,6 @@ bool FileExists(char* szPath)
 }
 
 void Launch_IdaJscript(){
-
-	 MessageBox(0,"Not yet","",0);
-	 return;
 
 	 char tmp[500] = {0};
 	 char tmp2[500] = {0};
@@ -368,9 +372,9 @@ int HandleQuickCall(unsigned __int64 fIndex, unsigned __int64 arg1){
 		case 42: //getVersion
 				return InterfaceVersion;
 
-		case 43:
+		/*case 43:
 				SetFocusSelectLine();
-				return 0;
+				return 0;*/
 
 		case 49: //isX64 disasm
 				#ifndef __EA64__
@@ -861,25 +865,6 @@ void DoEvents()
 
 } 
 */
- 
-
- 
-
-struct plugin_data_t : public plugmod_t, public event_listener_t
-{
-
-	virtual ssize_t idaapi on_event(ssize_t event_id, va_list) override;
-	virtual bool idaapi run(size_t arg) override;
-
-	idaapi ~plugin_data_t();
-};
-
-//--------------------------------------------------------------------------
-// This callback is called for UI notification events
-ssize_t idaapi plugin_data_t::on_event(ssize_t event_id, va_list)
-{
-	return 0; // 0 means "continue processing the event"
-}
 
 void CreateServerWindow()
 {
@@ -901,7 +886,7 @@ void CreateServerWindow()
 	wc.hIconSm = NULL;
 
 	if (!RegisterClassEx(&wc)) {
-		MessageBox(NULL, TEXT("Could not register window class"),NULL, MB_ICONERROR);
+		MessageBox(NULL, TEXT("Could not register IPC Server window class"),NULL, MB_ICONERROR);
 		return;
 	}
 
@@ -926,74 +911,38 @@ void CreateServerWindow()
 	//msg("ServerHWND = %x oldProc=%x newProc=%x", ServerHwnd, oldProc, WindowProc);
 }
 
-/*
-DWORD WINAPI ThreadProc(LPVOID lpParam)
+void idaapi term(void)
 {
-	//immediatly create server window for use (no need to explicitly launch plugin)  
-	ServerHwnd = CreateWindow("EDIT", "MESSAGE_WINDOW", 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
-	SetReg(IPC_NAME, (int)ServerHwnd);
-	msg("idasrvr2: new thread hwnd=%x ThreadID=%x\n", ServerHwnd, GetCurrentThreadId());
-
-	MSG msg;
-	while (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	try {
+#ifdef HAS_DECOMPILER 
+		if (hasDecompiler) term_hexrays_plugin();
+#endif
+		DestroyWindow(ServerHwnd);
+		HWND saved_hwnd = ReadReg(IPC_NAME);
+		if (!IsWindow(saved_hwnd)) 
+			SetReg(IPC_NAME, 0);
+		//CloseHandle(hMemMapFile);
 	}
-
-	return 0;
-
+	catch (...) {};
 }
 
-
-BOOL CALLBACK CB_EnumWindowsProc(HWND hwnd, LPARAM lParam)
+bool idaapi run(size_t arg)
 {
-	DWORD lpdwProcessId;
-	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
-	if (lpdwProcessId == lParam)
-	{
-		ServerHwnd = hwnd;
-		return FALSE;
-	}
-	return TRUE;
+	Launch_IdaJscript();
+	return true;
 }
 
-void CALLBACK mTimerProc(HWND hwnd, UINT uMsg, UINT timerId, DWORD dwTime)
+void startUp(void)
 {
-	msg("TimerProc threadID=%x", GetCurrentThreadId());
-	SendMessage(ServerHwnd, IDA_QUICKCALL_MESSAGE, 1, 1);
-}*/
-
-static plugmod_t* idaapi init()
-{
- 
-	if (inf_get_filetype() == f_ELF)
-		return nullptr; // we do not want to work with this idb
-
-	//plugin_data_t* pd = new plugin_data_t;
-	// an example how to retrieve plugin options
-	const char* options = get_plugin_options("IDASrvr3");
-	if (options != nullptr)
-		warning("command line options: %s", options);
-
-	//immediatly create server window for use (no need to explicitly launch plugin)  
-	ServerHwnd = CreateWindow("EDIT", "MESSAGE_WINDOW", 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
-	//SetTimer(NULL, 0, 1000 , (TIMERPROC)&mTimerProc); //works, but WinProc not called w/sendmessage
-
 	CreateServerWindow();
-	//EnumWindows(CB_EnumWindowsProc, GetCurrentProcessId() );
-	//oldProc = (WNDPROC)SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)WindowProc);
-
-	DWORD hThread1Data = 0;
-
 	SetReg(IPC_NAME, (int)ServerHwnd);
 	IDASRVR_BROADCAST_MESSAGE = RegisterWindowMessage(IPC_NAME);
 	IDA_QUICKCALL_MESSAGE = RegisterWindowMessage("IDA_QUICKCALL2");
-//	HANDLE hThread = CreateThread(NULL, 0, ThreadProc, &hThread1Data, 0, NULL);
 
 	InitializeCriticalSection(&m_cs);
-	msg("idasrvr2: initializing... hwnd=%x BROADCAST=%x QUICKCALL=%x ThreadID=%x\n", ServerHwnd, IDASRVR_BROADCAST_MESSAGE, IDA_QUICKCALL_MESSAGE, GetCurrentThreadId());
+	//msg("idasrvr2: initializing... hwnd=%x BROADCAST=%x QUICKCALL=%x ThreadID=%x\n", ServerHwnd, IDASRVR_BROADCAST_MESSAGE, IDA_QUICKCALL_MESSAGE, GetCurrentThreadId());
+
+	//MessageBox(0, "1", "", 0);
 
 #ifdef HAS_DECOMPILER
 	if (init_hexrays_plugin(0)) {
@@ -1010,36 +959,15 @@ static plugmod_t* idaapi init()
 		  return 0;
 	}*/
 
-	//return pd;
+	//MessageBox(0, "2", "", 0);
+}
+
+static plugmod_t* idaapi init()
+{
+	if (inf_get_filetype() == f_ELF) return nullptr; // we do not want to work with this idb
+	startUp();
 	return PLUGIN_KEEP;
-
 }
-
-plugin_data_t::~plugin_data_t()
-{
-	if (m_debug) msg("~plugin_data_t");
-
-	try {
-#ifdef HAS_DECOMPILER 
-		if (hasDecompiler) term_hexrays_plugin();
-#endif
-		//SetWindowLong(ServerHwnd, GWLP_WNDPROC, (LONG)oldProc);
-		DestroyWindow(ServerHwnd);
-		HWND saved_hwnd = ReadReg(IPC_NAME);
-		if (!IsWindow(saved_hwnd)) SetReg(IPC_NAME, 0);
-		//CloseHandle(hMemMapFile);
-	}
-	catch (...) {};
-}
-
-//--------------------------------------------------------------------------
-bool idaapi plugin_data_t::run(size_t arg)
-{
-	warning("IDASRVR3 plugin has been called with arg %" FMT_Z, arg);
-	Launch_IdaJscript();
-	return true;
-}
- 
 
 
 char comment[] = "";
@@ -1053,8 +981,8 @@ plugin_t PLUGIN =
   IDP_INTERFACE_VERSION,
   0,                    // plugin flags
   init,                 // initialize
-  nullptr,              // terminate. this pointer may be NULL.
-  nullptr,              // invoke plugin
+  term,                 // terminate. this pointer may be NULL.
+  run,                  // invoke plugin
   comment,              // long comment about the plugin (status line or hint)
   help,                 // multiline help about the plugin
   wanted_name,          // the preferred short name of the plugin
@@ -1066,7 +994,7 @@ plugin_t PLUGIN =
 //Export API for the VB app to call and access IDA API data
 //_________________________________________________________________
 
-
+/*
 void __stdcall SetFocusSelectLine(void){ 
 	/*HWND ida = (HWND)callui(ui_get_hwnd).vptr;   //todo IDA7
 	SetForegroundWindow(ida);	//make ida window active and send HOME+ SHIFT+END keys to select the current line
@@ -1075,8 +1003,8 @@ void __stdcall SetFocusSelectLine(void){
 	keybd_event(VK_SHIFT,0x2A,0,0);
 	keybd_event(VK_END,0x4F,KEYEVENTF_EXTENDEDKEY | 0,0);
 	keybd_event(VK_END,0x4F,KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,0);
-	keybd_event(VK_SHIFT,0x2A,KEYEVENTF_KEYUP,0); */
-}
+	keybd_event(VK_SHIFT,0x2A,KEYEVENTF_KEYUP,0); * /
+}*/
 
 void __stdcall Jump(__int64 addr)  { jumpto(addr);}
 void __stdcall Refresh   (void)      { refresh_idaview();      }
@@ -1095,7 +1023,7 @@ void __stdcall PatchByte(__int64 addr, char val){ patch_byte(addr, val); }
 void __stdcall PatchWord(__int64 addr, int val){  patch_word(addr, val); }
 void __stdcall DelFunc(__int64 addr){ del_func(addr); }
 int  __stdcall FuncIndex(__int64 addr){ return get_func_num(addr); }
-void __stdcall SelBounds( ea_t* selStart, ea_t* selEnd){ /*read_selection(selStart, selEnd);*/} //todo IDA7
+//void __stdcall SelBounds( ea_t* selStart, ea_t* selEnd){ /*read_selection(selStart, selEnd);*/} //todo IDA7
 void __stdcall Undefine(__int64 offset){ auto_mark(offset, AU_UNK); }
 char __stdcall OriginalByte(__int64 offset){ return get_original_byte(offset); }
 
@@ -1111,8 +1039,8 @@ void __stdcall FuncName(__int64 addr, char* buf, size_t bufsize)
 	qstring q;
 	get_func_name(&q, addr); 
 	memset(buf, 0, bufsize);
-	if (q.length() < (bufsize -1) ) {
-		qstrncpy(buf, q.c_str(), q.length());
+	if (q.length() <  bufsize) {
+		qstrncpy(buf, q.c_str(), q.length()+1);
 	}
 
 }
@@ -1121,8 +1049,8 @@ void __stdcall GetComment(__int64 offset, char* buf, int bufsize){
 	qstring q;
 	int retlen = get_cmt(&q, offset,false); 
 	memset(buf, 0, bufsize);
-	if (q.length() < (bufsize - 1)) {
-		qstrncpy(buf, q.c_str(), q.length());
+	if (q.length() <  bufsize) {
+		qstrncpy(buf, q.c_str(), q.length()+1);
 	}
 }
 
@@ -1170,22 +1098,24 @@ void __stdcall GetName(__int64 offset, char* buf, int bufsize){
 
 	if (q.length() > 0)
 	{
-		if (q.length() < bufsize - 1)
+		if (q.length() < bufsize)
 		{
-			qstrncpy(buf, q.c_str(), q.length());
+			qstrncpy(buf, q.c_str(), q.length()+1);
 		}
 	}
-	/*else  todo: IDA 7
+	else  //todo: IDA 7 - use fx in names.hpp
 	{
-		func_t* f = get_func(offset);
+		/*func_t* f = get_func(offset);
+		llabel_t* ll = f->llabels;
 		for(int i=0; i < f->llabelqty; i++){
-			if( f->llabels[i].ea == offset ){
-				int sz = strlen(f->llabels[i].name);
-				if(sz < bufsize) strcpy(buf,f->llabels[i].name);
+			if( ll.ea == offset ){
+				int sz = strlen(ll.name);
+				if(sz < bufsize) strcpy(buf,ll.name);
 				return;
 			}
-		}
-	}*/
+			ll++;
+		}*/
+	}
 
 }
 
@@ -1242,9 +1172,9 @@ int __stdcall GetAsm(__int64 addr, char* buf, int bufLen){
     flags = get_flags(addr);                        
     if(is_code(flags)) {                            
         generate_disasm_line(&q, addr, GENDSM_MULTI_LINE );
-		sLen = tag_remove(&q);
-		if (sLen > 0 && sLen < bufLen) {
-			qstrncpy(buf, q.c_str(),sLen);
+		sLen = tag_remove(&q) + 1;
+		if (sLen > 1 && sLen < bufLen) {
+			qstrncpy(buf, q.c_str(), sLen);
 		}
     }
 
@@ -1584,3 +1514,27 @@ bool CreateMemMapFile(char* fName, int mSize){
 */
 
 
+/*
+struct plugin_ctx_t : public plugmod_t, public event_listener_t
+{
+	plugin_ctx_t()
+	{
+
+	}
+
+	~plugin_ctx_t()
+	{
+		term();
+	}
+
+	bool idaapi run(size_t arg) {
+		return  run(arg);
+	}
+
+	ssize_t idaapi on_event(ssize_t code, va_list va) {
+		// This callback is called for IDP notification events
+		return 0;
+	}
+};
+
+plugin_ctx_t* pd = new plugin_ctx_t;*/

@@ -16,3 +16,10 @@
 modTmrProc.bas
 wingraph32.exe
 *obj*
+*.tlog
+*.sbr
+*.recipe
+*.log
+*.VC.db
+*.FileList*
+*.bsc

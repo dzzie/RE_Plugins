@@ -1,4 +1,12 @@
 
+--------------------------------------------
+NOTE: this has been changed over to support x64 numbers everywhere.
+the sample clients have not been updated yet. any x64 numbers should be strings
+unless using quickcall (only from an x64 process). The 0x prefix is required if the number
+is hex, decimal numbers should be supported as well.. Examples will be updated once fully
+tested and stabalized and then this warning will disappear. IDA_JScript_w_DukDbg is the working
+client ref implementation right now.
+--------------------------------------------
 
 this is a small plugin for IDA that will listen for messages through
 a WM_COPYDATA mechanism to allow remote control and data retrieval through

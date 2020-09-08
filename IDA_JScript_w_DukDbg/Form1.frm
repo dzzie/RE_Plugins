@@ -4,7 +4,7 @@ Object = "{047848A0-21DD-421D-951E-B4B1F3E1718D}#89.0#0"; "dukDbg.ocx"
 Object = "{3B7C8863-D78F-101B-B9B5-04021C009402}#1.2#0"; "richtx32.ocx"
 Object = "{248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0"; "MSWINSCK.OCX"
 Begin VB.Form Form1 
-   Caption         =   "IDA JScript - http://sandsprite.com"
+   Caption         =   "IDA JScript 2 - http://sandsprite.com"
    ClientHeight    =   7020
    ClientLeft      =   165
    ClientTop       =   450
@@ -160,7 +160,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -334,7 +333,7 @@ Private Sub Form_Load()
 
     'to use with duk we MUST use correct case on these since the relay is through JS
     
-    txtjs.AddIntellisense "x64", "add subtract"
+    txtjs.AddIntellisense "x64", "toHex add subtract"
     
     txtjs.AddIntellisense "fso", "readFile writeFile appendFile fileExists deleteFile openFileDialog saveFileDialog"
     
@@ -651,6 +650,7 @@ End Sub
 
 Private Sub txtjs_dukErr(line As Long, msg As String)
     ida.t "dukErr> " & line & " " & msg
+    'MsgBox msg
 End Sub
 
 Private Sub txtjs_printOut(msg As String)
