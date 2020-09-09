@@ -449,6 +449,7 @@ int HandleMsg(char* m){
 	   46 decodeins:va (instr length)
 	   47 getlong:va
 	   48 getword:va
+	   50 getx64:va:hwnd
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -787,11 +788,12 @@ int HandleMsg(char* m){
 					if( argc != 1 ){msg("getword needs 1 args\n"); return -1;}
 					return get_16bit(ua1);
 
-		  case 50: //getx64
-					if (argc != 1) { msg("getx64 needs 1 args\n"); return -1; }
-					return get_64bit(ua1);
-
-
+		  case 50: //getx64:va:hwnd
+					if (argc != 2) { msg("getx64 needs 2 args\n"); return -1; }
+					i = get_64bit(ua1);
+					sprintf(tmp, "0x%llX",i);
+					SendTextMessage(atoi(args[2]), tmp, strlen(tmp));
+					return i;
 	}				
 
 };

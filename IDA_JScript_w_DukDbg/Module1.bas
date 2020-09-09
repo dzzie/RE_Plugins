@@ -446,12 +446,53 @@ Function IDAPath() As String
     
 End Function
 
+Function installPLW_2(Optional alert As Boolean = False, Optional forceUpdate As Boolean = False) As Boolean
+    
+    Dim pluginDir As String, plwPath As String
+    Dim ida As String
+    
+    'Const plw = "IDASrvr2.dll"
+    Const plw = "IDASrvr2_64.dll"
+    
+    ida = IDAPath()
+    If Len(ida) = 0 Then
+        If alert Then MsgBox "Could not find IDA path in registry to auto install plw." & vbCrLf & vbCrLf & "Please copy it from the install directory to IDA plugins folder", vbInformation
+        Exit Function
+    End If
+    
+    pluginDir = fso.GetParentFolder(ida) & "\plugins\"
+    
+    If fso.fileExists(pluginDir & plw) Then
+        If Not forceUpdate Then
+            installPLW_2 = True
+            Exit Function
+        End If
+        fso.deleteFile pluginDir & plw
+    End If
+    
+    plwPath = App.path & "\" & plw
+    If Not fso.fileExists(plwPath) Then
+        If alert Then MsgBox "Could not find " & plw & " to install?"
+        Exit Function
+    End If
+    
+    fso.Copy plwPath, pluginDir
+    
+    If fso.fileExists(pluginDir & plw) Then
+        installPLW_2 = True
+    Else
+        If alert Then MsgBox "Failed to install " & plw & " in " & pluginDir, vbInformation
+    End If
+    
+End Function
+
 Function installPLW(Optional alert As Boolean = False, Optional forceUpdate As Boolean = False) As Boolean
     
     Dim pluginDir As String, plwPath As String
     Dim ida As String
     
     Const plw = "IDASrvr2.dll"
+    Const plw2 = "IDASrvr2_64.dll"
     
     ida = IDAPath()
     If Len(ida) = 0 Then

@@ -1,1 +1,2 @@
-t( ida.is)
+ea = ida.screenEA()
+t(h( ida.readByte(ea) ))

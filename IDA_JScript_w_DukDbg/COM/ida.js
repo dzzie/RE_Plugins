@@ -75,6 +75,7 @@
 	Function isData(va) as Long
 	Function ReadLong(va) As Long
     Function ReadShort(va) As Long
+	Function read64Bit(va) as String
     Function hexDump(x) As String
 	Function hexstr(x) As String
 	Function toBytes(hexstr) As String
@@ -285,6 +286,10 @@ function idaClass(){
 	
 	this.readShort = function(va){
 		return resolver('ida.ReadShort', arguments.length,0, va);
+	}
+	
+	this.read64Bit = function(va){
+		return resolver('ida.read64Bit', arguments.length,0, va);
 	}
 	
 	this.originalByte = function(va){

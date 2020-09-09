@@ -5,7 +5,7 @@ DefaultDirName=c:\IDAJS2
 DefaultGroupName=IDAJS
 UninstallDisplayIcon={app}\unins000.exe
 OutputDir=./
-OutputBaseFilename=IDAJSDBG_Setup
+OutputBaseFilename=IDAJS_2_Setup
 
 
 [Dirs]
@@ -20,6 +20,8 @@ Source: IDA_JScript.exe; DestDir: {app}; Flags: replacesameversion
 Source: spSubclass.dll; DestDir: {app}; Flags: regserver
 Source: SciLexer.dll; DestDir: {app}; Flags: replacesameversion
 Source: scivb2.ocx; DestDir: {app}; Flags: regserver   replacesameversion
+Source: UTypes.dll; DestDir: {app}; Flags: replacesameversion
+Source: vbUtypes.dll; DestDir: {app}; Flags: regserver replacesameversion
 Source: vbDevKit.dll; DestDir: {app}; Flags: regserver
 Source: ..\COM\ida.js; DestDir: {app}\COM\
 Source: ..\COM\x64.js; DestDir: {app}\COM\

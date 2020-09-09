@@ -320,6 +320,7 @@ Private Sub Form_Load()
     
     If Command = "/install" Then
         Call installPLW(True, True)
+        Call installPLW_2(True, True)
         Call register_idajsFileExt
         End
     End If
@@ -341,7 +342,7 @@ Private Sub Form_Load()
                                 "xRefsTo xRefsFrom getName functionName hideBlock showBlock setname addComment getComment addCodeXRef addDataXRef " & _
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
-                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort"
+                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort read64Bit"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     

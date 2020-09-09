@@ -126,9 +126,17 @@ End Function
 
 Function intToHex(x)
     On Error Resume Next
-    intToHex = Hex(x)
-    If Len(intToHex) = 1 Then intToHex = "0" & intToHex
-    If Err.Number <> 0 Then intToHex = x 'hex can throw overflow bleh...
+    
+    If Not tmp_x.fromString(x) Then
+        Form1.List1.AddItem "Failed to convert x: " & x
+        Exit Function
+    End If
+    
+    intToHex = tmp_x.toString(mHex)
+    
+    'intToHex = Hex(x)
+    'If Len(intToHex) = 1 Then intToHex = "0" & intToHex
+    'If Err.Number <> 0 Then intToHex = x 'hex can throw overflow bleh...
 End Function
 
 Function getAsm(va)
@@ -465,7 +473,8 @@ End Function
             Form1.List1.AddItem "Failed to convert va: " & va
             Exit Function
         End If
-        readByte = ipc.SendCmdRecvText("readByte:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        readByte = ipc.SendCmdRecvText("readbyte:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        readByte = Right(readByte, 2)
      End If
 End Function
 
@@ -479,8 +488,17 @@ Function readLong(va)
             Form1.List1.AddItem "Failed to convert va: " & va
             Exit Function
         End If
-        readLong = ipc.SendCmdRecvText("readlong:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        readLong = ipc.SendCmdRecvInt("getlong:" & tmp_x.toString(mHex)) ' & ":" & Form1.hwnd)
     End If
+End Function
+
+Function read64Bit(va)
+    On Error Resume Next
+    If Not tmp_x.fromString(va) Then
+        Form1.List1.AddItem "Failed to convert va: " & va
+        Exit Function
+    End If
+    read64Bit = ipc.SendCmdRecvText("getx64:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
 End Function
 
 Function readShort(va)
@@ -493,7 +511,7 @@ Function readShort(va)
             Form1.List1.AddItem "Failed to convert va: " & va
             Exit Function
         End If
-        readShort = ipc.SendCmdRecvText("readshort:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+        readShort = ipc.SendCmdRecvInt("getword:" & tmp_x.toString(mHex)) '& ":" & Form1.hwnd)
     End If
 End Function
 
@@ -509,6 +527,7 @@ Function originalByte(va)
             Exit Function
         End If
         originalByte = ipc.SendCmdRecvInt("orgbyte:" & tmp_x.toString(mHex))
+        originalByte = Right(originalByte, 2)
     End If
 End Function
 
