@@ -8,10 +8,10 @@ fStart = ida.functionStart(funcIndex);
 fEnd = ida.functionEnd(funcIndex);
 
 tmp = '';j=0;x = new Array();
-x.push("// opcodes for " + fName + " size: 0x" + h(fEnd-fStart) + " bytes\r\n");
+x.push("// opcodes for " + fName + " size: " + h(fEnd-fStart) + " bytes\r\n");
 
 for(i = fStart; i < fEnd; i++){
-    tmp+= "_asm _emit 0x" + h(ida.readByte(i)) + " ";
+    tmp+= "_asm _emit " + h(ida.readByte(i)) + " ";
     j++;
     if(j == 6){
         x.push('\t'+tmp);

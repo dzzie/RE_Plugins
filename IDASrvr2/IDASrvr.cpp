@@ -21,7 +21,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 	  dont have it, you can just comment out the few lines that reference it. 
 */
 
-bool m_debug = true;
+bool m_debug = false;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
 //#define __EA64__  //create the plugin for the 64 bit databases
@@ -120,7 +120,7 @@ int EaForFxName(char* fxName){
 
 	for(int i=0;i<x;i++){
 		fx = getn_func(i);
-		if(get_func_name(&q, fx->start_ea) > 0){
+		if(fx != nullptr && get_func_name(&q, fx->start_ea) > 0){
 			//if(m_debug) msg("on index %d name=%s\n", i, buf);
 			if(q == fxName){
 				if(m_debug) msg("Found ea for name %s=%x\n", fxName, fx->start_ea );
@@ -213,10 +213,10 @@ bool SendTextMessage(char* name, char *Buffer, int blen)
 		  return SendTextMessage((int)h,Buffer,blen);
 }  
 
-bool SendTextMessage(int hwnd, char *Buffer, int blen) 
+bool SendTextMessage(int hwnd, char* Buffer, int blen)
 {
-		  char* nullString = "NULL";
-		  if(blen==0){ //in case they are waiting on a message with data len..
+	char* nullString = "NULL";
+	if (blen == 0 || Buffer == NULL) { //in case they are waiting on a message with data len..
 				Buffer = nullString;
 				blen=4;
 		  }
@@ -247,6 +247,12 @@ bool SendIntMessage(int hwnd, __int64 resp){
 bool get64(char* str, unsigned __int64* outval)
 {
 	char* end;
+
+	if (str == NULL) {
+		outval = 0;
+		return false;
+	}
+
 	*outval = strtoull(str, &end, 0); //base determined by string (supports 0x prefix)
 	if (*outval == 0 && end == str) {
 		return false; // str was not a number 
@@ -495,7 +501,7 @@ int HandleMsg(char* m){
 
 	/*MessageBox(0, m, "Message", 0);
 	msg("HandleMsg len: %d", strlen(m));
-	return 0;*/
+	//return 0;*/
 
 	//split command string into args array
 	token = strtok(m,":");
@@ -522,6 +528,7 @@ int HandleMsg(char* m){
 
 
 	//if(m_debug) msg("command handler: %d",i);
+	//MessageBox(0, "", "", 0);
 
 	//handle specific command
 	switch(i){
@@ -634,9 +641,7 @@ int HandleMsg(char* m){
 
 		case 14: //funcstart:funcIndex:[hwnd] - x64 requires hwnd, legacy 32bit code still ok
 			     if( argc < 1 ){msg("funcstart needs 1 args\n"); return -1;}
-				 i = atoi(args[1]);
-				 if(i < 0) return -1;
-				 x = FunctionStart(i);
+				 x = FunctionStart(ua1);
 				 if(argc == 2) SendIntMessage(atoi(args[2]),x);
 				 return x;
 				 break;
@@ -1041,7 +1046,7 @@ void __stdcall FuncName(__int64 addr, char* buf, size_t bufsize)
 	qstring q;
 	get_func_name(&q, addr); 
 	memset(buf, 0, bufsize);
-	if (q.length() <  bufsize) {
+	if (q.length() > 0 && q.length() <  bufsize) {
 		qstrncpy(buf, q.c_str(), q.length()+1);
 	}
 
@@ -1051,7 +1056,7 @@ void __stdcall GetComment(__int64 offset, char* buf, int bufsize){
 	qstring q;
 	int retlen = get_cmt(&q, offset,false); 
 	memset(buf, 0, bufsize);
-	if (q.length() <  bufsize) {
+	if (q.length() > 0 && q.length() <  bufsize) {
 		qstrncpy(buf, q.c_str(), q.length()+1);
 	}
 }
@@ -1129,38 +1134,38 @@ void __stdcall MakeCode(__int64 offset){
 
 
 __int64 __stdcall FunctionStart(int n){
-	if(n < 0 || n >  NumFuncs()){
-		if(debug) msg("Invalid function index specified!");
+	func_t *clsFx = getn_func(n);
+	if (clsFx == nullptr) {
+		if (m_debug) msg("Invalid function index specified!");
 		return -1;
 	}
-	func_t *clsFx = getn_func(n);
 	return clsFx->start_ea;
 }
 
 __int64 __stdcall FunctionEnd(int n){
-	if(n < 0 || n >  NumFuncs()){
-		if(debug) msg("Invalid function index specified!");
+	func_t *clsFx = getn_func(n);
+	if (clsFx == nullptr) {
+		if (m_debug) msg("Invalid function index specified!");
 		return -1;
 	}
-	func_t *clsFx = getn_func(n);
 	return clsFx->end_ea;
 }
 
 int __stdcall FuncArgSize(int index){
-		if(index < 0 || index >  NumFuncs()){
-			if(debug) msg("Invalid function index specified!");
+		func_t *clsFx = getn_func(index);
+		if (clsFx == nullptr) {
+			if (m_debug) msg("Invalid function index specified!");
 			return -1;
 		}
-		func_t *clsFx = getn_func(index);
 		return clsFx->argsize ;
 }
 
 int __stdcall FuncColor(int index){
-		if(index < 0 || index >  NumFuncs()){
-			if(debug) msg("Invalid function index specified!");
+		func_t *clsFx = getn_func(index);
+		if (clsFx == nullptr) {
+			if (m_debug) msg("Invalid function index specified!");
 			return -1;
 		}
-		func_t *clsFx = getn_func(index);
 		return clsFx->color  ;
 }
 
@@ -1172,15 +1177,18 @@ int __stdcall GetAsm(__int64 addr, char* buf, int bufLen){
 
 	memset(buf, 0, bufLen);
     flags = get_flags(addr);                        
-    if(is_code(flags)) {                            
-        generate_disasm_line(&q, addr, GENDSM_MULTI_LINE );
-		sLen = tag_remove(&q) + 1;
-		if (sLen > 1 && sLen < bufLen) {
-			qstrncpy(buf, q.c_str(), sLen);
+	if (is_code(flags)) {
+		generate_disasm_line(&q, addr, GENDSM_MULTI_LINE);
+		if (q.length() > 0) {
+			sLen = tag_remove(&q) + 1;
+			if (sLen > 1 && sLen < bufLen) {
+				qstrncpy(buf, q.c_str(), sLen);
+				return sLen;
+			}
 		}
     }
 
-	return sLen;
+	return 0;
 
 }
 
@@ -1231,7 +1239,7 @@ int __stdcall SearchText(int addr, char* buf, int search_type,int debug){
 	int y=0,x=0;
 	int ret = find_text(addr,y,x,buf, search_type);
 	
-	if(debug==1){
+	if(m_debug==1){
 		qsnprintf(msg,499,"ret=%x addr=%x search_type=%x",ret,addr,search_type);
 		MessageBox(0,msg,"",0);
 	}
@@ -1339,7 +1347,7 @@ int __stdcall DecompileFunction(__int64 offset, char* fpath)
 			return 0;
 		}
 		
-		/*if(debug)*/ msg("%a: successfully decompiled\n", pfn->start_ea);
+		/*if(m_debug)*/ msg("%a: successfully decompiled\n", pfn->start_ea);
 
 		const strvec_t &sv = cfunc->get_pseudocode(); //not available in 6.2 known ok in 6.5..
 		for ( int i=0; i < sv.size(); i++ )

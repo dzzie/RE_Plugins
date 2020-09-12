@@ -160,6 +160,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -183,6 +184,9 @@ Begin VB.Form Form1
    End
    Begin VB.Menu mnuTools 
       Caption         =   "Tools"
+      Begin VB.Menu mnuNew 
+         Caption         =   "New"
+      End
       Begin VB.Menu mnuOpenScript 
          Caption         =   "Open File"
       End
@@ -259,6 +263,15 @@ End Sub
 
 Private Sub Check1_Click()
     List1.Visible = CBool(Check1.value)
+End Sub
+
+Private Sub mnuNew_Click()
+    Dim t As String
+    t = fso.GetFreeFileName(Environ("temp"))
+    fso.writeFile t, ""
+    loadedFile = t
+    txtjs.LoadFile t
+    'sci.Text = Empty
 End Sub
 
 Private Sub mnuSetTimeout_Click()
@@ -338,11 +351,11 @@ Private Sub Form_Load()
     
     txtjs.AddIntellisense "fso", "readFile writeFile appendFile fileExists deleteFile openFileDialog saveFileDialog"
     
-    txtjs.AddIntellisense "ida", "isUp message makeStr makeUnk loadedFile patchString patchByte getAsm instSize " & _
+    txtjs.AddIntellisense "ida", "isUp is32Bit message makeStr makeUnk loadedFile patchString patchByte getAsm instSize " & _
                                 "xRefsTo xRefsFrom getName functionName hideBlock showBlock setname addComment getComment addCodeXRef addDataXRef " & _
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
-                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort read64Bit"
+                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     

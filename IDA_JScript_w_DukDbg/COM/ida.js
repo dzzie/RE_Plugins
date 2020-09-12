@@ -1,5 +1,6 @@
 /*
 	Property get isUp As Boolean
+	Property get is32Bit As Boolean
 	Property get timeout As Long
 	Property let timeout As Long
 	Sub Caption(msg)
@@ -75,7 +76,7 @@
 	Function isData(va) as Long
 	Function ReadLong(va) As Long
     Function ReadShort(va) As Long
-	Function read64Bit(va) as String
+	Function readQWord(va) as String
     Function hexDump(x) As String
 	Function hexstr(x) As String
 	Function toBytes(hexstr) As String
@@ -288,8 +289,8 @@ function idaClass(){
 		return resolver('ida.ReadShort', arguments.length,0, va);
 	}
 	
-	this.read64Bit = function(va){
-		return resolver('ida.read64Bit', arguments.length,0, va);
+	this.readQWord = function(va){
+		return resolver('ida.readQWord', arguments.length,0, va);
 	}
 	
 	this.originalByte = function(va){
@@ -383,7 +384,11 @@ idaClass.prototype = {
 	get isUp(){
 		return resolver('ida.isUp.get', 0, this.hInst);
 	},
-
+    
+	get is32Bit(){
+		return resolver('ida.is32Bit.get', 0, this.hInst);
+	},
+	
 	/*set Enabled(val){
 		return resolver('list.Enabled.let', 1, this.hInst, val);
 	},*/

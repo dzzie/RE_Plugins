@@ -37,6 +37,10 @@ Property Let timeout(v)
     Form1.txtjs.timeout = CLng(v)
 End Property
 
+Property Get is32Bit() As Boolean
+    is32Bit = Not is64BitMode
+End Property
+
 Property Get isUp() As Boolean
     isUp = IIf(IsWindow(ipc.RemoteHWND) = 1, True, False)
 End Property
@@ -492,13 +496,13 @@ Function readLong(va)
     End If
 End Function
 
-Function read64Bit(va)
+Function readQWord(va)
     On Error Resume Next
     If Not tmp_x.fromString(va) Then
         Form1.List1.AddItem "Failed to convert va: " & va
         Exit Function
     End If
-    read64Bit = ipc.SendCmdRecvText("getx64:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
+    readQWord = ipc.SendCmdRecvText("getx64:" & tmp_x.toString(mHex) & ":" & Form1.hwnd)
 End Function
 
 Function readShort(va)
