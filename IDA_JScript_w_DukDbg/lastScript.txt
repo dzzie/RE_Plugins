@@ -1,30 +1,68 @@
-//emit_cur_func.idajs
-ea = ida.screenEA()
-funcIndex = ida.funcIndexFromVA(ea)
-if(funcIndex == -1) throw("Cursor not in a function: ea="+h(ea)+" i="+funcIndex);
+decoder = 0x40EE70 
+refs = ida.xRefsTo(decoder).split(",")
+addr = new Array();
 
-fName = ida.functionName(funcIndex);
-fStart = ida.functionStart(funcIndex);
-fEnd = ida.functionEnd(funcIndex);
-
-tmp = '';j=0;x = new Array();
-x.push("// opcodes for " + fName + " size: " + h(fEnd-fStart) + " bytes\r\n");
-
-for(i = fStart; i < fEnd; i++){
-    tmp+= "_asm _emit " + h(ida.readByte(i)) + " ";
-    j++;
-    if(j == 6){
-        x.push('\t'+tmp);
-        tmp = '';
-        j=0;
+for( i=0; i<refs.length; i++)
+{
+    p = ida.prevEA(refs[i])
+    msg = "call: " + h(p)
+    for(j=10;j>0;j++)
+    {
+        asm = ida.getAsm(p)
+        if(asm.indexOf("offset") > 0)
+        {
+            a = asm.indexOf("_")
+            if(a > 0){
+                asm = asm.substr(a+1)
+                asm = h(n(asm))
+            } 
+            //msg += "  arg:" + h(p) + " " + asm
+            if( asm.length > 6 ){
+                
+                    k = n(asm) - 4
+                    v = ida.readLong(k);
+                    t( h(refs[i]) + "," + asm + "," + v )
+                 
+            }else{
+                 t('miss: ' + h(refs[i]) + "," + asm + "," + v )
+            }
+            //t(msg)
+            break;
+        }
+        else
+        {
+            p = ida.prevEA(p);
+        }
     }
 }
 
-if(tmp.length > 0) x.push('\t'+tmp);
-x.push(' }');
-x = x.join('\r\n')
-app.setClipboard(x)
-t(x)
+//addr = unique(addr)
+t("done: " + addr.length)
 
+//t( unique(addr).join('\r\n')  )
 
+function exists(x){
+    for(i=0;i<addr.length;i++){
+       if(x == addr[i]) return true;
+    }
+    return false
+}
+
+function n(x){
+    try{
+        x = x.split("0x").join('');
+        return parseInt("0x"+x)
+    }catch(e){
+        return "not hex: " + x
+    }
+}
+
+function unique(x) {
+    var a = [];
+    for (i = 0; i < x.length; i++) {
+        var current = x[i];
+        if (a.indexOf(current) < 0) a.push(current);
+    }
+    return a;
+}
 

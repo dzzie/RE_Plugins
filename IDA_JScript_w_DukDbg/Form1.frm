@@ -160,7 +160,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -462,7 +461,7 @@ Private Sub Form_Load()
     
     List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     
-    x = " Built in classes: ida. fso. app. remote. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
+    x = " Built in classes: ida. fso. app. x64. remote. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
         "global functions: \n\t alert(x), \n\t h(x) [int to hex], \n" & _
         "\t t(x) [append this textbox with x] \n" & _
         "\t d(x) [add x to debug pane list]\n\n" & _

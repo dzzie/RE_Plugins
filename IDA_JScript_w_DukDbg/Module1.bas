@@ -85,8 +85,8 @@ Sub FormPos(fform As Form, Optional andSize As Boolean = False, Optional save_mo
     
 End Sub
 
-Sub SaveMySetting(key, value)
-    SaveSetting App.EXEName, "Settings", key, value
+Sub SaveMySetting(key, Value)
+    SaveSetting App.EXEName, "Settings", key, Value
 End Sub
 
 Function GetMySetting(key, Optional defaultval = "")
@@ -102,19 +102,19 @@ Function KeyExistsInCollection(c As Collection, val As String) As Boolean
 nope: KeyExistsInCollection = False
 End Function
 
-Sub push(ary, value) 'this modifies parent ary object
-    On Error GoTo init
-    x = UBound(ary) '<-throws Error If Not initalized
-    ReDim Preserve ary(UBound(ary) + 1)
-    ary(UBound(ary)) = value
-    Exit Sub
-init:     ReDim ary(0): ary(0) = value
-End Sub
+'Sub push(ary, Value) 'this modifies parent ary object
+'    On Error GoTo Init
+'    X = UBound(ary) '<-throws Error If Not initalized
+'    ReDim Preserve ary(UBound(ary) + 1)
+'    ary(UBound(ary)) = Value
+'    Exit Sub
+'Init:     ReDim ary(0): ary(0) = Value
+'End Sub
 
 Function FirstOccurance(it, ByVal csvFind As String, ByRef outFoundVal) As Long
     If Len(csvFind) = 0 Then Exit Function
     
-    Dim find() As String, x, lowestOffset As Long, lowestIndex As Long, i As Long, a As Long
+    Dim find() As String, X, lowestOffset As Long, lowestIndex As Long, i As Long, a As Long
     
     outFoundVal = Empty
     lowestOffset = MAX_LONG
@@ -163,7 +163,7 @@ Function hexDump(bAryOrStrData, Optional ByVal length As Long = -1, Optional ByV
     Dim ary() As Byte
     Dim offset As Long
     Const LANG_US = &H409
-    Dim i As Long, tt, h, x
+    Dim i As Long, tt, h, X
     Dim hexOnly As Long
     
     offset = 0
@@ -189,9 +189,9 @@ Function hexDump(bAryOrStrData, Optional ByVal length As Long = -1, Optional ByV
         tt = Hex(ary(i - 1))
         If Len(tt) = 1 Then tt = "0" & tt
         tmp = tmp & tt & " "
-        x = ary(i - 1)
+        X = ary(i - 1)
         'chars = chars & IIf((x > 32 And x < 127) Or x > 191, Chr(x), ".") 'x > 191 causes \x0 problems on non us systems... asc(chr(x)) = 0
-        chars = chars & IIf((x > 32 And x < 127), Chr(x), ".")
+        chars = chars & IIf((X > 32 And X < 127), Chr(X), ".")
         If i > 1 And i Mod 16 = 0 Then
             h = Hex(offset)
             While Len(h) < 6: h = "0" & h: Wend
@@ -247,7 +247,7 @@ Public Function toBytes(ByVal hexstr, ByRef outVar, Optional ByVal inputformat A
 'isDecimal flag requires csv or spaced values..
 'ignores common C source prefixes and characters
 
-    Dim ret As String, x As String, str As String
+    Dim ret As String, X As String, str As String
     Dim r() As Byte, b As Byte, b1 As Byte
     Dim foundDecimal As Boolean, tmp, i, a, a2
     Dim pos As Long, marker As String
@@ -283,9 +283,9 @@ Public Function toBytes(ByVal hexstr, ByRef outVar, Optional ByVal inputformat A
         tmp = Split(hexstr, "%u")
         For i = 1 To UBound(tmp)
             a = InStr(tmp(i), "%")
-            x = ""
+            X = ""
             If a > 1 Then
-                x = Mid(tmp(i), a)
+                X = Mid(tmp(i), a)
                 tmp(i) = Mid(tmp(i), 1, a - 1)
             End If
             If Len(tmp(i)) = 3 Then tmp(i) = "0" & tmp(i)
@@ -294,7 +294,7 @@ Public Function toBytes(ByVal hexstr, ByRef outVar, Optional ByVal inputformat A
                 a2 = Mid(tmp(i), 3, 2)
                 tmp(i) = a2 & a
             End If
-            If Len(x) > 0 Then tmp(i) = tmp(i) & x
+            If Len(X) > 0 Then tmp(i) = tmp(i) & X
         Next
         hexstr = Join(tmp, "")
     End If
@@ -333,8 +333,8 @@ Public Function toBytes(ByVal hexstr, ByRef outVar, Optional ByVal inputformat A
     str = Replace(str, ",", Empty)
     
     For i = 1 To Len(str) Step 2
-        x = Mid(str, i, 2)
-        If Not isHexChar(x, b) Then Exit Function
+        X = Mid(str, i, 2)
+        If Not isHexChar(X, b) Then Exit Function
         bpush r(), b
     Next
     
@@ -355,16 +355,16 @@ End Function
 
 
 Private Sub bpush(bAry() As Byte, b As Byte) 'this modifies parent ary object
-    On Error GoTo init
-    Dim x As Long
+    On Error GoTo Init
+    Dim X As Long
     
-    x = UBound(bAry) '<-throws Error If Not initalized
+    X = UBound(bAry) '<-throws Error If Not initalized
     ReDim Preserve bAry(UBound(bAry) + 1)
     bAry(UBound(bAry)) = b
     
     Exit Sub
 
-init:
+Init:
     ReDim bAry(0)
     bAry(0) = b
     
@@ -416,9 +416,9 @@ Function ReadRegValue(path, Optional KeyName = "")
             lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, strData, lDataBufSize)
             If lResult = 0 Then ret = strData
         ElseIf lValueType = REG_DWORD Then
-            Dim x As Long
-            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, x, lDataBufSize)
-            ret = x
+            Dim X As Long
+            lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, X, lDataBufSize)
+            ret = X
         ElseIf lValueType = REG_EXPAND_SZ Then
             strBuf = String(lDataBufSize, Chr$(0))
             lResult = RegQueryValueEx(handle, CStr(KeyName), 0, 0, ByVal strBuf, lDataBufSize)
@@ -462,7 +462,7 @@ Function installPLW_2(Optional alert As Boolean = False, Optional forceUpdate As
     
     pluginDir = fso.GetParentFolder(ida) & "\plugins\"
     
-    If fso.fileExists(pluginDir & plw) Then
+    If fso.FileExists(pluginDir & plw) Then
         If Not forceUpdate Then
             installPLW_2 = True
             Exit Function
@@ -471,14 +471,14 @@ Function installPLW_2(Optional alert As Boolean = False, Optional forceUpdate As
     End If
     
     plwPath = App.path & "\" & plw
-    If Not fso.fileExists(plwPath) Then
+    If Not fso.FileExists(plwPath) Then
         If alert Then MsgBox "Could not find " & plw & " to install?"
         Exit Function
     End If
     
     fso.Copy plwPath, pluginDir
     
-    If fso.fileExists(pluginDir & plw) Then
+    If fso.FileExists(pluginDir & plw) Then
         installPLW_2 = True
     Else
         If alert Then MsgBox "Failed to install " & plw & " in " & pluginDir, vbInformation
@@ -502,7 +502,7 @@ Function installPLW(Optional alert As Boolean = False, Optional forceUpdate As B
     
     pluginDir = fso.GetParentFolder(ida) & "\plugins\"
     
-    If fso.fileExists(pluginDir & plw) Then
+    If fso.FileExists(pluginDir & plw) Then
         If Not forceUpdate Then
             installPLW = True
             Exit Function
@@ -511,14 +511,14 @@ Function installPLW(Optional alert As Boolean = False, Optional forceUpdate As B
     End If
     
     plwPath = App.path & "\" & plw
-    If Not fso.fileExists(plwPath) Then
+    If Not fso.FileExists(plwPath) Then
         If alert Then MsgBox "Could not find " & plw & " to install?"
         Exit Function
     End If
     
     fso.Copy plwPath, pluginDir
     
-    If fso.fileExists(pluginDir & plw) Then
+    If fso.FileExists(pluginDir & plw) Then
         installPLW = True
     Else
         If alert Then MsgBox "Failed to install " & plw & " in " & pluginDir, vbInformation
@@ -532,7 +532,7 @@ Function register_idajsFileExt() As Boolean
     Dim tmp As String
        
     homedir = App.path & "\IDA_JScript.exe"
-    If Not fso.fileExists(homedir) Then Exit Function
+    If Not fso.FileExists(homedir) Then Exit Function
     cmd = "cmd /c ftype IDAJS.Document=""" & homedir & """ %1 && assoc .idajs=IDAJS.Document"
     
     On Error Resume Next
