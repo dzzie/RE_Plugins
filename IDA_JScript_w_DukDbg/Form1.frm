@@ -207,6 +207,9 @@ Begin VB.Form Form1
       Begin VB.Menu mnuSpacer2 
          Caption         =   "-"
       End
+      Begin VB.Menu mnuShowAddrList 
+         Caption         =   "View Address List"
+      End
       Begin VB.Menu mnuScintOpts 
          Caption         =   "Scintinella Version"
       End
@@ -231,6 +234,7 @@ Public loadedFile As String
 Public sci As sci2.SciSimple
 Public remote As New CRemoteExportClient
 Public x64 As New CX64
+Public al As frmAddrList
 
 Private Sub cboSaved_Click()
     On Error Resume Next
@@ -261,7 +265,7 @@ Private Sub cboSaved_Click()
 End Sub
 
 Private Sub Check1_Click()
-    List1.Visible = CBool(Check1.value)
+    List1.Visible = CBool(Check1.Value)
 End Sub
 
 Private Sub mnuNew_Click()
@@ -283,6 +287,10 @@ Private Sub mnuSetTimeout_Click()
         Exit Sub
     End If
     txtjs.timeout = l
+End Sub
+
+Private Sub mnuShowAddrList_Click()
+    al.showList
 End Sub
 
 Private Sub txtjs_StateChanged(state As dukDbg.dbgStates)
@@ -316,6 +324,8 @@ Private Sub txtjs_StateChanged(state As dukDbg.dbgStates)
 
     End If
     
+    'If state = dsIdle And al.addrAdded Then al.showList
+    
 End Sub
  
 
@@ -339,6 +349,8 @@ Private Sub Form_Load()
         
     FormPos Me, True
     Me.Visible = True
+    frmAddrList.Visible = False
+    Set al = frmAddrList
     
     Set remote.ws = Winsock1
     Set sci = txtjs.sci
@@ -361,6 +373,8 @@ Private Sub Form_Load()
      txtjs.AddIntellisense "app", "intToHex t clearLog caption alert getClipboard setClipboard benchMark askValue exec enableIDADebugMessages timeout do_events() hexDump hexstr toBytes"
        
      txtjs.AddIntellisense "remote", "ip response ScanProcess ResolveExport"
+     
+     txtjs.AddIntellisense "al", "addAddr showList() hideList() clear()"
      
     'divide up into these classes for intellise sense cleanliness?
     'ui -> jump refresh() hideea showea hideblock showblock getcomment addcomment loadedfile
@@ -392,6 +406,10 @@ Private Sub Form_Load()
         MsgBox "Failed to add remote client object?"
     End If
     
+    If Not txtjs.AddObject(al, "al") Then
+        MsgBox "Failed to add address list object?"
+    End If
+    
 '    txtjs.DisplayCallTips = True
 '    txtjs.WordWrap = True
 '    txtjs.ShowIndentationGuide = True
@@ -404,7 +422,7 @@ Private Sub Form_Load()
         Dim f
         tmp = fso.GetFolderFiles(App.path & "\scripts")
         For Each f In tmp
-            Set ci = cboSaved.ComboItems.Add(, , fso.GetBaseName(CStr(f)))
+            Set ci = cboSaved.ComboItems.add(, , fso.GetBaseName(CStr(f)))
             ci.Tag = f
         Next
         cboSaved.Text = Empty
@@ -423,7 +441,7 @@ Private Sub Form_Load()
         If IsWindow(autoConnectHWND) = 0 Then autoConnectHWND = 0
     End If
     
-    If fso.fileExists(c) Then
+    If fso.FileExists(c) Then
         loadedFile = c
         txtjs.LoadFile c
     'ElseIf fso.FileExists(App.path & "\lastScript.txt") Then
@@ -461,7 +479,7 @@ Private Sub Form_Load()
     
     List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     
-    x = " Built in classes: ida. fso. app. x64. remote. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
+    x = " Built in classes: ida. fso. app. x64. remote. al. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
         "global functions: \n\t alert(x), \n\t h(x) [int to hex], \n" & _
         "\t t(x) [append this textbox with x] \n" & _
         "\t d(x) [add x to debug pane list]\n\n" & _
@@ -486,6 +504,9 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
     On Error Resume Next
+    Set al = Nothing
+    frmAddrList.closing = True
+    Unload frmAddrList
     FormPos Me, True, True
     If Len(txtjs.Text) > 2 And sci.isDirty Then
         If Len(loadedFile) > 0 Then
@@ -610,10 +631,10 @@ End Sub
 
 
 
-Function fileExists(path) As Boolean
+Function FileExists(path) As Boolean
   If Len(path) = 0 Then Exit Function
-  If Dir(path, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then fileExists = True _
-  Else fileExists = False
+  If Dir(path, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then FileExists = True _
+  Else FileExists = False
 End Function
 
 'Private Sub sc_Error()

@@ -17,6 +17,7 @@ Class=CRemoteExportClient; CRemoteExportClient.cls
 Class=CX64; CX64.cls
 Class=ULong64; ULong64.cls
 Module=modGeneral; modGeneral.bas
+Form=frmAddrList.frm
 IconForm="Form1"
 Startup="Form1"
 HelpFile=""

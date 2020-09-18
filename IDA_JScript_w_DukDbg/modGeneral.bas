@@ -8,6 +8,11 @@ Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal 
 Public hUtypes As Long
 Public uTypesPath As String
 
+Function cCLng(x) As Long
+    On Error Resume Next
+    cCLng = CLng(Replace(x, "0x", "&h"))
+End Function
+
 Function ensureUTypes() As Boolean
     
     On Error Resume Next
@@ -70,15 +75,15 @@ End Function
 
 Sub push(ary, Value) 'this modifies parent ary object
     On Error GoTo Init
-    Dim X
+    Dim x
        
-    X = UBound(ary)
-    ReDim Preserve ary(X + 1)
+    x = UBound(ary)
+    ReDim Preserve ary(x + 1)
     
     If IsObject(Value) Then
-        Set ary(X + 1) = Value
+        Set ary(x + 1) = Value
     Else
-        ary(X + 1) = Value
+        ary(x + 1) = Value
     End If
     
     Exit Sub

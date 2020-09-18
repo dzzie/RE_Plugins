@@ -295,7 +295,7 @@ Function decompile(va) As String
                                                         'its our token we will need to replace it latter :-\ foresight denied!
     r = ipc.SendCmdRecvInt("decompile:" & va & ":" & Replace(pth, ":", "_"))
     
-    If r = 1 And fso.fileExists(pth) Then
+    If r = 1 And fso.FileExists(pth) Then
         decompile = fso.readFile(pth)
     End If
     
@@ -314,7 +314,7 @@ Function jump(va)
     On Error Resume Next
     
     If Not is64BitMode Then
-        ipc.quickCall qcmJmpAddr_32, CLng(va)
+        ipc.quickCall qcmJmpAddr_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -327,7 +327,7 @@ End Function
 
 Function jumpRVA(rva)
     On Error Resume Next
-    ipc.quickCall qcmJmpRVA, CLng(rva)
+    ipc.quickCall qcmJmpRVA, cCLng(rva)
 End Function
 
 Function refresh()
@@ -337,7 +337,7 @@ End Function
 Function undefine(va)
     On Error Resume Next
     If Not is64BitMode Then
-        ipc.quickCall qcmUndef_32, CLng(va)
+        ipc.quickCall qcmUndef_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -350,7 +350,7 @@ End Function
 Function showEA(va)
     On Error Resume Next
     If Not is64BitMode Then
-        ipc.quickCall qcmShow_32, CLng(va)
+        ipc.quickCall qcmShow_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -363,7 +363,7 @@ End Function
 Function hideEA(va)
     On Error Resume Next
     If Not is64BitMode Then
-        ipc.quickCall qcmHide_32, CLng(va)
+        ipc.quickCall qcmHide_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -376,7 +376,7 @@ End Function
  Sub removeName(va)
     On Error Resume Next
     If Not is64BitMode Then
-        ipc.quickCall qcmRemName_32, CLng(va)
+        ipc.quickCall qcmRemName_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -389,7 +389,7 @@ End Function
 Sub makeCode(va)
     On Error Resume Next
     If Not is64BitMode Then
-        ipc.quickCall qcmMakeCode_32, CLng(va)
+        ipc.quickCall qcmMakeCode_32, cCLng(va)
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -402,7 +402,7 @@ End Sub
 Function funcIndexFromVA(va)
     On Error Resume Next
     If Not is64BitMode Then
-        funcIndexFromVA = ipc.quickCall(qcmFuncIdx_32, CLng(va))
+        funcIndexFromVA = ipc.quickCall(qcmFuncIdx_32, cCLng(va))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -415,7 +415,7 @@ End Function
 Function nextEA(va)
     On Error Resume Next
     If Not is64BitMode Then
-        nextEA = ipc.quickCall(qcmNextEa_32, CLng(va))
+        nextEA = ipc.quickCall(qcmNextEa_32, cCLng(va))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -429,7 +429,7 @@ End Function
 Function prevEA(va)
     On Error Resume Next
     If Not is64BitMode Then
-        prevEA = ipc.quickCall(qcmPrevEa_32, CLng(va))
+        prevEA = ipc.quickCall(qcmPrevEa_32, cCLng(va))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -451,7 +451,7 @@ End Function
  Function functionStart(functionIndex)
      On Error Resume Next
      If Not is64BitMode Then
-        functionStart = ipc.quickCall(qcmFuncStart_32, CLng(functionIndex))
+        functionStart = ipc.quickCall(qcmFuncStart_32, cCLng(functionIndex))
      Else
         functionStart = ipc.SendCmdRecvText("funcstart:" & functionIndex & ":" & Form1.hwnd)
         functionStart = tmp_x.setVal(functionStart).toString(mHex)
@@ -461,7 +461,7 @@ End Function
  Function functionEnd(functionIndex)
      On Error Resume Next
      If Not is64BitMode Then
-        functionEnd = ipc.quickCall(qcmFuncEnd_32, CLng(functionIndex))
+        functionEnd = ipc.quickCall(qcmFuncEnd_32, cCLng(functionIndex))
      Else
         functionEnd = ipc.SendCmdRecvText("funcend:" & functionIndex & ":" & Form1.hwnd)
         functionEnd = tmp_x.setVal(functionEnd).toString(mHex)
@@ -471,7 +471,7 @@ End Function
  Function readByte(va)
      On Error Resume Next
      If Not is64BitMode Then
-        readByte = CByte(ipc.quickCall(qcmReadByte_32, CLng(va)))
+        readByte = CByte(ipc.quickCall(qcmReadByte_32, cCLng(va)))
      Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -486,7 +486,7 @@ Function readLong(va)
     On Error Resume Next
     If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
-         readLong = CLng(ipc.quickCall(qcmReadLong_32, CLng(va)))
+         readLong = CLng(ipc.quickCall(qcmReadLong_32, cCLng(va)))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -509,7 +509,7 @@ Function readShort(va)
     On Error Resume Next
     If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
-         readShort = CLng(ipc.quickCall(qcmReadShort_32, CLng(va)))
+         readShort = CLng(ipc.quickCall(qcmReadShort_32, cCLng(va)))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -524,7 +524,7 @@ Function originalByte(va)
     
     If Not is64BitMode Then
          If va = 0 Or va = -1 Then Exit Function
-         originalByte = CByte(ipc.quickCall(qcmOrgByte_32, CLng(va)))
+         originalByte = CByte(ipc.quickCall(qcmOrgByte_32, cCLng(va)))
     Else
         If Not tmp_x.fromString(va) Then
             Form1.List1.AddItem "Failed to convert va: " & va
@@ -559,7 +559,7 @@ End Function
 
 Function quickCall(msg, Optional arg1 = 0) As Long
     On Error Resume Next
-    quickCall = ipc.quickCall(CLng(msg), CLng(arg1))
+    quickCall = ipc.quickCall(cCLng(msg), cCLng(arg1))
 End Function
 
 
@@ -675,15 +675,15 @@ Sub appendFile(path, it)
     Close f
 End Sub
 
-Function fileExists(path) As Boolean
+Function FileExists(path) As Boolean
   On Error GoTo hell
   Dim tmp As String
   tmp = Replace(path, "'", Empty)
   tmp = Replace(tmp, """", Empty)
   If Len(tmp) = 0 Then Exit Function
-  If Dir(tmp, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then fileExists = True
+  If Dir(tmp, vbHidden Or vbNormal Or vbReadOnly Or vbSystem) <> "" Then FileExists = True
   Exit Function
-hell: fileExists = False
+hell: FileExists = False
 End Function
 
 Function deleteFile(fpath) As Boolean
@@ -701,7 +701,7 @@ Function getClipboard()
 End Function
 
 Function setClipboard(x)
-    Clipboard.Clear
+    Clipboard.clear
     Clipboard.SetText x
 End Function
 

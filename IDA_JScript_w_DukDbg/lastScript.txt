@@ -1,68 +1,8 @@
-decoder = 0x40EE70 
-refs = ida.xRefsTo(decoder).split(",")
-addr = new Array();
+al.addAddr("123456a")
+al.showList()
 
-for( i=0; i<refs.length; i++)
-{
-    p = ida.prevEA(refs[i])
-    msg = "call: " + h(p)
-    for(j=10;j>0;j++)
-    {
-        asm = ida.getAsm(p)
-        if(asm.indexOf("offset") > 0)
-        {
-            a = asm.indexOf("_")
-            if(a > 0){
-                asm = asm.substr(a+1)
-                asm = h(n(asm))
-            } 
-            //msg += "  arg:" + h(p) + " " + asm
-            if( asm.length > 6 ){
-                
-                    k = n(asm) - 4
-                    v = ida.readLong(k);
-                    t( h(refs[i]) + "," + asm + "," + v )
-                 
-            }else{
-                 t('miss: ' + h(refs[i]) + "," + asm + "," + v )
-            }
-            //t(msg)
-            break;
-        }
-        else
-        {
-            p = ida.prevEA(p);
-        }
-    }
-}
 
-//addr = unique(addr)
-t("done: " + addr.length)
 
-//t( unique(addr).join('\r\n')  )
 
-function exists(x){
-    for(i=0;i<addr.length;i++){
-       if(x == addr[i]) return true;
-    }
-    return false
-}
 
-function n(x){
-    try{
-        x = x.split("0x").join('');
-        return parseInt("0x"+x)
-    }catch(e){
-        return "not hex: " + x
-    }
-}
-
-function unique(x) {
-    var a = [];
-    for (i = 0; i < x.length; i++) {
-        var current = x[i];
-        if (a.indexOf(current) < 0) a.push(current);
-    }
-    return a;
-}
 

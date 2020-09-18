@@ -1,3 +1,7 @@
+clear()
+addAddr(addr,[txt])
+showList()
+hideList()
 readQWord(va)
 toHex(str1)
 add(x64Str1, strorInt2)
