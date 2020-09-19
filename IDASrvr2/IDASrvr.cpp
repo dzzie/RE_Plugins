@@ -107,7 +107,7 @@ UINT IDASRVR_BROADCAST_MESSAGE=0;
 UINT IDA_QUICKCALL_MESSAGE = 0;
 
 __int64 __stdcall ImageBase(void);
-int __stdcall DumpFunction(int funcIndex, char* outFilePath);
+int __stdcall DumpFunction(int funcIndex, int flags, char* outFilePath);
 int __stdcall DumpFunctionBytes(int funcIndex, char* outFilePath);
 //void __stdcall SetFocusSelectLine(void);
 
@@ -458,7 +458,7 @@ int HandleMsg(char* m){
 	   47 getlong:va
 	   48 getword:va
 	   50 getx64:va:hwnd
-	   51 dumpfunc:va:fpath
+	   51 dumpfunc:va:flags:fpath
 	   52 dumpfuncbytes:va:fpath
 
 
@@ -805,9 +805,9 @@ int HandleMsg(char* m){
 					SendTextMessage(atoi(args[2]), tmp, strlen(tmp));
 					return i;
 
-		  case 51:  //dumpfunc:va:fpath
-			        if (argc != 2) { msg("dumpfunc needs 2 args\n"); return -1; }
-					return DumpFunction(atoi(args[1]), args[2]);
+		  case 51:  //dumpfunc:va:flags:fpath
+			        if (argc != 3) { msg("dumpfunc needs 3 args\n"); return -1; }
+					return DumpFunction(atoi(args[1]), atoi(args[2]), args[3]);
 
 		  case 52: //dumpfuncbytes:va:fpath
 				   if (argc != 2) { msg("dumpfuncbytes needs 2 args\n"); return -1; }
@@ -1208,7 +1208,7 @@ int __stdcall GetAsm(__int64 addr, char* buf, int bufLen){
 
 //todo: improve me - this function is simplistic, will miss undisasm sections and chunked function tails. maybe output to memmap file instead
 //      also add options bitflag w/addr, w/opcodes
-int __stdcall DumpFunction(int funcIndex, char* outFilePath)
+int __stdcall DumpFunction(int funcIndex, int flags, char* outFilePath)
 {
 	func_t* clsFx = getn_func(funcIndex);
 	if (clsFx == nullptr) {
@@ -1227,21 +1227,37 @@ int __stdcall DumpFunction(int funcIndex, char* outFilePath)
 		return -2;
 	}
 
-	char buf[500];
-	char cmt[500];
+	char buf[500] = { 0 };
+	char cmt[500] = { 0 };
+	char tmp[100] = { 0 };
+	char* t;
 
-	#ifdef __EA64__
-		char* fmt = "%016llX  %s %s\r\n";
-	#else
-	    char* fmt = "%08X  %s %s\r\n";
-	#endif
+	insn_t ins;
 
 	while (curEA < endAt && curEA != BADADDR)
 	{
 		int sz = GetAsm(curEA, buf, sizeof(buf));
 		if (sz == 0) break;
-		GetComment(curEA, cmt, sizeof(cmt)); //mem zeroed internally
-		fprintf(f, fmt, curEA, buf, cmt);
+		if (flags & 1) {
+			#ifdef __EA64__
+				fprintf(f, "%016llX  ", curEA);
+			#else
+				fprintf(f, "%08X  ", (int)curEA);
+			#endif
+		}
+		if (flags & 2) {
+			t = (char*)&tmp;
+			memset(tmp, 0, sizeof(tmp));
+			decode_insn(&ins, curEA);
+			for (int i = 0; i < ins.size; i++) { //max size is 16
+				sprintf(t, "%02X ", get_byte(curEA + i));
+				t += 3;
+				if (i > 16) {sprintf(t, "%s", " ... "); break;}
+			}
+			fprintf(f, "%-20s  ", tmp);
+		}
+		if(flags & 4) GetComment(curEA, cmt, sizeof(cmt)); //mem zeroed internally
+		fprintf(f, "%s %s\r\n", buf, cmt);
 		curEA = find_code(curEA, SEARCH_DOWN | SEARCH_NEXT);
 	}
 	

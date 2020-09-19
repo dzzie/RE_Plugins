@@ -1,4 +1,4 @@
-dumpFunc(i)
+dumpFunc(i,[flags])
 dumpFuncBytes(i)
 copyAll()
 clear()

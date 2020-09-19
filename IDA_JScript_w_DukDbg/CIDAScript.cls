@@ -19,10 +19,10 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
-Function dumpFunc(i)
+Function dumpFunc(i, flags)
     Dim p As String, r As Long
     p = fso.GetFreeFileName(Environ("temp"))
-    r = ipc.SendCmdRecvInt("dumpfunc:" & i & ":" & Replace(p, ":", "_")) 'strtok :(
+    r = ipc.SendCmdRecvInt("dumpfunc:" & i & ":" & flags & ":" & Replace(p, ":", "_")) 'strtok :(
     If r = 1 Then dumpFunc = fso.readFile(p)
     fso.deleteFile p
 End Function

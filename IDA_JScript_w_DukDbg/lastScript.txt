@@ -1,7 +1,9 @@
-i = ida.funcIndexFromVA("0x00014002012D")
-t(i)
+i = ida.funcIndexFromVA(0x01011F1D)
 f = ida.dumpFunc(i)
+t(i)
 t(f)
-b = ida.dumpFuncBytes(i)
-t(b)
+
+
+
+
 

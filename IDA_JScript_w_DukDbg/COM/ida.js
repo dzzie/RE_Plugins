@@ -83,7 +83,7 @@
 	Sub clearDecompilerCache()
 #	'Function refListToArray(x) As Long() 
 #	'Function InstSize(offset)
-     Function dumpFunc(index)
+     Function dumpFunc(index,flags)
      Function dumpFuncBytes(index)
 
 */
@@ -381,8 +381,9 @@ function idaClass(){
 		return resolver('ida.toBytes', arguments.length,0, x);
 	}
 	
-	this.dumpFunc = function(x){
-		return resolver('ida.dumpFunc', arguments.length,0, x);
+	this.dumpFunc = function(x,flags){
+		if(flags == undefined) flags = 0;
+		return resolver('ida.dumpFunc', 2 ,0, x, flags);
 	}
 	
 	this.dumpFuncBytes = function(x){
