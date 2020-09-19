@@ -21,10 +21,10 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 	  dont have it, you can just comment out the few lines that reference it. 
 */
 
-bool m_debug = false;
+bool m_debug = true;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-//#define __EA64__  //create the plugin for the 64 bit databases
+#define __EA64__  //create the plugin for the 64 bit databases
 
 #ifndef _WIN64
 	#error "You can only compile this as an x64 binary, 32/64 bit mode is set with __EA64__ define above"
@@ -107,6 +107,8 @@ UINT IDASRVR_BROADCAST_MESSAGE=0;
 UINT IDA_QUICKCALL_MESSAGE = 0;
 
 __int64 __stdcall ImageBase(void);
+int __stdcall DumpFunction(int funcIndex, char* outFilePath);
+int __stdcall DumpFunctionBytes(int funcIndex, char* outFilePath);
 //void __stdcall SetFocusSelectLine(void);
 
 
@@ -456,6 +458,9 @@ int HandleMsg(char* m){
 	   47 getlong:va
 	   48 getword:va
 	   50 getx64:va:hwnd
+	   51 dumpfunc:va:fpath
+	   52 dumpfuncbytes:va:fpath
+
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -484,8 +489,8 @@ int HandleMsg(char* m){
 					"funcindex","nextea","prevea","makestring","makeunk", "screenea", "findcode", "decompile",
     /*               40           41        42        43        44        45        46         47        48 */
 					"qc_only","qc_only","qc_only","qc_only", "iscode", "isdata", "decodeins","getlong","getword",
-    /*               49           50        51        52        53        54        55         56        57 */
-		             "isx64", "getx64",
+    /*               49           50        51          52        53        54        55         56        57 */
+		             "isx64","getx64","dumpfunc","dumpfuncbytes",
 
 					"\x00"};
 	
@@ -799,6 +804,14 @@ int HandleMsg(char* m){
 					sprintf(tmp, "0x%llX",i);
 					SendTextMessage(atoi(args[2]), tmp, strlen(tmp));
 					return i;
+
+		  case 51:  //dumpfunc:va:fpath
+			        if (argc != 2) { msg("dumpfunc needs 2 args\n"); return -1; }
+					return DumpFunction(atoi(args[1]), args[2]);
+
+		  case 52: //dumpfuncbytes:va:fpath
+				   if (argc != 2) { msg("dumpfuncbytes needs 2 args\n"); return -1; }
+				   return DumpFunctionBytes(atoi(args[1]), args[2]);
 	}				
 
 };
@@ -1191,6 +1204,85 @@ int __stdcall GetAsm(__int64 addr, char* buf, int bufLen){
 	return 0;
 
 }
+
+
+//todo: improve me - this function is simplistic, will miss undisasm sections and chunked function tails. maybe output to memmap file instead
+//      also add options bitflag w/addr, w/opcodes
+int __stdcall DumpFunction(int funcIndex, char* outFilePath)
+{
+	func_t* clsFx = getn_func(funcIndex);
+	if (clsFx == nullptr) {
+		if (m_debug) msg("Invalid function index specified!");
+		return -1;
+	}
+
+	__int64 curEA = clsFx->start_ea;
+	__int64 endAt = clsFx->end_ea;
+
+	if (outFilePath[1] == '_') outFilePath[1] = ':'; //fix cheesy workaround to tokinizer reserved char..
+
+	FILE* f = fopen(outFilePath, "w+");
+	if (f == NULL) {
+		if (m_debug) msg("Invalid function index specified!");
+		return -2;
+	}
+
+	char buf[500];
+	char cmt[500];
+
+	#ifdef __EA64__
+		char* fmt = "%016llX  %s %s\r\n";
+	#else
+	    char* fmt = "%08X  %s %s\r\n";
+	#endif
+
+	while (curEA < endAt && curEA != BADADDR)
+	{
+		int sz = GetAsm(curEA, buf, sizeof(buf));
+		if (sz == 0) break;
+		GetComment(curEA, cmt, sizeof(cmt)); //mem zeroed internally
+		fprintf(f, fmt, curEA, buf, cmt);
+		curEA = find_code(curEA, SEARCH_DOWN | SEARCH_NEXT);
+	}
+	
+	fclose(f);
+	return 1;
+
+}
+
+int __stdcall DumpFunctionBytes(int funcIndex, char* outFilePath)
+{
+	func_t* clsFx = getn_func(funcIndex);
+	if (clsFx == nullptr) {
+		if (m_debug) msg("Invalid function index specified!");
+		return -1;
+	}
+
+	__int64 startEA = clsFx->start_ea;
+	__int64 endEA = clsFx->end_ea;
+	int size = endEA - startEA;
+
+	if (startEA == 0 || endEA == 0 || size == 0) return -1;
+
+	if (outFilePath[1] == '_') outFilePath[1] = ':'; //fix cheesy workaround to tokinizer reserved char..
+
+	FILE* f = fopen(outFilePath, "w+");
+	if (f == NULL) {
+		if (m_debug) msg("Invalid function index specified!");
+		return -2;
+	}
+
+	unsigned char* buf = (unsigned char*)malloc(size);
+	get_bytes(buf, size, startEA);
+	for (int i = 0; i < size-1; i++)
+	{
+		fprintf(f, "\\x%02X", buf[i]);
+	}
+	fclose(f);
+	return 1;
+
+}
+
 
 __int64 __stdcall FirstCodeFrom(__int64 ea){
 

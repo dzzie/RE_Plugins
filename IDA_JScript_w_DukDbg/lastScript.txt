@@ -1,11 +1,7 @@
-al.addAddr("123456a")
-al.showList()
-al.copyAll()
-
-
-
-
-
-
-
+i = ida.funcIndexFromVA("0x00014002012D")
+t(i)
+f = ida.dumpFunc(i)
+t(f)
+b = ida.dumpFuncBytes(i)
+t(b)
 

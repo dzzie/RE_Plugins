@@ -19,6 +19,21 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
+Function dumpFunc(i)
+    Dim p As String, r As Long
+    p = fso.GetFreeFileName(Environ("temp"))
+    r = ipc.SendCmdRecvInt("dumpfunc:" & i & ":" & Replace(p, ":", "_")) 'strtok :(
+    If r = 1 Then dumpFunc = fso.readFile(p)
+    fso.deleteFile p
+End Function
+
+Function dumpFuncBytes(i)
+    Dim p As String, r As Long
+    p = fso.GetFreeFileName(Environ("temp"))
+    r = ipc.SendCmdRecvInt("dumpfuncbytes:" & i & ":" & Replace(p, ":", "_"))
+    If r = 1 Then dumpFuncBytes = fso.readFile(p)
+    fso.deleteFile p
+End Function
 
 Private Sub Class_Initialize()
     Set ipc = New CIpc
@@ -91,8 +106,8 @@ Function makeStr(va, Optional ascii As Boolean = True)
     ipc.Send "makestring:" & va & ":" & IIf(ascii, "ascii", "unicode")
 End Function
 
-Function makeUnk(va, size)
-    ipc.Send "makeunk:" & va & ":" & size
+Function makeUnk(va, Size)
+    ipc.Send "makeunk:" & va & ":" & Size
 End Function
 
 Property Get loadedFile() As String
@@ -234,8 +249,8 @@ Function showBlock(offset, endAt)
     refresh
 End Function
 
-Sub setname(offset, name)
-    ipc.Send "setname:" & offset & ":" & CStr(name)
+Sub setname(offset, Name)
+    ipc.Send "setname:" & offset & ":" & CStr(Name)
  End Sub
 
 Sub addComment(offset, comment)
@@ -268,11 +283,11 @@ End Function
  End Sub
  
  'todo x64
-Function funcVAByName(name)
+Function funcVAByName(Name)
     If Not is64BitMode Then
-        funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
+        funcVAByName = ipc.SendCmdRecvInt("name_va:" & Name)
     Else
-        funcVAByName = ipc.SendCmdRecvText("name_va:" & name & ":" & Form1.hwnd)
+        funcVAByName = ipc.SendCmdRecvText("name_va:" & Name & ":" & Form1.hwnd)
         funcVAByName = tmp_x.setVal(funcVAByName).toString(mHex)
     End If
 End Function
@@ -701,7 +716,7 @@ Function getClipboard()
 End Function
 
 Function setClipboard(x)
-    Clipboard.clear
+    Clipboard.Clear
     Clipboard.SetText x
 End Function
 
@@ -731,6 +746,7 @@ Function toBytes(hexstr) As String
     Dim out As String
     If Module1.toBytes(CStr(hexstr), out) Then toBytes = out
 End Function
+
 
 
 'Function refListToArray(x) As Long() 'no way to use a vb6 array in js?

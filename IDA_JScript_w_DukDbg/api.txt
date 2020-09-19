@@ -1,3 +1,5 @@
+dumpFunc(i)
+dumpFuncBytes(i)
 copyAll()
 clear()
 addAddr(addr,[txt])

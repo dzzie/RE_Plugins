@@ -160,7 +160,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -367,7 +366,8 @@ Private Sub Form_Load()
                                 "xRefsTo xRefsFrom getName functionName hideBlock showBlock setname addComment getComment addCodeXRef addDataXRef " & _
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
-                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord"
+                                "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord " & _
+                                "dumpFunc dumpFuncBytes"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     
