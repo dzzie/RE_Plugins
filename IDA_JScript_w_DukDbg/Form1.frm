@@ -24,6 +24,17 @@ Begin VB.Form Form1
    ScaleHeight     =   7020
    ScaleWidth      =   10230
    StartUpPosition =   2  'CenterScreen
+   Begin MSComctlLib.ProgressBar pb 
+      Height          =   150
+      Left            =   45
+      TabIndex        =   9
+      Top             =   0
+      Width           =   9960
+      _ExtentX        =   17568
+      _ExtentY        =   265
+      _Version        =   393216
+      Appearance      =   0
+   End
    Begin MSWinsockLib.Winsock Winsock1 
       Left            =   9045
       Top             =   0
@@ -33,9 +44,9 @@ Begin VB.Form Form1
    End
    Begin dukDbg.ucDukDbg txtjs 
       Height          =   3570
-      Left            =   225
+      Left            =   45
       TabIndex        =   7
-      Top             =   90
+      Top             =   225
       Width           =   9960
       _ExtentX        =   17568
       _ExtentY        =   6297
@@ -52,9 +63,9 @@ Begin VB.Form Form1
          Strikethrough   =   0   'False
       EndProperty
       Height          =   3195
-      Left            =   135
+      Left            =   90
       TabIndex        =   0
-      Top             =   3780
+      Top             =   3870
       Width           =   9975
       Begin VB.Frame fraSaved 
          BorderStyle     =   0  'None
@@ -160,6 +171,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -377,6 +389,8 @@ Private Sub Form_Load()
      
      txtjs.AddIntellisense "al", "addAddr showList() hideList() clear() copyAll()"
      
+     txtjs.AddIntellisense "pb", "max value clear() inc()"
+     
     'divide up into these classes for intellise sense cleanliness?
     'ui -> jump refresh() hideea showea hideblock showblock getcomment addcomment loadedfile
     'refs -> getrefsto getrefsfrom addcodexref adddataxref delcodexref deldataxref
@@ -409,6 +423,10 @@ Private Sub Form_Load()
     
     If Not txtjs.AddObject(al, "al") Then
         MsgBox "Failed to add address list object?"
+    End If
+    
+    If Not txtjs.AddObject(pb, "pb") Then
+        MsgBox "Failed to add progress bar object?"
     End If
     
 '    txtjs.DisplayCallTips = True
@@ -480,7 +498,7 @@ Private Sub Form_Load()
     
     List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     
-    x = " Built in classes: ida. fso. app. x64. remote. al. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
+    x = " Built in classes: ida. fso. app. x64. remote. al. pb. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
         "global functions: \n\t alert(x), \n\t h(x) [int to hex], \n" & _
         "\t t(x) [append this textbox with x] \n" & _
         "\t d(x) [add x to debug pane list]\n\n" & _
@@ -496,7 +514,7 @@ Private Sub Form_Resize()
     txtjs.Width = Me.Width - txtjs.Left - 140
     txtjs.Height = Me.Height - txtjs.Top - Frame1.Height - 550
     Frame1.Width = Me.Width - Frame1.Left - 140
-    Frame1.Top = txtjs.Top + txtjs.Height
+    Frame1.Top = txtjs.Top + txtjs.Height - 200
     Text1.Width = Frame1.Width - Text1.Left - 140
     List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     List1.Width = Text1.Width

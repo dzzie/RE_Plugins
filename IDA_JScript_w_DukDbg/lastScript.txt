@@ -1,9 +1,5 @@
-i = ida.funcIndexFromVA(0x01011F1D)
-f = ida.dumpFunc(i)
-t(i)
-t(f)
-
-
-
-
-
+pb.max = 100
+pb.value = 40
+for(i=0;i<10;i++) pb.inc()
+t(pb.value)
+pb.clear()
