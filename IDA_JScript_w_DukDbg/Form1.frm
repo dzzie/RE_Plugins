@@ -160,6 +160,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -265,7 +266,7 @@ Private Sub cboSaved_Click()
 End Sub
 
 Private Sub Check1_Click()
-    List1.Visible = CBool(Check1.Value)
+    List1.Visible = CBool(Check1.value)
 End Sub
 
 Private Sub mnuNew_Click()
@@ -374,7 +375,7 @@ Private Sub Form_Load()
        
      txtjs.AddIntellisense "remote", "ip response ScanProcess ResolveExport"
      
-     txtjs.AddIntellisense "al", "addAddr showList() hideList() clear()"
+     txtjs.AddIntellisense "al", "addAddr showList() hideList() clear() copyAll()"
      
     'divide up into these classes for intellise sense cleanliness?
     'ui -> jump refresh() hideea showea hideblock showblock getcomment addcomment loadedfile

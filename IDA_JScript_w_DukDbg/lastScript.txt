@@ -1,5 +1,8 @@
 al.addAddr("123456a")
 al.showList()
+al.copyAll()
+
+
 
 
 

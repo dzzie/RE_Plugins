@@ -3,11 +3,10 @@
 	Sub addAddr(addr,txt)
 	Sub showList()
 	Sub hideList()
+	Sub copyAll()
 */
 
 function alClass(){
-
-
 
 	this.clear = function(){
 		return resolver('al.clear', arguments.length,0);
@@ -25,6 +24,10 @@ function alClass(){
 
 	this.hideList = function(){
 		return resolver('al.hideList', arguments.length,0);
+	}
+	
+	this.copyAll = function(){
+		return resolver('al.copyAll', arguments.length,0);
 	}
 
 }
