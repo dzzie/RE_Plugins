@@ -19,6 +19,19 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
+Function immvals(ea)
+    immvals = ipc.SendCmdRecvText("immvals:" & ea & ":" & Form1.hwnd)
+    MsgBox immvals
+End Function
+
+'Function getopn(ea)
+'    getopn = ipc.SendCmdRecvInt("getopn:" & ea)
+'End Function
+
+Function getopv(ea, n)
+    getopv = ipc.SendCmdRecvText("getopv:" & ea & ":" & n & ":" & Form1.hwnd)
+End Function
+
 Function dumpFunc(i, flags)
     Dim p As String, r As Long
     p = fso.GetFreeFileName(Environ("temp"))
@@ -84,11 +97,11 @@ Sub clearDecompilerCache()
     Me.quickCall 40, 0
 End Sub
 
-Sub caption(msg)
+Property Let caption(msg)
     Form1.caption = msg
     Form1.refresh
     DoEvents
-End Sub
+End Property
 
 Function alert(msg)
     If IsArray(msg) Then

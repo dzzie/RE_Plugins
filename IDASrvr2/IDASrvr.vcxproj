@@ -314,6 +314,7 @@
     <None Include="IDASrvr.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\idasdk75\include\ua.hpp" />
     <ClInclude Include="..\idasdk55\idasdk55\include\auto.hpp" />
     <ClInclude Include="..\idasdk55\idasdk55\include\bytes.hpp" />
     <ClInclude Include="..\idasdk55\idasdk55\include\frame.hpp" />

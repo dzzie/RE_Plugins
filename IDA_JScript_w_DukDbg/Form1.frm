@@ -26,11 +26,11 @@ Begin VB.Form Form1
    StartUpPosition =   2  'CenterScreen
    Begin MSComctlLib.ProgressBar pb 
       Height          =   150
-      Left            =   45
+      Left            =   90
       TabIndex        =   9
       Top             =   0
-      Width           =   9960
-      _ExtentX        =   17568
+      Width           =   9915
+      _ExtentX        =   17489
       _ExtentY        =   265
       _Version        =   393216
       Appearance      =   0
@@ -379,7 +379,7 @@ Private Sub Form_Load()
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
                                 "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord " & _
-                                "dumpFunc dumpFuncBytes"
+                                "dumpFunc dumpFuncBytes getopv"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     
@@ -519,6 +519,7 @@ Private Sub Form_Resize()
     List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     List1.Width = Text1.Width
     fraSaved.Left = Frame1.Width - 600 - fraSaved.Width
+    pb.Width = txtjs.Width
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)

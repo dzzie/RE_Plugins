@@ -21,6 +21,7 @@ function pbClass(){
 }
 
 pbClass.prototype = {
+	
 	set value(val){
 		return resolver('pb.value.let', 1, this.hInst,val);
 	},

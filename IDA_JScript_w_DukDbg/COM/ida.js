@@ -3,7 +3,7 @@
 	Property get is32Bit As Boolean
 	Property get timeout As Long
 	Property let timeout As Long
-	Sub Caption(msg)
+	Property let caption 
 	sub do_events()
 	Function alert(msg)
 	Function Message(msg As String)
@@ -85,6 +85,9 @@
 #	'Function InstSize(offset)
      Function dumpFunc(index,flags)
      Function dumpFuncBytes(index)
+	 Function immvals(va)
+#	 Function getopn(va)
+	 Function getopv(va,index)
 
 */
 
@@ -92,10 +95,14 @@ function idaClass(){
 
 	this.hInst = 0
 
-	this.caption = function(msg){
+	/*this.caption = function(msg){ //now a property let
 		return resolver('ida.Caption', arguments.length,0, msg);
-	}
+	}*/
 
+	this.immvals = function(va){
+		return resolver('ida.immvals', arguments.length,0,va);
+	}
+	
 	this.do_events = function(){
 		return resolver('ida.do_events', arguments.length,0);
 	}
@@ -389,10 +396,20 @@ function idaClass(){
 	this.dumpFuncBytes = function(x){
 		return resolver('ida.dumpFuncBytes', arguments.length,0, x);
 	}
+	
+	/*this.getopn = function(x){
+		return resolver('ida.getopn', arguments.length,0, x);
+	}*/
+	
+	//get_operand_value
+	this.getopv = function(va,index){
+		return resolver('ida.getopv', arguments.length,0, va,index);
+	}
 
 }
 
 idaClass.prototype = {
+	
 	get isUp(){
 		return resolver('ida.isUp.get', 0, this.hInst);
 	},
@@ -415,6 +432,10 @@ idaClass.prototype = {
 	
 	set timeout(val){
 		return resolver('ida.timeout.let', 1, this.hInst, val);
+	},
+	
+	set caption(val){
+		return resolver('ida.caption.let', 1, this.hInst, val);
 	}
 }
 

@@ -1,3 +1,4 @@
+getopv(ea, index)
 dumpFunc(i,[flags])
 dumpFuncBytes(i)
 copyAll()

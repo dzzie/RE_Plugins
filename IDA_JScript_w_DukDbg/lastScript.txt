@@ -1,5 +1,4 @@
-pb.max = 100
-pb.value = 40
-for(i=0;i<10;i++) pb.inc()
-t(pb.value)
-pb.clear()
+va = 0x010125b4
+t( ida.getopn(va))
+t( ida.getopv(va,0))
+

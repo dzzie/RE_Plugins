@@ -109,6 +109,9 @@ UINT IDA_QUICKCALL_MESSAGE = 0;
 __int64 __stdcall ImageBase(void);
 int __stdcall DumpFunction(int funcIndex, int flags, char* outFilePath);
 int __stdcall DumpFunctionBytes(int funcIndex, char* outFilePath);
+int __stdcall GetImm(__int64 ea, int hwnd); //not returning anything?
+int __stdcall get_operand_value(__int64 va, int n, int hwnd);
+
 //void __stdcall SetFocusSelectLine(void);
 
 
@@ -460,7 +463,8 @@ int HandleMsg(char* m){
 	   50 getx64:va:hwnd
 	   51 dumpfunc:va:flags:fpath
 	   52 dumpfuncbytes:va:fpath
-
+	   53 immvals:va:hwnd  //not working ?
+	   54 getopv:va:n:hwnd
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -490,7 +494,7 @@ int HandleMsg(char* m){
     /*               40           41        42        43        44        45        46         47        48 */
 					"qc_only","qc_only","qc_only","qc_only", "iscode", "isdata", "decodeins","getlong","getword",
     /*               49           50        51          52        53        54        55         56        57 */
-		             "isx64","getx64","dumpfunc","dumpfuncbytes",
+		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv",
 
 					"\x00"};
 	
@@ -789,6 +793,7 @@ int HandleMsg(char* m){
 			  		if( argc != 1 ){msg("decode_insn needs 1 args\n"); return -1;}
 					decode_insn(&ins, ua1);
 					return ins.size;
+					
 
 		  case 47: //getlong
 			  		if( argc != 1 ){msg("getlong needs 1 args\n"); return -1;}
@@ -812,6 +817,23 @@ int HandleMsg(char* m){
 		  case 52: //dumpfuncbytes:va:fpath
 				   if (argc != 2) { msg("dumpfuncbytes needs 2 args\n"); return -1; }
 				   return DumpFunctionBytes(atoi(args[1]), args[2]);
+
+		  case 53: //immvals:va:hwnd
+				   if (argc != 2) { msg("immVals needs 2 args\n"); return -1; }
+				   return  GetImm(ua1, atoi(args[2]));
+
+		  case 54: //getopv:va:n:hwnd
+				   if (argc != 3) { msg("getopv needs 3 args\n"); return -1; }
+				   i = get_operand_value(ua1, atoi(args[2]), atoi(args[3]));
+				   if(i != 1)SendTextMessage(atoi(args[3])," ",1);
+				   return i;
+
+		  /*case 55: getopn:va not working?
+					if (argc != 1) { msg("getopn needs 1 args\n"); return -1; }
+					decode_insn(&ins, ua1);
+					return ins.ops->n;*/
+
+
 	}				
 
 };
@@ -1010,6 +1032,59 @@ plugin_t PLUGIN =
 };
 
 
+//https://github.com/idapython/src/blob/17a1c5445736e9f1967ee392e140c39abd6d949c/python/idc.py#L1654
+int __stdcall get_operand_value(__int64 va, int n, int hwnd)
+{
+	qstring q;
+	if (n < 0 || n > 8) return -1;
+	insn_t ins;
+	decode_insn(&ins, va);
+	if (ins.size == 0) return -2;
+	op_t op = ins.ops[n];
+	switch (op.type)
+	{
+		case o_mem:
+		case o_far:
+		case o_near:
+		case o_displ: // Memory Ref [Base Reg + Index Reg + Displacement].
+			q.sprnt("0x%llx", op.addr);
+			break;
+		/*case o_reg:
+			//from intel.hpp enum RegNo ? not useful just parse asm
+		    q.sprnt("reg:%llx", op.reg);
+			break;*/
+		case o_imm:
+			//use op.value
+			q.sprnt("0x%llx", op.value);
+			break;
+		/*case o_phrase: //Memory Ref [Base Reg + Index Reg].
+			//use op.phrase
+			q.sprnt("phrase:%llx", op.phrase);
+			break;*/
+		default:
+			return -3;
+	}
+
+	SendTextMessage(hwnd, (char*)q.c_str(), q.length()+1);
+	return 1;
+
+}
+//todo: returning nothing...
+int __stdcall GetImm(__int64 ea, int hwnd)
+{
+	qstring q;
+	uval_t vals[16] = { 0 };
+	int i = get_printable_immvals((uval_t*)&vals, ea, 8, 0);
+	if (i < 1 || i > 16) {
+		SendTextMessage(hwnd, " ", 1);
+		return -2;
+	}
+	for (int j = 0; j < i; j++){
+		q.cat_sprnt("%llX,", vals[j]);
+	}
+	SendTextMessage(hwnd, (char*)q.c_str(), q.length()+1);
+	return i;
+}
 
 //Export API for the VB app to call and access IDA API data
 //_________________________________________________________________

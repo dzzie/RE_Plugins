@@ -58,5 +58,8 @@
     <ClInclude Include="..\idasdk55\idasdk55\include\va.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\ua.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
