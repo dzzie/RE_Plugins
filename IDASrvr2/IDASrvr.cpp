@@ -62,6 +62,7 @@ bool m_debug = true;
 #include <stdio.h>
 #include <search.hpp>
 #include <xref.hpp>
+#include <enum.hpp>
 
 #ifdef HAS_DECOMPILER
 	#include <hexrays.hpp>    
@@ -465,6 +466,9 @@ int HandleMsg(char* m){
 	   52 dumpfuncbytes:va:fpath
 	   53 immvals:va:hwnd  //not working ?
 	   54 getopv:va:n:hwnd
+	   55 addenum:name
+	   56 addenummem:enumid:value:name
+	   57 getenum:name
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -494,7 +498,8 @@ int HandleMsg(char* m){
     /*               40           41        42        43        44        45        46         47        48 */
 					"qc_only","qc_only","qc_only","qc_only", "iscode", "isdata", "decodeins","getlong","getword",
     /*               49           50        51          52        53        54        55         56        57 */
-		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv",
+		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv", "addenum", "addenummem", "getenum",
+	/*               58           59        60          61        62        63        64         65        66 */
 
 					"\x00"};
 	
@@ -833,7 +838,17 @@ int HandleMsg(char* m){
 					decode_insn(&ins, ua1);
 					return ins.ops->n;*/
 
+		  case 55: //addenum:name
+			       if (argc != 1) { msg("addenum needs 1 arg\n"); return -1; }
+				   return add_enum(BADADDR, args[1], hex_flag() );
 
+		  case 56: //addenummem:enumid:value:name
+				   if (argc != 3) { msg("addenummem needs 3 arg\n"); return -1; }
+				   return add_enum_member(atoi(args[1]), args[3], ua2);
+
+		  case 57: //getenum:name
+				   if (argc != 1) { msg("getenum needs 1 arg\n"); return -1; }
+				   return get_enum(args[1]);
 	}				
 
 };

@@ -1,4 +1,1 @@
-va = 0x010125b4
-t( ida.getopn(va))
-t( ida.getopv(va,0))
-
+t(h(-1))

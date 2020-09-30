@@ -1,3 +1,6 @@
+add_enum(name)
+get_enum(name)
+add_enum_member(id,name,value)
 getopv(ea, index)
 dumpFunc(i,[flags])
 dumpFuncBytes(i)

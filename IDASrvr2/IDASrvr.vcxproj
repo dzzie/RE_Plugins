@@ -21,6 +21,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{51505C1A-8FCA-491C-8B8F-5E9E0FFB45C9}</ProjectGuid>
     <RootNamespace>IDASrvr</RootNamespace>
+    <ProjectName>IDASrvr2</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -314,17 +315,15 @@
     <None Include="IDASrvr.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\idasdk75\include\auto.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\entry.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\enum.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\funcs.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\hexrays.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\ida.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\name.hpp" />
     <ClInclude Include="..\..\..\idasdk75\include\ua.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\auto.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\bytes.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\frame.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\funcs.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\hexrays.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\ida.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\kernwin.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\nalt.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\name.hpp" />
-    <ClInclude Include="..\idasdk55\idasdk55\include\va.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\xref.hpp" />
     <ClInclude Include="IDASrvr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

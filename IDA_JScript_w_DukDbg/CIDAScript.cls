@@ -19,6 +19,19 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
+Function add_enum(Name) As Long
+    add_enum = ipc.SendCmdRecvInt("addenum:" & Name)
+End Function
+
+Function get_enum(Name) As Long
+    get_enum = ipc.SendCmdRecvInt("getenum:" & Name)
+End Function
+
+Function add_enum_member(id, Name, val) As Long
+    'addenummem:enumid:value:name
+    add_enum_member = ipc.SendCmdRecvInt("addenummem:" & id & ":" & val & ":" & Name)
+End Function
+
 Function immvals(ea)
     immvals = ipc.SendCmdRecvText("immvals:" & ea & ":" & Form1.hwnd)
     MsgBox immvals

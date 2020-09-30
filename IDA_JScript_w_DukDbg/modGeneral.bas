@@ -29,6 +29,7 @@ Function ensureUTypes() As Boolean
     If Len(thisDll) > 0 Then push pd, GetParentFolder(thisDll)
     push pd, App.path
     push pd, Environ("WinDir")
+    push pd, App.path & "\binary_snapshot"
     
     For Each parentDir In pd
         pth = parentDir & "\UTypes.dll"
@@ -73,26 +74,26 @@ Public Function GetDllPath(Optional dll As String = "vbUtypes.dll") As String
      GetDllPath = ret
 End Function
 
-Sub push(ary, Value) 'this modifies parent ary object
-    On Error GoTo Init
+Sub push(ary, value) 'this modifies parent ary object
+    On Error GoTo init
     Dim x
        
     x = UBound(ary)
     ReDim Preserve ary(x + 1)
     
-    If IsObject(Value) Then
-        Set ary(x + 1) = Value
+    If IsObject(value) Then
+        Set ary(x + 1) = value
     Else
-        ary(x + 1) = Value
+        ary(x + 1) = value
     End If
     
     Exit Sub
-Init:
+init:
     ReDim ary(0)
-    If IsObject(Value) Then
-        Set ary(0) = Value
+    If IsObject(value) Then
+        Set ary(0) = value
     Else
-        ary(0) = Value
+        ary(0) = value
     End If
 End Sub
 

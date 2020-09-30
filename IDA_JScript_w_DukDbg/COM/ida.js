@@ -88,6 +88,9 @@
 	 Function immvals(va)
 #	 Function getopn(va)
 	 Function getopv(va,index)
+	 Function add_enum(name)
+	 Function add_enum_member(id,name,value)
+	 Function get_enum(name)
 
 */
 
@@ -99,6 +102,18 @@ function idaClass(){
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
 
+	this.add_enum = function(name){
+		return resolver('ida.add_enum', arguments.length,0,name);
+	}
+	
+	this.get_enum = function(name){
+		return resolver('ida.get_enum', arguments.length,0,name);
+	}
+	
+	this.add_enum_member = function(id,name,value){
+		return resolver('ida.add_enum_member', arguments.length,0,id,name,value);
+	}
+	
 	this.immvals = function(va){
 		return resolver('ida.immvals', arguments.length,0,va);
 	}

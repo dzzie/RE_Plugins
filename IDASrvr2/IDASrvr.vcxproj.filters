@@ -25,40 +25,34 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\idasdk55\idasdk55\include\auto.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\bytes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\frame.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\funcs.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\hexrays.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\ida.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="IDASrvr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\kernwin.hpp">
+    <ClInclude Include="..\..\..\idasdk75\include\auto.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\nalt.hpp">
+    <ClInclude Include="..\..\..\idasdk75\include\entry.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\name.hpp">
+    <ClInclude Include="..\..\..\idasdk75\include\enum.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\idasdk55\idasdk55\include\va.hpp">
+    <ClInclude Include="..\..\..\idasdk75\include\funcs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\hexrays.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\ida.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\name.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\idasdk75\include\ua.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\xref.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
