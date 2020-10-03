@@ -1,0 +1,10 @@
+
+IDASrvr2 has been moved to an x64 compile for IDA7+
+
+The primary client lib ref implementation is in IDAJScript
+the client libs in this folder have not been updated but only
+require a couple tweaks as the api has not really changed just
+the window messages now have a 2 on the end of them and the existing
+api has been seamlessly extended to now accept x64 numbers
+
+the activexclient lib was updated 10.3.20 

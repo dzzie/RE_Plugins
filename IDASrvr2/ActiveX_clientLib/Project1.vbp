@@ -1,10 +1,11 @@
 Type=OleDll
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\WINDOWS\system32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{60FF6824-F68B-4DF1-9ECF-6F0893AAD2B8}#1.2#0#..\..\..\libs\subclass\spSubclass.dll#SandSprite_SubClass Component
 Module=Module1; Module1.bas
-Class=cIDAClient; CIDA.cls
+Class=CIDAClient2; CIDA.cls
 Form=Form2.frm
-Class=cIDAClient64; CIDA64.cls
 Class=ULong64; ULong64.cls
+Class=CIPC; CIPC.cls
 Startup="(None)"
 HelpFile=""
 Title="IDAClientLibrary2"

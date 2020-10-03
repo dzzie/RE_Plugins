@@ -55,5 +55,8 @@
     <ClInclude Include="..\..\..\idasdk75\include\xref.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\idasdk75\include\struct.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

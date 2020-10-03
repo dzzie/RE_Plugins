@@ -39,9 +39,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
- 'todo: filter based on 32/64 bit? will work for x64 too using idaClient? should only used api shared in both..
 
-Public Function SelectIDAInstance(ida As Object, Optional refresh As Boolean = True) As Long
+Public Function SelectIDAInstance(ida As CIDAClient2, Optional refresh As Boolean = True) As Long
     
     Dim x
     Dim cnt As Long
@@ -51,12 +50,12 @@ Public Function SelectIDAInstance(ida As Object, Optional refresh As Boolean = T
     On Error Resume Next
     
     If refresh Then
-        cnt = ida.EnumIDAWindows
+        cnt = ida.ipc.FindActiveIDAWindows
     Else
-        cnt = Servers.Count
+        cnt = ida.ipc.Servers.Count
     End If
     
-    curIDA = IDA_HWND
+    curIDA = ida.ipc.RemoteHWND
     
     'If cnt = 0 Then
     '    SelectIDAInstance = 0
@@ -69,12 +68,12 @@ Public Function SelectIDAInstance(ida As Object, Optional refresh As Boolean = T
     '    Exit Function
         
     'Else
-       For Each x In Servers 'remove any that arent still valid..
+       For Each x In ida.ipc.Servers 'remove any that arent still valid..
             If IsWindow(x) = 0 Then
-                Servers.Remove "hwnd:" & x
+                ida.ipc.Servers.Remove "hwnd:" & x
             Else
-                IDA_HWND = CLng(x)
-                pth = ida.LoadedFile
+                ida.ipc.RemoteHWND = CLng(x)
+                pth = ida.loadedFile
                 pth = FileNameFromPath(pth)
                 If ida.is64Bit = 1 Then pth = pth & " *64"
                 List1.AddItem x & ": " & pth
@@ -83,7 +82,7 @@ Public Function SelectIDAInstance(ida As Object, Optional refresh As Boolean = T
         List1.ListIndex = 0
     'End If
     
-    IDA_HWND = curIDA
+    ida.ipc.RemoteHWND = curIDA
     Me.Show 1
     
     Dim sel

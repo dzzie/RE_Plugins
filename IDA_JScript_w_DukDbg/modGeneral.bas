@@ -1,16 +1,44 @@
 Attribute VB_Name = "modGeneral"
 Option Explicit
 
+Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long)
 Private Declare Function GetModuleFileName Lib "kernel32" Alias "GetModuleFileNameA" (ByVal hModule As Long, ByVal lpFileName As String, ByVal nSize As Long) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
+Private Const HWND_TOPMOST = -1
+Private Const HWND_NOTOPMOST = -2
 
 Public hUtypes As Long
 Public uTypesPath As String
 
-Function cCLng(x) As Long
+Function cCLng(X) As Long
     On Error Resume Next
-    cCLng = CLng(Replace(x, "0x", "&h"))
+    cCLng = CLng(Replace(X, "0x", "&h"))
+End Function
+
+Function TopMost(frm As Object, Optional ontop As Boolean = True)
+    On Error Resume Next
+    Dim s
+    s = IIf(ontop, HWND_TOPMOST, HWND_NOTOPMOST)
+    SetWindowPos frm.hwnd, s, frm.Left / 15, frm.Top / 15, frm.Width / 15, frm.Height / 15, 0
+End Function
+
+Function Rpad(v, Optional L As Long = 8, Optional char As String = " ")
+    On Error GoTo hell
+    Dim X As Long
+    X = Len(v)
+    If X < L Then
+        Rpad = v & String(L - X, char)
+    Else
+hell:
+        Rpad = v
+    End If
+End Function
+
+Function isIde() As Boolean
+    On Error GoTo out
+    Debug.Print 1 / 0
+out: isIde = Err
 End Function
 
 Function ensureUTypes() As Boolean
@@ -76,15 +104,15 @@ End Function
 
 Sub push(ary, value) 'this modifies parent ary object
     On Error GoTo init
-    Dim x
+    Dim X
        
-    x = UBound(ary)
-    ReDim Preserve ary(x + 1)
+    X = UBound(ary)
+    ReDim Preserve ary(X + 1)
     
     If IsObject(value) Then
-        Set ary(x + 1) = value
+        Set ary(X + 1) = value
     Else
-        ary(x + 1) = value
+        ary(X + 1) = value
     End If
     
     Exit Sub

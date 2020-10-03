@@ -1,10 +1,9 @@
 Type=Exe
+Form=frmTest.frm
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#C:\Windows\SysWOW64\stdole2.tlb#OLE Automation
-Reference=*\G{1B61E359-1F0F-4374-80D1-3510C0C50366}#1.0#0#..\IDASrvr\ActiveX_clientLib\IDAClientLib2.dll#IDA Remote Client Library 2
 Object={248DD890-BB45-11CF-9ABC-0080C7E7B78D}#1.0#0; MSWINSCK.OCX
-Form=Form1.frm
 Startup="Form1"
-ExeName32="IdaUdpBridge.exe"
+ExeName32="test.exe"
 Command32=""
 Name="Project1"
 HelpContextID="0"
@@ -14,7 +13,6 @@ MinorVer=0
 RevisionVer=0
 AutoIncrementVer=0
 ServerSupportFiles=0
-VersionCompanyName="sandsprite"
 CompilationType=0
 OptimizationType=0
 FavorPentiumPro(tm)=0
@@ -31,8 +29,5 @@ Retained=0
 ThreadPerObject=0
 MaxNumberOfThreads=1
 
-[MS Transaction Server]
-AutoRefresh=1
-
 [fastBuild]
-fullPath=%ap%\IdaUdpBridge.exe
+fullPath=%ap%\test.exe

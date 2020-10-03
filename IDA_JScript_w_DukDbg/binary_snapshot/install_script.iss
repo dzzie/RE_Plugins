@@ -21,24 +21,25 @@ Source: spSubclass.dll; DestDir: {app}; Flags: regserver
 Source: SciLexer.dll; DestDir: {app}; Flags: replacesameversion
 Source: scivb2.ocx; DestDir: {app}; Flags: regserver   replacesameversion
 Source: UTypes.dll; DestDir: {app}; Flags: replacesameversion
-;Source: vbUtypes.dll; DestDir: {app}; Flags: regserver replacesameversion
+Source: MSCOMCTL.OCX; DestDir: {win}; Flags: regserver uninsneveruninstall
+Source: richtx32.ocx; DestDir: {sys}; Flags: regserver uninsneveruninstall
+Source: MSWINSCK.OCX; DestDir: {sys}; Flags: regserver uninsneveruninstall
+;Source: vbUtypes.dll; DestDir: {app}; Flags: regserver replacesameversion --> ULong64.cls now internal
 Source: vbDevKit.dll; DestDir: {app}; Flags: regserver
+Source: ..\..\IDASrvr2\bin\IDASrvr2.dll; DestDir: {app}
+Source: ..\..\IDASrvr2\bin\IDASrvr2_64.dll; DestDir: {app}
 Source: ..\COM\ida.js; DestDir: {app}\COM\
 Source: ..\COM\x64.js; DestDir: {app}\COM\
 Source: ..\COM\list.js; DestDir: {app}\COM\
 Source: ..\COM\TextBox.js; DestDir: {app}\COM\
 Source: ..\COM\remote.js; DestDir: {app}\COM\
-Source: ..\COM\x64.js; DestDir: {app}\COM\
+Source: ..\COM\al.js; DestDir: {app}\COM\
+Source: ..\COM\pb.js; DestDir: {app}\COM\
 ;Source: ..\scripts\funcCalls.idajs; DestDir: {app}\scripts\
 Source: ..\api.txt; DestDir: {app}
 Source: ..\beautify.js; DestDir: {app}
 Source: ..\java.hilighter; DestDir: {app}
 Source: ..\userlib.js; DestDir: {app}
-Source: ..\..\IDASrvr2\bin\IDASrvr2.dll; DestDir: {app}
-Source: ..\..\IDASrvr2\bin\IDASrvr2_64.dll; DestDir: {app}
-;Source: MSCOMCTL.OCX; DestDir: {win}; Flags: regserver uninsneveruninstall
-Source: richtx32.ocx; DestDir: {sys}; Flags: regserver uninsneveruninstall
-Source: MSWINSCK.OCX; DestDir: {sys}; Flags: regserver uninsneveruninstall
 Source: ..\readme.txt; DestDir: {app}
 Source: ..\scripts\cur_func_bytes.idajs; DestDir: {app}\scripts\
 Source: ..\scripts\emit_cur_func.idajs; DestDir: {app}\scripts\

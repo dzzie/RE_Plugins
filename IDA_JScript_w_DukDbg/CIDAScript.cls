@@ -171,6 +171,15 @@ End Function
 
 Function intToHex(x)
     On Error Resume Next
+     
+    'keep it 32bit if we can... (-1 went to full 64bit)
+    intToHex = Hex(CLng(Replace(x, "0x", "&h")))
+    
+    If Err.Number = 0 Then
+        If Len(intToHex) = 1 Then intToHex = "0" & intToHex
+        intToHex = "0x" & intToHex
+        Exit Function
+    End If
     
     If Not tmp_x.fromString(x) Then
         Form1.List1.AddItem "Failed to convert x: " & x
@@ -178,10 +187,7 @@ Function intToHex(x)
     End If
     
     intToHex = tmp_x.toString(mHex)
-    
-    'intToHex = Hex(x)
-    'If Len(intToHex) = 1 Then intToHex = "0" & intToHex
-    'If Err.Number <> 0 Then intToHex = x 'hex can throw overflow bleh...
+
 End Function
 
 Function getAsm(va)

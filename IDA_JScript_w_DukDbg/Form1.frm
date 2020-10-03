@@ -171,7 +171,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -231,6 +230,9 @@ Begin VB.Form Form1
       Begin VB.Menu mnuSHellExt 
          Caption         =   "Register .idajs Shell Extension"
       End
+      Begin VB.Menu mnuDisableUIPI 
+         Caption         =   "Disable UIPI (dev)"
+      End
       Begin VB.Menu mnuSetTimeout 
          Caption         =   "Set Timeout"
       End
@@ -278,6 +280,29 @@ End Sub
 
 Private Sub Check1_Click()
     List1.Visible = CBool(Check1.value)
+End Sub
+
+Private Sub mnuDisableUIPI_Click()
+    Dim reg As New clsRegistry2
+    Dim path As String, name As String, v
+    'If you don't want to disable UAC, you could try just disabling UIPI (User Interface Privilege Isolation).
+    'Open regedit and go to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    'Add a new DWORD (32-bit) Value called EnableUIPI and set it to 0.
+    path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+    name = "EnableUIPI"
+    reg.hive = HKEY_LOCAL_MACHINE
+    
+    v = reg.ReadValue(path, name)
+    If v = 0 And Not IsEmpty(v) Then
+        MsgBox "Already exists and set to 0 (disabled)", vbInformation
+    Else
+        If reg.SetValue(path, name, 0, REG_DWORD) Then
+            MsgBox "Value now 0 (disabled) reboot", vbInformation
+        Else
+            MsgBox "Failed to set run as admin", vbInformation
+        End If
+    End If
+    
 End Sub
 
 Private Sub mnuNew_Click()
@@ -363,6 +388,7 @@ Private Sub Form_Load()
     Me.Visible = True
     frmAddrList.Visible = False
     Set al = frmAddrList
+    mnuDisableUIPI.Visible = isIde()
     
     Set remote.ws = Winsock1
     Set sci = txtjs.sci

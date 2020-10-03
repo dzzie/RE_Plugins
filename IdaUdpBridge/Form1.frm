@@ -11,6 +11,15 @@ Begin VB.Form Form1
    ScaleWidth      =   9975
    StartUpPosition =   2  'CenterScreen
    Begin VB.TextBox Text1 
+      BeginProperty Font 
+         Name            =   "Courier"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   285
       Left            =   540
       TabIndex        =   5
@@ -20,17 +29,17 @@ Begin VB.Form Form1
    Begin VB.CommandButton Command2 
       Caption         =   "rebind port"
       Height          =   420
-      Left            =   405
+      Left            =   495
       TabIndex        =   3
-      Top             =   4320
+      Top             =   4275
       Width           =   1275
    End
    Begin VB.CommandButton cmdclear 
       Caption         =   "Clear list"
       Height          =   420
-      Left            =   2025
+      Left            =   2115
       TabIndex        =   2
-      Top             =   4320
+      Top             =   4275
       Width           =   1410
    End
    Begin VB.CommandButton Command1 
@@ -42,15 +51,24 @@ Begin VB.Form Form1
       Width           =   1410
    End
    Begin VB.ListBox List1 
+      BeginProperty Font 
+         Name            =   "Courier New"
+         Size            =   12
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   3570
-      Left            =   90
+      Left            =   45
       TabIndex        =   0
-      Top             =   90
+      Top             =   45
       Width           =   9870
    End
    Begin MSWinsockLib.Winsock sck 
-      Left            =   4140
-      Top             =   90
+      Left            =   0
+      Top             =   4230
       _ExtentX        =   741
       _ExtentY        =   741
       _Version        =   393216
@@ -70,7 +88,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Dim ida As New cIDAClient
+Dim ida As New CIDAClient2 'updated to v2 ida7 10.3.20
+
 Private Declare Function IsWindow Lib "user32" (ByVal hwnd As Long) As Long
 
 Private Sub cmdclear_Click()
@@ -79,16 +98,16 @@ End Sub
 
 Private Sub Command1_Click()
 
-    ida.EnumIDAWindows
-    If ida.ActiveServers.Count = 0 Then
+    ida.ipc.FindActiveIDAWindows
+    If ida.ipc.Servers.Count = 0 Then
         List1.Clear
         List1.AddItem "No open IDA instances found. Do you have IDASrvr plugin installed?"
-    ElseIf ida.ActiveServers.Count = 1 Then
-        ida.ActiveIDA = ida.ActiveServers(1)
+    ElseIf ida.ipc.Servers.Count = 1 Then
+        ida.ActiveIDA = ida.ipc.Servers(1)
     Else
         ida.ActiveIDA = ida.SelectServer(True)
     End If
-    Text1 = ida.LoadedFile
+    Text1 = ida.loadedFile
     
 End Sub
 
@@ -120,10 +139,10 @@ Private Sub Form_Load()
     If Err.Number <> 0 Then
         List1.AddItem "Failed to bind to udp 3333"
     Else
-        List1.AddItem "Now listening for IDA commands on udp 3333"
+        List1.AddItem "Now listening for IDA commands on udp 3333 "
     End If
     
-    ida.Listen Me.hwnd
+    ida.ipc.Listen Me.hwnd
 
     c = Command
     a = InStr(c, "/hwnd=")
@@ -137,7 +156,7 @@ Private Sub Form_Load()
     
     If autoConnectHWND <> 0 Then
         ida.ActiveIDA = autoConnectHWND
-        Text1 = ida.LoadedFile
+        Text1 = ida.loadedFile
     Else
         Command1_Click
     End If
@@ -163,16 +182,20 @@ Private Sub sck_DataArrival(ByVal bytesTotal As Long)
     sck.GetData tmp
     List1.AddItem tmp
     
-    args = Split(tmp, " ")
+    If InStr(tmp, " ") < 1 Then
+        args = Split(tmp, ":")
+    Else
+        args = Split(tmp, " ") 'original style is default..
+    End If
     
     Select Case args(0)
-        Case "jmp": ida.Jump CLng(args(1))
-                    'ida.QuickCall qcmSetFocusSelectLine
+        Case "jmp": ida.jump args(1)
+                    '"0x6B380663" or 1798833763 or 0x1122334455667788
                     
-        Case "jmpfunc": ida.Jump ida.FuncVAByName(args(1))
+        Case "jmpfunc": ida.jump ida.funcVAByName(args(1))
                         'ida.QuickCall qcmSetFocusSelectLine
                         
-        Case "jmp_rva": ida.JumpRVA CLng(args(1))
+        Case "jmp_rva": ida.jumpRVA args(1)
                         'ida.QuickCall qcmSetFocusSelectLine
 '        Case "curidb":
 '                        sck.RemoteHost = sck.RemoteHostIP

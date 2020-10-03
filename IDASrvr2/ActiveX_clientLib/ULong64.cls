@@ -11,8 +11,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-'from http://github.com/dzzie/libs/vb6_utypes
-
 Enum op
     op_add = 0
     op_sub = 1
@@ -28,12 +26,14 @@ Enum op
     op_lt = 11
     op_gteq = 12
     op_lteq = 13
+    op_rol32 = 14
 End Enum
 
 Enum modes
     mUnsigned = 0
     mSigned = 1
     mHex = 2
+    mAuto = -1
 End Enum
 
 Public mode As modes
@@ -41,7 +41,6 @@ Public rawValue As Currency   'this is the default property of the class
 Public padLeft As Boolean
 Public useTick As Boolean
 Public use0x As Boolean
-Public def32bit As Boolean
 
 'Currency (scaled integer) 8 bytes
 '-922,337,203,685,477.5808 to 922,337,203,685,477.5807
@@ -67,22 +66,24 @@ Private Declare Function U642Str Lib "utypes.dll" (ByVal v1 As Currency, ByVal b
 'get hi and lo longs from 64 numbers
 Private Declare Sub fromU64 Lib "utypes.dll" (ByVal v0 As Currency, ByRef v1 As Long, ByRef v2 As Long)
 
-Property Get Value()
-Attribute Value.VB_UserMemId = 0
-    Value = rawValue
+Property Get value()
+    value = rawValue
 End Property
 
 'this is the default method of the class
-Property Let Value(v)
+Property Let value(v)
     
     If TypeName(v) = "String" Then
-        fromString v
+        fromString v, -1
     ElseIf TypeName(v) = "ULong64" Then
-        rawValue = v.Value
+        rawValue = v.value
     ElseIf TypeName(v) = "ULong" Or TypeName(v) = "UInt" Or TypeName(v) = "UByte" Then
-        SetLongs 0, v.Value
+        SetLongs 0, v.value
     ElseIf TypeName(v) = "Long" Or TypeName(v) = "Byte" Or TypeName(v) = "Integer" Then
         SetLongs 0, CLng(v)
+    ElseIf TypeName(v) = "Currency" Or TypeName(v) = "Double" _
+        Or TypeName(v) = "Long" Or TypeName(v) = "Integer" Then
+            Me.rawValue = v
     Else
         Err.Raise 1, "ULong64.Value", "Unsupported conversion type to ULong64: " & TypeName(v)
     End If
@@ -92,7 +93,7 @@ End Property
 'this way you can .setval(x).add(y)
 Function setVal(v) As ULong64
     Set setVal = Me
-    Value = v
+    value = v
 End Function
 
 Property Get MAX_SIGNED64() As String
@@ -159,21 +160,15 @@ Function toString(Optional m As modes = mHex) As String
     If i > 0 Then
         tmp = UCase(Mid(tmp, 1, i))
         If m = mHex Then
-            If is32BitSafe() Then
-                If padLeft Then
-                    tmp = Right("00000000" & tmp, 8)
-                End If
-            Else
-                If padLeft Then
-                    tmp = Right("0000000000000000" & tmp, 16)
-                End If
-                If useTick Then
-                    a = Len(tmp) - 8
-                    If a > 0 Then
-                        lo = Right(tmp, 8)
-                        hi = Mid(tmp, 1, Len(tmp) - 8)
-                        tmp = hi & "`" & lo
-                    End If
+            If padLeft Then
+                tmp = Right("0000000000000000" & tmp, 16)
+            End If
+            If useTick Then
+                a = Len(tmp) - 8
+                If a > 0 Then
+                    lo = Right(tmp, 8)
+                    hi = Mid(tmp, 1, Len(tmp) - 8)
+                    tmp = hi & "`" & lo
                 End If
             End If
             If use0x Then tmp = "0x" & tmp
@@ -183,11 +178,12 @@ Function toString(Optional m As modes = mHex) As String
 End Function
 
 
-Function fromString(ByVal s As String, Optional m As modes = mHex) As Boolean
+Function fromString(ByVal s As String, Optional m As modes = mAuto) As Boolean
     On Error GoTo hell
     s = Trim(s)
     s = Replace(s, "`", Empty)
     
+    If m = -1 Then m = mUnsigned
     If Left(s, 1) = "-" Then m = mSigned
     
     If LCase(Left(s, 2)) = "0x" Or LCase(Left(s, 2)) = "&h" Or LCase(Left(s, 2)) = "\x" Then
@@ -216,13 +212,13 @@ Function raw_op(operand2, operation As op) As ULong64
     Dim ret As New ULong64
     Dim tmp As New ULong64
     
-    If TypeName(operand2) = "ULong64" Then
-        Set tmp = operand2
-    ElseIf TypeName(operand2) = "ULong" Then
-        tmp.SetLongs 0, operand2.rawValue
-    Else
-        tmp.SetLongs 0, CLng(operand2)
-    End If
+'    If TypeName(operand2) = "ULong64" Then
+'        Set tmp = operand2
+'    ElseIf TypeName(operand2) = "ULong" Then
+'        tmp.SetLongs 0, operand2.rawValue
+'    Else
+        tmp = operand2
+    'End If
     
     If mode = mSigned Then
         ret.rawValue = S64(rawValue, tmp.rawValue, operation)
@@ -241,13 +237,8 @@ End Function
 
 
 Private Sub Class_Initialize()
-    hLib = LoadLibrary("UTypes.dll")
-    If hLib = 0 Then hLib = LoadLibrary(App.path & "\UTypes.dll")
-    If hLib = 0 Then hLib = LoadLibrary(App.path & "\..\UTypes.dll")
-    If hLib = 0 Then hLib = LoadLibrary(App.path & "\..\..\UTypes.dll")
-'    If ensureUTypes() Then hLib = modGeneral.hUTypes
-    padLeft = True
-    def32bit = True
+    If ensureUTypes() Then hLib = modGeneral.hUtypes
+    padLeft = False
     useTick = True
 End Sub
 
@@ -295,23 +286,30 @@ End Function
 Function greaterThan(operand2) As Boolean
     Dim a As ULong64
     Set a = raw_op(operand2, op_gt)
-    greaterThan = (a.rawValue = 1)
+    greaterThan = Not (a.rawValue = 0)
 End Function
 
 Function lessThan(operand2) As Boolean
     Dim a As ULong64
     Set a = raw_op(operand2, op_lt)
-    lessThan = (a.rawValue = 1)
+    lessThan = Not (a.rawValue = 0)
 End Function
 
 Function greaterThanEqual(operand2) As Boolean
     Dim a As ULong64
     Set a = raw_op(operand2, op_gteq)
-    greaterThanEqual = (a.rawValue = 1)
+    greaterThanEqual = Not (a.rawValue = 0)
 End Function
 
 Function lessThanEqual(operand2) As Boolean
     Dim a As ULong64
     Set a = raw_op(operand2, op_lteq)
-    lessThanEqual = (a.rawValue = 1)
+    lessThanEqual = Not (a.rawValue = 0)
 End Function
+
+Function rol32(operand2) As ULong64
+    Set rol32 = raw_op(operand2, op_rol32)
+End Function
+
+
+

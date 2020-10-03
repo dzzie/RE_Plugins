@@ -20,7 +20,7 @@ Function toHex(x)
     toHex = m.toString(mHex)
 End Function
 
-Function Add(x, y)
+Function add(x, y)
     Dim m As modes
     Dim x2 As ULong64
     Dim x64 As New ULong64
@@ -38,13 +38,13 @@ Function Add(x, y)
             Form1.List1.AddItem "x64.Add Error converting " & x & " to x64 from string"
             Exit Function
         Else
-            Set x2 = x64.Add(y)
-            Add = x2.toString(mHex)
+            Set x2 = x64.add(y)
+            add = x2.toString(mHex)
         End If
     Else
         x64 = CLng(x)
-        Set x2 = x64.Add(y)
-        Add = x2.toString(mHex)
+        Set x2 = x64.add(y)
+        add = x2.toString(mHex)
     End If
     
     Exit Function
@@ -52,7 +52,7 @@ hell:
     Form1.List1.AddItem "Error in x64.Add " & Err.Description
 End Function
 
-Function Subtract(x, y)
+Function subtract(x, y)
     Dim m As modes
     Dim x2 As ULong64
     Dim x64 As New ULong64
@@ -70,13 +70,13 @@ Function Subtract(x, y)
             Form1.List1.AddItem "x64.Subtract Error converting " & x & " to x64 from string"
             Exit Function
         Else
-            Set x2 = x64.Subtract(y)
-            Subtract = x2.toString(mHex)
+            Set x2 = x64.subtract(y)
+            subtract = x2.toString(mHex)
         End If
     Else
         x64 = CLng(x)
-        Set x2 = x64.Subtract(y)
-        Subtract = x2.toString(mHex)
+        Set x2 = x64.subtract(y)
+        subtract = x2.toString(mHex)
     End If
     
     Exit Function

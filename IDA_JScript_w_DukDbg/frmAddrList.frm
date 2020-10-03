@@ -41,11 +41,17 @@ Begin VB.Form frmAddrList
       Begin VB.Menu mnuClear 
          Caption         =   "Clear"
       End
+      Begin VB.Menu mnuTopMost 
+         Caption         =   "TopMost"
+      End
       Begin VB.Menu mnuDiv2 
          Caption         =   "-"
       End
       Begin VB.Menu mnuImport 
          Caption         =   "Import"
+         Begin VB.Menu mnuImportXrefsTo 
+            Caption         =   "IDA Xrefs To"
+         End
          Begin VB.Menu mnuImportClip 
             Caption         =   "Clipboard"
          End
@@ -72,10 +78,12 @@ End Sub
 
 Sub addAddr(addr, txt)
     On Error Resume Next
-    Dim li As ListItem
+    Dim li As ListItem, index
     If IsNumeric(addr) Then addr = "0x" & Hex(addr)
     Set li = lv.ListItems.add(, , addr)
-    li.subItems(1) = txt
+    li.subItems(2) = txt
+    index = Form1.ida.funcIndexFromVA(addr)
+    li.subItems(1) = Form1.ida.functionName(index)
 End Sub
 
 Sub showList()
@@ -107,9 +115,10 @@ Private Sub Form_Load()
     mnuPopup.Visible = False
     Me.Icon = Form1.Icon
     mnuClearOnImport.Checked = True
-    lv.SetColumnHeaders "Address,Text*", "2400"
+    lv.SetColumnHeaders "Address,Func*,Text", "2400"
     lv.SetFont "Courier", 12
     lv.MultiSelect = True
+    lv.AllowDelete = True
 End Sub
 
 Private Sub Form_Resize()
@@ -157,7 +166,7 @@ Private Sub mnuEditSel_Click()
     Dim li As ListItem, x As String
     Set li = lv.SelectedItem
     If li Is Nothing Then Exit Sub
-    x = InputBox("Edit the CSV data: ", , li.Text & "," & li.subItems(1))
+    x = InputBox("Edit the CSV data: ", , li.Text & "," & li.subItems(1) & "," & li.subItems(2))
     If Len(x) = 0 Then Exit Sub
     ImportItem li, x
 End Sub
@@ -183,9 +192,10 @@ Function ImportItem(li As ListItem, csvData As String)
     Dim z() As String
     If Len(csvData) = 0 Then Exit Function
     If InStr(csvData, ",") > 0 Then
-        z = Split(csvData, ",", 2)
+        z = Split(csvData, ",", 3)
         li.Text = z(0)
         li.subItems(1) = z(1)
+        li.subItems(2) = z(2)
     Else
         li.Text = csvData
     End If
@@ -198,4 +208,28 @@ Private Sub mnuImportFile_Click()
     pth = dlg.OpenDialog(AllFiles)
     If Len(pth) = 0 Then Exit Sub
     doImport fso.readFile(pth)
+End Sub
+
+Private Sub mnuImportXrefsTo_Click()
+    On Error Resume Next
+    Dim v, tmp, addr, refs, li As ListItem, index
+    v = InputBox("Enter 'address to get xrefs to")
+    If Len(v) = 0 Then Exit Sub
+    If InStr(1, v, "0x", vbTextCompare) < 1 Then v = "0x" & v
+    With Form1.ida
+        'tmp = .funcVAByName(v)
+        'If tmp <> 0 Then v = tmp 'it was a name, standardize to address
+        refs = Split(.xRefsTo(v), ",")
+        For Each addr In refs
+            Set li = lv.ListItems.add(, , .intToHex(addr))
+            li.subItems(2) = .getAsm(addr)
+            index = .funcIndexFromVA(addr)
+            li.subItems(1) = .functionName(index)
+        Next
+    End With
+End Sub
+
+Private Sub mnuTopMost_Click()
+    mnuTopMost.Checked = Not mnuTopMost.Checked
+    TopMost Me, mnuTopMost.Checked
 End Sub

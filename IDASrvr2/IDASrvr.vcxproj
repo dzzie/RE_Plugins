@@ -322,6 +322,7 @@
     <ClInclude Include="..\..\..\idasdk75\include\hexrays.hpp" />
     <ClInclude Include="..\..\..\idasdk75\include\ida.hpp" />
     <ClInclude Include="..\..\..\idasdk75\include\name.hpp" />
+    <ClInclude Include="..\..\..\idasdk75\include\struct.hpp" />
     <ClInclude Include="..\..\..\idasdk75\include\ua.hpp" />
     <ClInclude Include="..\..\..\idasdk75\include\xref.hpp" />
     <ClInclude Include="IDASrvr.h" />
