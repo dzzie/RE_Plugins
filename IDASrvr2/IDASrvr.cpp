@@ -24,7 +24,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 bool m_debug = true;
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-#define __EA64__  //create the plugin for the 64 bit databases
+//#define __EA64__  //create the plugin for the 64 bit databases
 
 #ifndef _WIN64
 	#error "You can only compile this as an x64 binary, 32/64 bit mode is set with __EA64__ define above"
@@ -890,7 +890,7 @@ int HandleMsg(char* m){
 						segment_t* seg = getnseg(i);
 						if(seg != NULL){
 							get_segm_name(&name,seg,0);
-							q.sprnt("\t{'name':'%s','base':'0x%x','size':'0x%X'}", name.c_str(), seg->start_ea, seg->end_ea - seg->start_ea);
+							q.sprnt("\t{'name':'%s','base':'0x%x','size':'0x%X','index':%d}", name.c_str(), seg->start_ea, seg->end_ea - seg->start_ea, i);
 							s+=q;
 							if(i != get_segm_qty()-1) s += ",\n"; else s += "\n";
 						}

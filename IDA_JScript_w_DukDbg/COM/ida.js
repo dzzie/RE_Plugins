@@ -95,7 +95,7 @@
 	 Function addSegment(base, size, name)
 	 Function segExists(nameOrBase)
 	 Function delSeg(nameOrBase)
-	 Function getSegs(optJsonOnly)
+	 Function getSegs(optSegNameOrBase)
 */
 
 function idaClass(){
@@ -106,18 +106,22 @@ function idaClass(){
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
 	
-	this.getSegs = function(optJsonOnly){ //ida api returns a json array which we turn into an js object [{name,base,size}]
-		json = resolver('ida.getSegs', 0,0); //arg is for js stub only...
+	this.getSegs = function(optSegNameOrBase){ //ida api returns a json array which we turn into an js object [{name,base,size,index}]
+		json = resolver('ida.getSegs',0,0);    //arg is for js stub only...
 		json = json.split("'").join('"')
-		if(optJsonOnly === undefined){
-			try{
-				return JSON.parse(json);
-			}catch(e){
-				alert("Error in getSegs: " + e)
-				return json; 
+		try{
+			if(optSegNameOrBase == -1) return json;      //ancient chinese secret..useful for debugging anyway...
+			j = JSON.parse(json);
+			if(optSegNameOrBase === undefined) return j; //return all segments objects as array
+			if(!isNaN(optSegNameOrBase) && optSegNameOrBase < 20) return j[optSegNameOrBase]; //on you if index doesnt exist i was trying to be nice..
+			for(i=0; i < j.length; i++){ 
+				if(j[i].name == optSegNameOrBase || j[i].base == optSegNameOrBase){
+					return j[i]; //search for specified segment and return first match.
+				}
 			}
-		}else{
-			return json;
+		}catch(e){
+			alert("Error in getSegs: " + e)
+			return json; 
 		}
 	}
 	

@@ -1,3 +1,7 @@
-t( ida.getSegs())
+t( ida.getSegs(0x42b000).name)
+
+
+
+
 
 
