@@ -1,1 +1,4 @@
-t(ida.importFile(0x42d6d0,"C:\\Users\\home\\Desktop\\test.txt"))
+segs = ida.getSegs()
+alert(segs.length)
+alert(segs[0].name)
+alert( h(segs[0].base))

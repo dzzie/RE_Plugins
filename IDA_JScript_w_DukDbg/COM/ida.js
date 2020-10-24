@@ -91,7 +91,11 @@
 	 Function add_enum(name)
 	 Function add_enum_member(id,name,value)
 	 Function get_enum(name)
-	 Function importFile(va, path)
+	 Function importFile(va, path, optNewSegName)
+	 Function addSegment(base, size, name)
+	 Function segExists(nameOrBase)
+	 Function delSeg(nameOrBase)
+	 Function getSegs()
 */
 
 function idaClass(){
@@ -102,8 +106,31 @@ function idaClass(){
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
 	
-	this.importFile = function(va, path){
-		return resolver('ida.importFile', arguments.length,0,va,path);
+	this.getSegs = function(){ //ida api returns a json array which we turn into an js object [{name,base,size}]
+		json = resolver('ida.getSegs', arguments.length,0);
+		try{
+			return JSON.parse(json.split("'").join('"'));
+		}catch(e){
+			alert("Error in getSegs: " + e)
+			return json; 
+		}
+	}
+	
+	this.delSeg = function(nameOrBase){
+		return resolver('ida.delSeg', arguments.length,0, nameOrBase);
+	}
+	
+	this.segExists = function(nameOrBase){
+		return resolver('ida.segExists', arguments.length,0, nameOrBase);
+	}
+	
+	this.addSegment = function(base, size, name){
+		return resolver('ida.addSegment', arguments.length,0, base, size, name);
+	}
+	
+	this.importFile = function(va, path, optNewSegName){
+		if(optNewSegName === undefined) optNewSegName = '';
+		return resolver('ida.importFile', arguments.length,0,va,path,optNewSegName);
 	}
 	
 	this.add_enum = function(name){

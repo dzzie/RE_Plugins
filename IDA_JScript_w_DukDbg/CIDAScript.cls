@@ -19,7 +19,23 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
-Function importFile(va, path)
+Function getSegs()
+    getSegs = ipc.SendCmdRecvText("getsegs:" & Form1.hwnd)
+End Function
+
+Function delSeg(nameOrBase)
+    delSeg = ipc.SendCmdRecvInt("delseg:" & nameOrBase)
+End Function
+
+Function segExists(nameOrBase)
+    segExists = ipc.SendCmdRecvInt("segexists:" & nameOrBase)
+End Function
+
+Function addSegment(base, size, name)
+        addSegment = ipc.SendCmdRecvInt("addseg:" & base & ":" & size & ":" & name)
+End Function
+
+Function importFile(va, path, optNewSegName)
     
     On Error GoTo hell
     
@@ -37,6 +53,12 @@ Function importFile(va, path)
     Get f, , b()
     Close f
     
+    If Len(optNewSegName) > 0 Then
+        If segExists(va) = 0 Then
+            If addSegment(va, UBound(b), optNewSegName) = 0 Then GoTo hell
+        End If
+    End If
+    
     For i = 0 To UBound(b)
         patchByte ul.toString(), b(i)
         ul = ul.add(1)
@@ -50,17 +72,17 @@ hell:
 End Function
 
 
-Function add_enum(Name) As Long
-    add_enum = ipc.SendCmdRecvInt("addenum:" & Name)
+Function add_enum(name) As Long
+    add_enum = ipc.SendCmdRecvInt("addenum:" & name)
 End Function
 
-Function get_enum(Name) As Long
-    get_enum = ipc.SendCmdRecvInt("getenum:" & Name)
+Function get_enum(name) As Long
+    get_enum = ipc.SendCmdRecvInt("getenum:" & name)
 End Function
 
-Function add_enum_member(id, Name, val) As Long
+Function add_enum_member(id, name, val) As Long
     'addenummem:enumid:value:name
-    add_enum_member = ipc.SendCmdRecvInt("addenummem:" & id & ":" & val & ":" & Name)
+    add_enum_member = ipc.SendCmdRecvInt("addenummem:" & id & ":" & val & ":" & name)
 End Function
 
 Function immvals(ea)
@@ -163,8 +185,8 @@ Function makeStr(va, Optional ascii As Boolean = True)
     ipc.Send "makestring:" & va & ":" & IIf(ascii, "ascii", "unicode")
 End Function
 
-Function makeUnk(va, Size)
-    ipc.Send "makeunk:" & va & ":" & Size
+Function makeUnk(va, size)
+    ipc.Send "makeunk:" & va & ":" & size
 End Function
 
 Property Get loadedFile() As String
@@ -312,8 +334,8 @@ Function showBlock(offset, endAt)
     refresh
 End Function
 
-Sub setname(offset, Name)
-    ipc.Send "setname:" & offset & ":" & CStr(Name)
+Sub setname(offset, name)
+    ipc.Send "setname:" & offset & ":" & CStr(name)
  End Sub
 
 Sub addComment(offset, comment)
@@ -346,11 +368,11 @@ End Function
  End Sub
  
  'todo x64
-Function funcVAByName(Name)
+Function funcVAByName(name)
     If Not is64BitMode Then
-        funcVAByName = ipc.SendCmdRecvInt("name_va:" & Name)
+        funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
     Else
-        funcVAByName = ipc.SendCmdRecvText("name_va:" & Name & ":" & Form1.hwnd)
+        funcVAByName = ipc.SendCmdRecvText("name_va:" & name & ":" & Form1.hwnd)
         funcVAByName = tmp_x.setVal(funcVAByName).toString(mHex)
     End If
 End Function

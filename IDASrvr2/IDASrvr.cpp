@@ -469,9 +469,17 @@ int HandleMsg(char* m){
 	   55 addenum:name
 	   56 addenummem:enumid:value:name
 	   57 getenum:name
+	   58 addseg:base:size:name
+	   59 segExists:nameOrBase
+	   60 delSeg:nameOrBase
+	   61 getsegs:hwnd
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
+
+		 x = '[{"name":"a","base":"0x1"},{"name":"b","base":"0x2"}]' // 0x must be a string? direct hex num not supported...x64 would require string anyway...
+		 x = JSON.parse(x)
+		 alert(x[0].name)
 
     */
 
@@ -500,7 +508,7 @@ int HandleMsg(char* m){
     /*               49           50        51          52        53        54        55         56        57 */
 		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv", "addenum", "addenummem", "getenum",
 	/*               58           59        60          61        62        63        64         65        66 */
-
+		             "addseg","segexists", "delseg","getsegs",
 					"\x00"};
 	
 	unsigned __int64 i=0;
@@ -849,7 +857,48 @@ int HandleMsg(char* m){
 		  case 57: //getenum:name
 				   if (argc != 1) { msg("getenum needs 1 arg\n"); return -1; }
 				   return get_enum(args[1]);
+
+		  case 58: //addseg:base:endVa_or_size:name
+				   if (argc != 3) { msg("addseg needs 3 arg\n"); return -1; }
+				   if(ua2 < ua1) ua2 = ua1 + ua2;
+				   return add_segm(0, ua1, ua2, args[3], "CODE",0);
+
+		  case 59: //segExists:nameOrBase
+				   if (argc != 1) { msg("segExists needs 1 arg\n"); return -1; }
+				   if(ua1!=0){
+					   return getseg(ua1) == NULL ? 0 : 1;
+				   }else{
+					   return get_segm_by_name(args[1]) == NULL ? 0 : 1;
+				   }
+
+		  case 60: //delSeg:nameOrBase
+				   if (argc != 1) { msg("degSeg needs 1 arg\n"); return -1; }
+				   if (ua1 != 0) {
+					  return del_segm(ua1, SEGMOD_KEEP);
+				   }
+				   else {
+					  segment_t *seg = get_segm_by_name(args[1]);
+					  if(seg==NULL) return 0;
+					  return del_segm(seg->start_ea, SEGMOD_KEEP);
+				   }
+		  case 61: //getsegs:hwnd
+					if (argc != 1) { msg("getSegs needs 1 arg\n"); return -1; }
+					qstring q;
+					qstring name;
+					qstring s = "[\n"; //x = '[{"name":"a","base":"0x1"},{"name":"b","base":"0x2"}]'
+					for(i = 0; i < get_segm_qty(); i++){
+						segment_t* seg = getnseg(i);
+						if(seg != NULL){
+							get_segm_name(&name,seg,0);
+							q.sprnt("\t{'name':'%s','base':'0x%x','size':'0x%X'}", name.c_str(), seg->start_ea, seg->end_ea - seg->start_ea);
+							s+=q;
+							if(i != get_segm_qty()-1) s += ",\n"; else s += "\n";
+						}
+					}
+					s+="]";
+					SendTextMessage(atoi(args[1]), (char*)s.c_str(), s.length());
 	}				
+
 
 };
 

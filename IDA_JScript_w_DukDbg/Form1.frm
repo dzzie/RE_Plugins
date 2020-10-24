@@ -171,7 +171,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -285,19 +284,19 @@ End Sub
 
 Private Sub mnuDisableUIPI_Click()
     Dim reg As New clsRegistry2
-    Dim path As String, Name As String, v
+    Dim path As String, name As String, v
     'If you don't want to disable UAC, you could try just disabling UIPI (User Interface Privilege Isolation).
     'Open regedit and go to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
     'Add a new DWORD (32-bit) Value called EnableUIPI and set it to 0.
     path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-    Name = "EnableUIPI"
+    name = "EnableUIPI"
     reg.hive = HKEY_LOCAL_MACHINE
     
-    v = reg.ReadValue(path, Name)
+    v = reg.ReadValue(path, name)
     If v = 0 And Not IsEmpty(v) Then
         MsgBox "Already exists and set to 0 (disabled)", vbInformation
     Else
-        If reg.SetValue(path, Name, 0, REG_DWORD) Then
+        If reg.SetValue(path, name, 0, REG_DWORD) Then
             MsgBox "Value now 0 (disabled) reboot", vbInformation
         Else
             MsgBox "Failed to set run as admin", vbInformation
@@ -406,7 +405,7 @@ Private Sub Form_Load()
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
                                 "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord " & _
-                                "dumpFunc dumpFuncBytes getopv add_enum get_enum add_enum_member importFile"
+                                "dumpFunc dumpFuncBytes getopv add_enum get_enum add_enum_member importFile addSegment segExists delSeg getSegs"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     
