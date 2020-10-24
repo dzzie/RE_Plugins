@@ -1,1 +1,1 @@
-ida.
+t(ida.importFile(0x42d6d0,"C:\\Users\\home\\Desktop\\test.txt"))

@@ -19,6 +19,37 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
+Function importFile(va, path)
+    
+    On Error GoTo hell
+    
+    path = Replace(path, "/", "\")
+    If Not FileExists(CStr(path)) Then GoTo hell
+    
+    Dim b() As Byte, f As Long, ul As New ULong64, i As Long
+    
+    ul.use0x = True
+    ul = va
+    
+    f = FreeFile
+    Open path For Binary As f
+    ReDim b(LOF(f) - 1)
+    Get f, , b()
+    Close f
+    
+    For i = 0 To UBound(b)
+        patchByte ul.toString(), b(i)
+        ul = ul.add(1)
+    Next
+                
+    importFile = 1
+    
+Exit Function
+hell:
+    importFile = 0
+End Function
+
+
 Function add_enum(Name) As Long
     add_enum = ipc.SendCmdRecvInt("addenum:" & Name)
 End Function

@@ -171,6 +171,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -284,19 +285,19 @@ End Sub
 
 Private Sub mnuDisableUIPI_Click()
     Dim reg As New clsRegistry2
-    Dim path As String, name As String, v
+    Dim path As String, Name As String, v
     'If you don't want to disable UAC, you could try just disabling UIPI (User Interface Privilege Isolation).
     'Open regedit and go to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
     'Add a new DWORD (32-bit) Value called EnableUIPI and set it to 0.
     path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-    name = "EnableUIPI"
+    Name = "EnableUIPI"
     reg.hive = HKEY_LOCAL_MACHINE
     
-    v = reg.ReadValue(path, name)
+    v = reg.ReadValue(path, Name)
     If v = 0 And Not IsEmpty(v) Then
         MsgBox "Already exists and set to 0 (disabled)", vbInformation
     Else
-        If reg.SetValue(path, name, 0, REG_DWORD) Then
+        If reg.SetValue(path, Name, 0, REG_DWORD) Then
             MsgBox "Value now 0 (disabled) reboot", vbInformation
         Else
             MsgBox "Failed to set run as admin", vbInformation
@@ -315,15 +316,15 @@ Private Sub mnuNew_Click()
 End Sub
 
 Private Sub mnuSetTimeout_Click()
-    Dim l As Long, msg As String
+    Dim L As Long, msg As String
     On Error Resume Next
     msg = Replace("Enter new ms timeout value\n  0 to disable\n\nIf you get a endless loop close IDA to break it", "\n", vbCrLf)
-    l = CLng(InputBox(msg, , txtjs.timeout))
+    L = CLng(InputBox(msg, , txtjs.timeout))
     If Err.Number <> 0 Then
         MsgBox "Invalid number set ignoring"
         Exit Sub
     End If
-    txtjs.timeout = l
+    txtjs.timeout = L
 End Sub
 
 Private Sub mnuShowAddrList_Click()
@@ -405,7 +406,7 @@ Private Sub Form_Load()
                                 "delCodeXRef delDataXRef funcVAByName renameFunc find decompile jump jumpRVA refresh undefine showEA hideEA " & _
                                 "removeName makeCode funcIndexFromVA nextEA prevEA funcCount() numFuncs() functionStart functionEnd readByte " & _
                                 "originalByte imageBase screenEA() quickCall clearDecompilerCache() isCode isData readLong readShort readQWord " & _
-                                "dumpFunc dumpFuncBytes getopv add_enum get_enum add_enum_member"
+                                "dumpFunc dumpFuncBytes getopv add_enum get_enum add_enum_member importFile"
                                
      txtjs.AddIntellisense "list", "AddItem Clear ListCount Enabled"
     

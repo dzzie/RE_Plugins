@@ -1,3 +1,4 @@
+importFile(va, path)
 add_enum(name)
 get_enum(name)
 add_enum_member(id,name,value)

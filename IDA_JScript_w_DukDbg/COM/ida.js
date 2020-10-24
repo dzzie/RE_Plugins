@@ -91,7 +91,7 @@
 	 Function add_enum(name)
 	 Function add_enum_member(id,name,value)
 	 Function get_enum(name)
-
+	 Function importFile(va, path)
 */
 
 function idaClass(){
@@ -101,7 +101,11 @@ function idaClass(){
 	/*this.caption = function(msg){ //now a property let
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
-
+	
+	this.importFile = function(va, path){
+		return resolver('ida.importFile', arguments.length,0,va,path);
+	}
+	
 	this.add_enum = function(name){
 		return resolver('ida.add_enum', arguments.length,0,name);
 	}

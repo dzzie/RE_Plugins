@@ -1,8 +1,8 @@
 x=0;
+pb.value = 0
+pb.max = ida.funcCount()
 
-i = ida.funcIndexFromVA("0x1400211D0")
-t(ida.funcCount())
-for(;i< ida.funcCount(); i++){
+for(i=0;i< ida.funcCount(); i++){
     a = ida.functionStart(i);
     b = ida.functionEnd(i);
     sz = b-a
@@ -14,6 +14,7 @@ for(;i< ida.funcCount(); i++){
             //t( n + " sz:"+sz);
         }
     }
+    pb.inc()
 }
 
 alert(x + " functions renamed")
