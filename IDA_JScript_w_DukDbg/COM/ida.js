@@ -95,7 +95,7 @@
 	 Function addSegment(base, size, name)
 	 Function segExists(nameOrBase)
 	 Function delSeg(nameOrBase)
-	 Function getSegs()
+	 Function getSegs(optJsonOnly)
 */
 
 function idaClass(){
@@ -106,13 +106,18 @@ function idaClass(){
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
 	
-	this.getSegs = function(){ //ida api returns a json array which we turn into an js object [{name,base,size}]
-		json = resolver('ida.getSegs', arguments.length,0);
-		try{
-			return JSON.parse(json.split("'").join('"'));
-		}catch(e){
-			alert("Error in getSegs: " + e)
-			return json; 
+	this.getSegs = function(optJsonOnly){ //ida api returns a json array which we turn into an js object [{name,base,size}]
+		json = resolver('ida.getSegs', 0,0); //arg is for js stub only...
+		json = json.split("'").join('"')
+		if(optJsonOnly === undefined){
+			try{
+				return JSON.parse(json);
+			}catch(e){
+				alert("Error in getSegs: " + e)
+				return json; 
+			}
+		}else{
+			return json;
 		}
 	}
 	

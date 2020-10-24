@@ -1,4 +1,4 @@
-getSegs()
+getSegs([optJsonOnly])
 delSeg(nameOrBase)
 segExists(nameOrBase)
 addSegment(base, size, name)

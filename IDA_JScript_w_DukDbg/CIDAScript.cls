@@ -31,8 +31,8 @@ Function segExists(nameOrBase)
     segExists = ipc.SendCmdRecvInt("segexists:" & nameOrBase)
 End Function
 
-Function addSegment(base, size, name)
-        addSegment = ipc.SendCmdRecvInt("addseg:" & base & ":" & size & ":" & name)
+Function addSegment(base, Size, Name)
+        addSegment = ipc.SendCmdRecvInt("addseg:" & base & ":" & Size & ":" & Name)
 End Function
 
 Function importFile(va, path, optNewSegName)
@@ -72,17 +72,17 @@ hell:
 End Function
 
 
-Function add_enum(name) As Long
-    add_enum = ipc.SendCmdRecvInt("addenum:" & name)
+Function add_enum(Name) As Long
+    add_enum = ipc.SendCmdRecvInt("addenum:" & Name)
 End Function
 
-Function get_enum(name) As Long
-    get_enum = ipc.SendCmdRecvInt("getenum:" & name)
+Function get_enum(Name) As Long
+    get_enum = ipc.SendCmdRecvInt("getenum:" & Name)
 End Function
 
-Function add_enum_member(id, name, val) As Long
+Function add_enum_member(id, Name, val) As Long
     'addenummem:enumid:value:name
-    add_enum_member = ipc.SendCmdRecvInt("addenummem:" & id & ":" & val & ":" & name)
+    add_enum_member = ipc.SendCmdRecvInt("addenummem:" & id & ":" & val & ":" & Name)
 End Function
 
 Function immvals(ea)
@@ -185,8 +185,8 @@ Function makeStr(va, Optional ascii As Boolean = True)
     ipc.Send "makestring:" & va & ":" & IIf(ascii, "ascii", "unicode")
 End Function
 
-Function makeUnk(va, size)
-    ipc.Send "makeunk:" & va & ":" & size
+Function makeUnk(va, Size)
+    ipc.Send "makeunk:" & va & ":" & Size
 End Function
 
 Property Get loadedFile() As String
@@ -334,8 +334,8 @@ Function showBlock(offset, endAt)
     refresh
 End Function
 
-Sub setname(offset, name)
-    ipc.Send "setname:" & offset & ":" & CStr(name)
+Sub setname(offset, Name)
+    ipc.Send "setname:" & offset & ":" & CStr(Name)
  End Sub
 
 Sub addComment(offset, comment)
@@ -368,11 +368,11 @@ End Function
  End Sub
  
  'todo x64
-Function funcVAByName(name)
+Function funcVAByName(Name)
     If Not is64BitMode Then
-        funcVAByName = ipc.SendCmdRecvInt("name_va:" & name)
+        funcVAByName = ipc.SendCmdRecvInt("name_va:" & Name)
     Else
-        funcVAByName = ipc.SendCmdRecvText("name_va:" & name & ":" & Form1.hwnd)
+        funcVAByName = ipc.SendCmdRecvText("name_va:" & Name & ":" & Form1.hwnd)
         funcVAByName = tmp_x.setVal(funcVAByName).toString(mHex)
     End If
 End Function
