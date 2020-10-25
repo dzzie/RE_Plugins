@@ -21,7 +21,7 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 	  dont have it, you can just comment out the few lines that reference it. 
 */
 
-bool m_debug = true;
+bool m_debug = true;  
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
 //#define __EA64__  //create the plugin for the 64 bit databases
@@ -473,6 +473,7 @@ int HandleMsg(char* m){
 	   59 segExists:nameOrBase
 	   60 delSeg:nameOrBase
 	   61 getsegs:hwnd
+	   62 funcmap:path  since a full dump of all functions probably has 1-10k+ entries just dump to tmp file 
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -489,6 +490,8 @@ int HandleMsg(char* m){
 	char buf[500];
 	char tmp[500];
 	insn_t ins;
+	qstring q;
+	qstring s;
 
 	memset(buf, 0,500);
 	memset(tmp, 0,500);
@@ -508,9 +511,9 @@ int HandleMsg(char* m){
     /*               49           50        51          52        53        54        55         56        57 */
 		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv", "addenum", "addenummem", "getenum",
 	/*               58           59        60          61        62        63        64         65        66 */
-		             "addseg","segexists", "delseg","getsegs",
+		             "addseg","segexists", "delseg","getsegs","funcmap"
 					"\x00"};
-	
+	qstring name;
 	unsigned __int64 i=0;
 	unsigned __int64 x=0;
 	int argc=0;
@@ -883,20 +886,38 @@ int HandleMsg(char* m){
 				   }
 		  case 61: //getsegs:hwnd
 					if (argc != 1) { msg("getSegs needs 1 arg\n"); return -1; }
-					qstring q;
-					qstring name;
-					qstring s = "[\n"; //x = '[{"name":"a","base":"0x1"},{"name":"b","base":"0x2"}]'
+					s = "[\n"; //x = '[{"name":"a","base":"0x1"},{"name":"b","base":"0x2"}]'
 					for(i = 0; i < get_segm_qty(); i++){
 						segment_t* seg = getnseg(i);
 						if(seg != NULL){
 							get_segm_name(&name,seg,0);
-							q.sprnt("\t{'name':'%s','base':'0x%x','size':'0x%X','index':%d}", name.c_str(), seg->start_ea, seg->end_ea - seg->start_ea, i);
+							//name.replace("'","."); name.replace("\"","."); name.replace("\\","."); //make safe(r) for json translation... looks like IDA already replaces these with underscore
+							q.sprnt("\t{'name':'%s','base':'0x%llx','size':'0x%X','index':%d}", name.c_str(), seg->start_ea, seg->end_ea - seg->start_ea, i);
 							s+=q;
 							if(i != get_segm_qty()-1) s += ",\n"; else s += "\n";
 						}
 					}
 					s+="]";
 					SendTextMessage(atoi(args[1]), (char*)s.c_str(), s.length());
+
+		  case 62: //funcmap:path  
+					if (argc != 1) { msg("getSegs needs 1 arg\n"); return -1; }
+					if (args[1][1] == '_') args[1][1] = ':'; //fix cheesy workaround to tokinizer reserved char..
+					FILE *fp = fopen(args[1], "w");
+					if(fp==NULL) return -1;
+					ua1 = 0;
+					for(i=0; i < get_func_qty(); i++){
+						func_t *fu = getn_func(i);
+						if(fu != NULL){
+							get_func_name(&name, fu->start_ea);
+							ua1 = fu->start_ea; //always a 64bit type even on 32bit disasm so no padding junk 
+							ua2 = fu->end_ea;
+							fprintf(fp, "%d,%s,0x%llx,0x%llx,0x%x,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
+							ua1++;
+						}
+					}
+					fclose(fp);
+					return ua1;
 	}				
 
 

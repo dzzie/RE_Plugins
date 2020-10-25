@@ -96,6 +96,7 @@
 	 Function segExists(nameOrBase)
 	 Function delSeg(nameOrBase)
 	 Function getSegs(optSegNameOrBase)
+	 Function funcMap()
 */
 
 function idaClass(){
@@ -105,6 +106,11 @@ function idaClass(){
 	/*this.caption = function(msg){ //now a property let
 		return resolver('ida.Caption', arguments.length,0, msg);
 	}*/
+	
+	//this is really just for integrating IDACompare but we want to test it..not in intellisense..
+	this.funcMap = function(){
+		return resolver('ida.funcMap', arguments.length,0);
+	}
 	
 	this.getSegs = function(optSegNameOrBase){ //ida api returns a json array which we turn into an js object [{name,base,size,index}]
 		json = resolver('ida.getSegs',0,0);    //arg is for js stub only...

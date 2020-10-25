@@ -1,4 +1,4 @@
-getSegs([optSegNameOrBase])
+getSegs([optSegNameBaseorIndex])
 delSeg(nameOrBase)
 segExists(nameOrBase)
 addSegment(base, size, name)

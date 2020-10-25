@@ -171,6 +171,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -221,20 +222,29 @@ Begin VB.Form Form1
       Begin VB.Menu mnuShowAddrList 
          Caption         =   "View Address List"
       End
-      Begin VB.Menu mnuScintOpts 
-         Caption         =   "Scintinella Version"
-      End
-      Begin VB.Menu mnuSelectIDAInstance 
-         Caption         =   "Reconnect to IDA"
+      Begin VB.Menu mnuIDACompareExporter 
+         Caption         =   "IDA Compare Exporter"
       End
       Begin VB.Menu mnuSHellExt 
          Caption         =   "Register .idajs Shell Extension"
+      End
+      Begin VB.Menu mnuSpacer3 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuScintOpts 
+         Caption         =   "Scintinella Version"
       End
       Begin VB.Menu mnuDisableUIPI 
          Caption         =   "Disable UIPI (dev)"
       End
       Begin VB.Menu mnuSetTimeout 
          Caption         =   "Set Timeout"
+      End
+      Begin VB.Menu mnuSpacer4 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuSelectIDAInstance 
+         Caption         =   "Reconnect to IDA"
       End
    End
 End
@@ -284,25 +294,29 @@ End Sub
 
 Private Sub mnuDisableUIPI_Click()
     Dim reg As New clsRegistry2
-    Dim path As String, name As String, v
+    Dim path As String, Name As String, v
     'If you don't want to disable UAC, you could try just disabling UIPI (User Interface Privilege Isolation).
     'Open regedit and go to: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
     'Add a new DWORD (32-bit) Value called EnableUIPI and set it to 0.
     path = "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
-    name = "EnableUIPI"
+    Name = "EnableUIPI"
     reg.hive = HKEY_LOCAL_MACHINE
     
-    v = reg.ReadValue(path, name)
+    v = reg.ReadValue(path, Name)
     If v = 0 And Not IsEmpty(v) Then
         MsgBox "Already exists and set to 0 (disabled)", vbInformation
     Else
-        If reg.SetValue(path, name, 0, REG_DWORD) Then
+        If reg.SetValue(path, Name, 0, REG_DWORD) Then
             MsgBox "Value now 0 (disabled) reboot", vbInformation
         Else
             MsgBox "Failed to set run as admin", vbInformation
         End If
     End If
     
+End Sub
+
+Private Sub mnuIDACompareExporter_Click()
+    frmIDACompare.Show
 End Sub
 
 Private Sub mnuNew_Click()
@@ -522,7 +536,7 @@ Private Sub Form_Load()
         End If
     End If
     
-    List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
+    List1.Move Text1.Left, Text1.top, Text1.Width, Text1.Height
     
     x = " Built in classes: ida. fso. app. x64. remote. al. pb. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
         "global functions: \n\t alert(x), \n\t h(x) [int to hex], \n" & _
@@ -538,11 +552,11 @@ End Sub
 Private Sub Form_Resize()
     On Error Resume Next
     txtjs.Width = Me.Width - txtjs.Left - 140
-    txtjs.Height = Me.Height - txtjs.Top - Frame1.Height - 550
+    txtjs.Height = Me.Height - txtjs.top - Frame1.Height - 550
     Frame1.Width = Me.Width - Frame1.Left - 140
-    Frame1.Top = txtjs.Top + txtjs.Height - 200
+    Frame1.top = txtjs.top + txtjs.Height - 200
     Text1.Width = Frame1.Width - Text1.Left - 140
-    List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
+    List1.Move Text1.Left, Text1.top, Text1.Width, Text1.Height
     List1.Width = Text1.Width
     fraSaved.Left = Frame1.Width - 600 - fraSaved.Width
     pb.Width = txtjs.Width

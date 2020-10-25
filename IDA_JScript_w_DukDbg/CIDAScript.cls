@@ -19,6 +19,15 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
+Function funcMap() 'not really for idajs, for integrating idacompare functionality
+    Dim path As String, p As String, v As Long
+    'fprintf(fp, "%d,%s,0x%llx,0x%llx,0x%x,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
+    path = fso.GetFreeFileName(Environ("temp"))
+    p = Replace(p, ":", "_") 'tokinizer bs
+    v = ipc.SendCmdRecvInt("funcmap:" & p)
+    If v > 0 Then funcMap = path Else fso.deleteFile path
+End Function
+
 Function getSegs()
     getSegs = ipc.SendCmdRecvText("getsegs:" & Form1.hwnd)
 End Function
