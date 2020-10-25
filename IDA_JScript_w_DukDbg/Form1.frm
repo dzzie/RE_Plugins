@@ -171,7 +171,6 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
-         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -316,6 +315,10 @@ Private Sub mnuDisableUIPI_Click()
 End Sub
 
 Private Sub mnuIDACompareExporter_Click()
+    If Not ida.isUp Then
+        MsgBox "Connect to an IDA instance first.", vbInformation
+        Exit Sub
+    End If
     frmIDACompare.Show
 End Sub
 

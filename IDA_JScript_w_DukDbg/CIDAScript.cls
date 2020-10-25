@@ -19,13 +19,13 @@ Attribute ipc.VB_VarHelpID = -1
 Private tmp_x As New ULong64
 Public is64BitMode As Boolean
 
-Function funcMap() 'not really for idajs, for integrating idacompare functionality
-    Dim path As String, p As String, v As Long
+Function funcMap(ByRef count As Long)  'not really for idajs, for integrating idacompare functionality
+    Dim path As String, p As String
     'fprintf(fp, "%d,%s,0x%llx,0x%llx,0x%x,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
     path = fso.GetFreeFileName(Environ("temp"))
-    p = Replace(p, ":", "_") 'tokinizer bs
-    v = ipc.SendCmdRecvInt("funcmap:" & p)
-    If v > 0 Then funcMap = path Else fso.deleteFile path
+    p = Replace(path, ":", "_") 'tokinizer bs
+    count = ipc.SendCmdRecvInt("funcmap:" & p)
+    If count > 0 Then funcMap = path Else fso.deleteFile path
 End Function
 
 Function getSegs()
@@ -202,8 +202,8 @@ Property Get loadedFile() As String
     loadedFile = ipc.SendCmdRecvText("loadedfile:" & Form1.hwnd)
 End Property
 
-Sub t(data)
-    Form1.Text1.Text = Form1.Text1.Text & vbCrLf & data
+Sub t(Data)
+    Form1.Text1.Text = Form1.Text1.Text & vbCrLf & Data
     Form1.Text1.SelStart = Len(Form1.Text1.Text)
     DoEvents
 End Sub
@@ -270,12 +270,12 @@ End Function
 
 Private Function csvToHex(csv) As String
     On Error Resume Next
-    Dim tmp() As String, x, y()
+    Dim tmp() As String, x, Y()
     tmp = Split(csv, ",")
     For Each x In tmp
-        push y, tmp_x.setVal(x).toString(mHex)
+        push Y, tmp_x.setVal(x).toString(mHex)
     Next
-    csvToHex = Join(y, ",")
+    csvToHex = Join(Y, ",")
 End Function
 
 Function xRefsTo(offset) 'returns CSV list
@@ -391,9 +391,9 @@ Function renameFunc(oldname, newName) As Boolean
 End Function
 
  'todo x64
-Function find(startea, endea, hexstr) '-1 if fail
+Function find(startEa, endea, hexstr) '-1 if fail
     'findcode:start:end:hexstr
-    find = ipc.SendCmdRecvInt("findcode:" & startea & ":" & endea & ":" & hexstr)
+    find = ipc.SendCmdRecvInt("findcode:" & startEa & ":" & endea & ":" & hexstr)
 End Function
 
 Function decompile(va) As String

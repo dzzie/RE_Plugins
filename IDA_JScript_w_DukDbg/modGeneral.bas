@@ -1,7 +1,7 @@
 Attribute VB_Name = "modGeneral"
 Option Explicit
-
-Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal X As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long)
+Private Declare Function GetTickCount Lib "kernel32" () As Long
+Private Declare Sub SetWindowPos Lib "user32" (ByVal hwnd As Long, ByVal hWndInsertAfter As Long, ByVal x As Long, ByVal Y As Long, ByVal cx As Long, ByVal cy As Long, ByVal wFlags As Long)
 Private Declare Function GetModuleFileName Lib "kernel32" Alias "GetModuleFileNameA" (ByVal hModule As Long, ByVal lpFileName As String, ByVal nSize As Long) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
 Private Declare Function LoadLibrary Lib "kernel32" Alias "LoadLibraryA" (ByVal lpLibFileName As String) As Long
@@ -10,25 +10,47 @@ Private Const HWND_NOTOPMOST = -2
 
 Public hUtypes As Long
 Public uTypesPath As String
+Private startTime As Long
 
-Function cCLng(X) As Long
+
+Sub StartBenchMark(Optional ByRef t As Long = -111)
+    If t = -111 Then
+        startTime = GetTickCount()
+    Else
+        t = GetTickCount()
+    End If
+End Sub
+
+Function EndBenchMark(Optional ByRef t As Long = -111) As String
+    Dim endTime As Long, loadTime As Long
+    endTime = GetTickCount()
+    If t = -111 Then
+        loadTime = endTime - startTime
+    Else
+        loadTime = endTime - t
+    End If
+    EndBenchMark = loadTime / 1000 & " seconds"
+End Function
+
+
+Function cCLng(x) As Long
     On Error Resume Next
-    cCLng = CLng(Replace(X, "0x", "&h"))
+    cCLng = CLng(Replace(x, "0x", "&h"))
 End Function
 
 Function TopMost(frm As Object, Optional ontop As Boolean = True)
     On Error Resume Next
     Dim s
     s = IIf(ontop, HWND_TOPMOST, HWND_NOTOPMOST)
-    SetWindowPos frm.hwnd, s, frm.Left / 15, frm.Top / 15, frm.Width / 15, frm.Height / 15, 0
+    SetWindowPos frm.hwnd, s, frm.Left / 15, frm.top / 15, frm.Width / 15, frm.Height / 15, 0
 End Function
 
 Function Rpad(v, Optional L As Long = 8, Optional char As String = " ")
     On Error GoTo hell
-    Dim X As Long
-    X = Len(v)
-    If X < L Then
-        Rpad = v & String(L - X, char)
+    Dim x As Long
+    x = Len(v)
+    If x < L Then
+        Rpad = v & String(L - x, char)
     Else
 hell:
         Rpad = v
@@ -104,15 +126,15 @@ End Function
 
 Sub push(ary, value) 'this modifies parent ary object
     On Error GoTo init
-    Dim X
+    Dim x
        
-    X = UBound(ary)
-    ReDim Preserve ary(X + 1)
+    x = UBound(ary)
+    ReDim Preserve ary(x + 1)
     
     If IsObject(value) Then
-        Set ary(X + 1) = value
+        Set ary(x + 1) = value
     Else
-        ary(X + 1) = value
+        ary(x + 1) = value
     End If
     
     Exit Sub

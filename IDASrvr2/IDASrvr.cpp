@@ -905,7 +905,7 @@ int HandleMsg(char* m){
 					if (args[1][1] == '_') args[1][1] = ':'; //fix cheesy workaround to tokinizer reserved char..
 					FILE *fp = fopen(args[1], "w");
 					if(fp==NULL) return -1;
-					ua1 = 0;
+					x = 0;
 					for(i=0; i < get_func_qty(); i++){
 						func_t *fu = getn_func(i);
 						if(fu != NULL){
@@ -913,11 +913,11 @@ int HandleMsg(char* m){
 							ua1 = fu->start_ea; //always a 64bit type even on 32bit disasm so no padding junk 
 							ua2 = fu->end_ea;
 							fprintf(fp, "%d,%s,0x%llx,0x%llx,0x%x,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
-							ua1++;
+							x++;
 						}
 					}
 					fclose(fp);
-					return ua1;
+					return x;
 	}				
 
 
