@@ -22,9 +22,10 @@ Note: this includes a decompile function that requires the hexrays decompiler. I
 */
 
 bool m_debug = true;  
+#define USE_STANDARD_FILE_FUNCTIONS
 
 #define HAS_DECOMPILER //if you dont have the hexrays decompiler comment this line out..
-//#define __EA64__  //create the plugin for the 64 bit databases
+#define __EA64__  //create the plugin for the 64 bit databases
 
 #ifndef _WIN64
 	#error "You can only compile this as an x64 binary, 32/64 bit mode is set with __EA64__ define above"
@@ -175,6 +176,30 @@ void Launch_IdaJscript(){
 	 
 }
 
+
+int FileSize(char* path)
+{
+    HANDLE hFile = CreateFile(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) return 0;
+	DWORD dwFileSize = GetFileSize(hFile, NULL);
+	CloseHandle(hFile);
+	return dwFileSize;
+}
+
+/*
+int file_length(FILE* f)
+{
+	int pos;
+	int end;
+
+	pos = ftell(f);
+	fseek(f, 0, SEEK_END);
+	end = ftell(f);
+	fseek(f, pos, SEEK_SET);
+
+	return end;
+}*/
+
 HWND ReadReg(char* name){
 
 	 char tmp[20] = {0};
@@ -187,8 +212,6 @@ HWND ReadReg(char* name){
 
 	 return (HWND)atoi(tmp);
 }
-
-
 
 void SetReg(char* name, int value){
 
@@ -474,6 +497,7 @@ int HandleMsg(char* m){
 	   60 delSeg:nameOrBase
 	   61 getsegs:hwnd
 	   62 funcmap:path  since a full dump of all functions probably has 1-10k+ entries just dump to tmp file 
+	   63 importpatch:path:va
 
 	   todo: not implemented in regular call yet...(40-43 are quick call usable even for x64)
 	     case 49: //isX64 disasm
@@ -511,8 +535,9 @@ int HandleMsg(char* m){
     /*               49           50        51          52        53        54        55         56        57 */
 		             "isx64","getx64","dumpfunc","dumpfuncbytes", "immvals","getopv", "addenum", "addenummem", "getenum",
 	/*               58           59        60          61        62        63        64         65        66 */
-		             "addseg","segexists", "delseg","getsegs","funcmap"
+		             "addseg","segexists", "delseg","getsegs","funcmap","importpatch",
 					"\x00"};
+	FILE* fp = 0;
 	qstring name;
 	unsigned __int64 i=0;
 	unsigned __int64 x=0;
@@ -903,7 +928,7 @@ int HandleMsg(char* m){
 		  case 62: //funcmap:path  
 					if (argc != 1) { msg("getSegs needs 1 arg\n"); return -1; }
 					if (args[1][1] == '_') args[1][1] = ':'; //fix cheesy workaround to tokinizer reserved char..
-					FILE *fp = fopen(args[1], "w");
+					fp = fopen(args[1], "w");
 					if(fp==NULL) return -1;
 					x = 0;
 					for(i=0; i < get_func_qty(); i++){
@@ -912,12 +937,38 @@ int HandleMsg(char* m){
 							get_func_name(&name, fu->start_ea);
 							ua1 = fu->start_ea; //always a 64bit type even on 32bit disasm so no padding junk 
 							ua2 = fu->end_ea;
-							fprintf(fp, "%d,%s,0x%llx,0x%llx,0x%x,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
+							fprintf(fp, "%d,%s,%llx,%llx,%d,%d\n", i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
 							x++;
 						}
 					}
 					fclose(fp);
 					return x;
+
+		  case 63: //importpatch:path:va
+				  if (argc != 2) { msg("getSegs needs 2 arg\n"); return -1; }
+				  if (args[1][1] == '_') args[1][1] = ':'; //fix cheesy workaround to tokinizer reserved char..
+				  	
+				  int fsize = FileSize(args[1]);
+				  //q.sprnt("%d:%s:%llx", fsize, args[1],ua2);
+				  //MessageBox(0,q.c_str(),"",0); ;
+				  if (fsize < 1) {return -2;}
+
+				  fp = fopen(args[1], "r");
+				  if (fp == NULL) return -3;
+
+				  unsigned char* data = (unsigned char*)malloc(fsize);
+				  if(data == NULL){fclose(fp); return -4;}
+				  fread(&data[0],1,fsize,fp);
+				  fclose(fp);
+
+				  for(i=0; i<fsize; i++){
+					  patch_byte(ua2+i, data[i]);
+				  }
+
+				  free(data);
+				  fclose(fp);
+				  return 1;
+
 	}				
 
 

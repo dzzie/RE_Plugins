@@ -11,6 +11,14 @@ Begin VB.Form frmIDACompare
    ScaleHeight     =   5775
    ScaleWidth      =   12270
    StartUpPosition =   2  'CenterScreen
+   Begin VB.CommandButton cmdAbort 
+      Caption         =   "abort"
+      Height          =   330
+      Left            =   11295
+      TabIndex        =   13
+      Top             =   90
+      Width           =   780
+   End
    Begin Project1.ucFilterList lv 
       Height          =   4785
       Left            =   2115
@@ -34,17 +42,17 @@ Begin VB.Form frmIDACompare
    Begin VB.CommandButton Command2 
       Caption         =   "select"
       Height          =   345
-      Left            =   11355
+      Left            =   10410
       TabIndex        =   5
-      Top             =   75
+      Top             =   45
       Width           =   735
    End
    Begin VB.CommandButton Command1 
       Caption         =   "new"
       Height          =   345
-      Left            =   10440
+      Left            =   9495
       TabIndex        =   3
-      Top             =   75
+      Top             =   45
       Width           =   735
    End
    Begin VB.TextBox txtDB 
@@ -53,7 +61,7 @@ Begin VB.Form frmIDACompare
       OLEDropMode     =   1  'Manual
       TabIndex        =   2
       Top             =   60
-      Width           =   9060
+      Width           =   8205
    End
    Begin VB.Frame Frame1 
       Height          =   3450
@@ -206,6 +214,7 @@ Option Explicit
 Public cn As New Connection
 Public dlg As New clsCmnDlg
 Dim x64Mode As Boolean
+Public abort As Boolean
 
 Private exportedA As Boolean
 Private exportedB As Boolean
@@ -435,6 +444,11 @@ End Enum
 '    If Not FileExists(base) Then
 '        MsgBox "Could not find blank database to use:" & vbCrLf & vbCrLf & _
 '               base, vbInformation
+
+Private Sub cmdAbort_Click()
+    abort = True
+End Sub
+
 '        Exit Sub
 '    End If
 '
@@ -472,9 +486,10 @@ Private Sub Form_Load()
     Dim li As ListItem
     Dim cnt As Long, i As Long
     Dim startPos As String, endPos As String, j As Long
-    Dim path As String, tmp As String, x() As String, count As Long
+    Dim path As String, tmp, X() As String, count As Long
     
-    lv.SetColumnHeaders "n,Start,End,Size,Name,Refs", "600,1605,1650,1020,2790,1440"
+    Me.Icon = Form1.Icon
+    lv.SetColumnHeaders "n,Start,End,Size,Name*,Refs", "600,1605,1650,1020,2790,1440"
 
     x64Mode = Form1.ida.is64BitMode
 
@@ -500,24 +515,43 @@ Private Sub Form_Load()
     pb.Max = count
     pb.value = 0
     Me.caption = "Loading stats for " & count & " functions..."
+    abort = False
     
     i = FreeFile
     Open path For Input As i
     Do
          Line Input #i, tmp
          If Len(tmp) > 0 Then
-            x = Split(tmp, ",") '    'i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
-            If CLng("&h" & Mid(x(4), 3)) > 60 Then
-                lv.AddItem x(0), x(2), x(3), x(4), x(1), x(5) '9 sec for 550 func
-'                Set li = lv.ListItems.add(, , x(0)) 'still took 9 seconds w/direct access
+            X = Split(tmp, ",") '    'i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
+            If CLng(X(4)) > 60 Then
+                lv.AddItem X(0), X(2), X(3), X(4), X(1), X(5) '9 sec for 550 func
+'                Set li = lv2.ListItems.add(, , x(0)) 'still took 9 seconds w/direct access confirmed with second lv
             Else
                 j = j + 1
             End If
          End If
          pb.value = pb.value + 1
          DoEvents
+         If abort Then Exit Do
     Loop While Not EOF(i)
     Close i
+    
+    '8.75 sec but could suck on giant idbs
+'    Dim dat() As String
+'    dat = Split(fso.readFile(path), vbCrLf)
+'    For Each tmp In dat
+'        If Len(tmp) > 0 Then
+'            x = Split(tmp, ",") '    'i, name.c_str(), ua1, ua2, (fu->end_ea - fu->start_ea), fu->referers);
+'            If CLng("&h" & Mid(x(4), 3)) > 60 Then
+'                lv.AddItem x(0), x(2), x(3), x(4), x(1), x(5) '9 sec for 550 func
+''                Set li = lv2.ListItems.add(, , x(0)) 'still took 9 seconds w/direct access
+'            Else
+'                j = j + 1
+'            End If
+'         End If
+'         pb.value = pb.value + 1
+'         DoEvents
+'    Next
     
     lv.LockUpdate = False
     pb.value = 0

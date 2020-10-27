@@ -56,29 +56,54 @@ Function importFile(va, path, optNewSegName)
     ul.use0x = True
     ul = va
     
-    f = FreeFile
-    Open path For Binary As f
-    ReDim b(LOF(f) - 1)
-    Get f, , b()
-    Close f
-    
     If Len(optNewSegName) > 0 Then
         If segExists(va) = 0 Then
-            If addSegment(va, UBound(b), optNewSegName) = 0 Then GoTo hell
+            If addSegment(va, FileLen(path), optNewSegName) = 0 Then GoTo hell
         End If
     End If
-    
-    For i = 0 To UBound(b)
-        patchByte ul.toString(), b(i)
-        ul = ul.add(1)
-    Next
-                
-    importFile = 1
+     
+    importFile = ipc.SendCmdRecvInt("importpatch:" & Replace(path, ":", "_") & ":" & ul.toString())
     
 Exit Function
 hell:
     importFile = 0
 End Function
+
+'Function importFile(va, path, optNewSegName)
+'
+'    On Error GoTo hell
+'
+'    path = Replace(path, "/", "\")
+'    If Not FileExists(CStr(path)) Then GoTo hell
+'
+'    Dim b() As Byte, f As Long, ul As New ULong64, i As Long
+'
+'    ul.use0x = True
+'    ul = va
+'
+'    f = FreeFile
+'    Open path For Binary As f
+'    ReDim b(LOF(f) - 1)
+'    Get f, , b()
+'    Close f
+'
+'    If Len(optNewSegName) > 0 Then
+'        If segExists(va) = 0 Then
+'            If addSegment(va, UBound(b), optNewSegName) = 0 Then GoTo hell
+'        End If
+'    End If
+'
+'    For i = 0 To UBound(b)
+'        patchByte ul.toString(), b(i)
+'        ul = ul.add(1)
+'    Next
+'
+'    importFile = 1
+'
+'Exit Function
+'hell:
+'    importFile = 0
+'End Function
 
 
 Function add_enum(Name) As Long
@@ -231,11 +256,11 @@ End Function
 
 
 
-Function intToHex(x)
+Function intToHex(X)
     On Error Resume Next
      
     'keep it 32bit if we can... (-1 went to full 64bit)
-    intToHex = Hex(CLng(Replace(x, "0x", "&h")))
+    intToHex = Hex(CLng(Replace(X, "0x", "&h")))
     
     If Err.Number = 0 Then
         If Len(intToHex) = 1 Then intToHex = "0" & intToHex
@@ -243,8 +268,8 @@ Function intToHex(x)
         Exit Function
     End If
     
-    If Not tmp_x.fromString(x) Then
-        Form1.List1.AddItem "Failed to convert x: " & x
+    If Not tmp_x.fromString(X) Then
+        Form1.List1.AddItem "Failed to convert x: " & X
         Exit Function
     End If
     
@@ -270,10 +295,10 @@ End Function
 
 Private Function csvToHex(csv) As String
     On Error Resume Next
-    Dim tmp() As String, x, Y()
+    Dim tmp() As String, X, Y()
     tmp = Split(csv, ",")
-    For Each x In tmp
-        push Y, tmp_x.setVal(x).toString(mHex)
+    For Each X In tmp
+        push Y, tmp_x.setVal(X).toString(mHex)
     Next
     csvToHex = Join(Y, ",")
 End Function
@@ -314,7 +339,7 @@ End Function
 
 '
 Function hideBlock(offset, endAt)
-    Dim x, i As Long
+    Dim X, i As Long
     
     If offset < 1 Or endAt < 1 Then
         MsgBox "Address would go negative", vbInformation
@@ -329,7 +354,7 @@ Function hideBlock(offset, endAt)
 End Function
 
 Function showBlock(offset, endAt)
-    Dim x, i As Long
+    Dim X, i As Long
     
     If offset < 1 Or endAt < 1 Then
         MsgBox "Address would go negative", vbInformation
@@ -809,9 +834,9 @@ Function getClipboard()
     getClipboard = Clipboard.GetText()
 End Function
 
-Function setClipboard(x)
+Function setClipboard(X)
     Clipboard.Clear
-    Clipboard.SetText x
+    Clipboard.SetText X
 End Function
 
 Function openFileDialog() As String
@@ -828,12 +853,12 @@ Function benchMark() As Long
     benchMark = i.lowpart
 End Function
 
-Function hexDump(x) As String
-    hexDump = Module1.hexDump(CStr(x), , , hoDump)
+Function hexDump(X) As String
+    hexDump = Module1.hexDump(CStr(X), , , hoDump)
 End Function
 
-Function hexstr(x) As String
-    hexstr = Module1.hexDump(CStr(x), , , hoHexOnly)
+Function hexstr(X) As String
+    hexstr = Module1.hexDump(CStr(X), , , hoHexOnly)
 End Function
 
 Function toBytes(hexstr) As String

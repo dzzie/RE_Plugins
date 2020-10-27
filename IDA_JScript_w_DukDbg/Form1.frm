@@ -171,6 +171,7 @@ Begin VB.Form Form1
          _ExtentX        =   17251
          _ExtentY        =   3916
          _Version        =   393217
+         Enabled         =   -1  'True
          ScrollBars      =   3
          TextRTF         =   $"Form1.frx":0CCA
       End
@@ -215,26 +216,8 @@ Begin VB.Form Form1
       Begin VB.Menu mnuFormatJS 
          Caption         =   "Format Javascript"
       End
-      Begin VB.Menu mnuSpacer2 
-         Caption         =   "-"
-      End
-      Begin VB.Menu mnuShowAddrList 
-         Caption         =   "View Address List"
-      End
-      Begin VB.Menu mnuIDACompareExporter 
-         Caption         =   "IDA Compare Exporter"
-      End
-      Begin VB.Menu mnuSHellExt 
-         Caption         =   "Register .idajs Shell Extension"
-      End
       Begin VB.Menu mnuSpacer3 
          Caption         =   "-"
-      End
-      Begin VB.Menu mnuScintOpts 
-         Caption         =   "Scintinella Version"
-      End
-      Begin VB.Menu mnuDisableUIPI 
-         Caption         =   "Disable UIPI (dev)"
       End
       Begin VB.Menu mnuSetTimeout 
          Caption         =   "Set Timeout"
@@ -244,6 +227,30 @@ Begin VB.Form Form1
       End
       Begin VB.Menu mnuSelectIDAInstance 
          Caption         =   "Reconnect to IDA"
+      End
+   End
+   Begin VB.Menu mnuExtras 
+      Caption         =   "Extras"
+      Begin VB.Menu mnuImportPatch 
+         Caption         =   "Import Patch"
+      End
+      Begin VB.Menu mnuShowAddrList 
+         Caption         =   "View Address List"
+      End
+      Begin VB.Menu mnuIDACompareExporter 
+         Caption         =   "IDA Compare Exporter"
+      End
+      Begin VB.Menu mnuSpacer2 
+         Caption         =   "-"
+      End
+      Begin VB.Menu mnuScintOpts 
+         Caption         =   "Scintinella Version"
+      End
+      Begin VB.Menu mnuDisableUIPI 
+         Caption         =   "Disable UIPI (dev)"
+      End
+      Begin VB.Menu mnuSHellExt 
+         Caption         =   "Register .idajs Shell Extension"
       End
    End
 End
@@ -320,6 +327,10 @@ Private Sub mnuIDACompareExporter_Click()
         Exit Sub
     End If
     frmIDACompare.Show
+End Sub
+
+Private Sub mnuImportPatch_Click()
+   frmImportBytes.Show
 End Sub
 
 Private Sub mnuNew_Click()
@@ -539,7 +550,7 @@ Private Sub Form_Load()
         End If
     End If
     
-    List1.Move Text1.Left, Text1.top, Text1.Width, Text1.Height
+    List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     
     x = " Built in classes: ida. fso. app. x64. remote. al. pb. [hitting the dot will display intellisense and open paran codetip intellisense] \n\n" & _
         "global functions: \n\t alert(x), \n\t h(x) [int to hex], \n" & _
@@ -555,11 +566,11 @@ End Sub
 Private Sub Form_Resize()
     On Error Resume Next
     txtjs.Width = Me.Width - txtjs.Left - 140
-    txtjs.Height = Me.Height - txtjs.top - Frame1.Height - 550
+    txtjs.Height = Me.Height - txtjs.Top - Frame1.Height - 550
     Frame1.Width = Me.Width - Frame1.Left - 140
-    Frame1.top = txtjs.top + txtjs.Height - 200
+    Frame1.Top = txtjs.Top + txtjs.Height - 200
     Text1.Width = Frame1.Width - Text1.Left - 140
-    List1.Move Text1.Left, Text1.top, Text1.Width, Text1.Height
+    List1.Move Text1.Left, Text1.Top, Text1.Width, Text1.Height
     List1.Width = Text1.Width
     fraSaved.Left = Frame1.Width - 600 - fraSaved.Width
     pb.Width = txtjs.Width

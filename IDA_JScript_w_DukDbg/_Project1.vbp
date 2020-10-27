@@ -21,6 +21,7 @@ Module=modGeneral; modGeneral.bas
 Form=frmAddrList.frm
 UserControl=ucFilterList.ctl
 Form=frmIDACompare.frm
+Form=frmImportBytes.frm
 IconForm="Form1"
 Startup="Form1"
 HelpFile=""
